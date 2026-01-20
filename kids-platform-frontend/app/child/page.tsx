@@ -3,29 +3,30 @@
 import { useEffect, useState } from "react";
 import { getGames, startAttempt, GameListItem } from "@/lib/endpoints";
 import Link from "next/link";
+import { getChildSession, clearChildSession } from "@/lib/auth";
 
 export default function ChildHomePage() {
-  const [ageGroupCode, setAgeGroupCode] = useState("3_5");
-  const [childProfileId, setChildProfileId] = useState(1); // <-- постав свій існуючий childProfileId
+  const [ageGroupCode, setAgeGroupCode] = useState<string | null>(null);
+  const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [games, setGames] = useState<GameListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-  const saved = localStorage.getItem("childProfileId");
-  if (saved) setChildProfileId(Number(saved));
-}, []);
+    const session = getChildSession();
+    if (!session.childProfileId || !session.ageGroupCode) {
+      window.location.href = "/child/join";
+      return;
+    }
+    setChildProfileId(session.childProfileId);
+    setAgeGroupCode(session.ageGroupCode);
+  }, []);
 
-useEffect(() => {
-  localStorage.setItem("childProfileId", String(childProfileId));
-}, [childProfileId]);
-
-
-  async function load() {
+  async function load(code: string) {
     setLoading(true);
     setError(null);
     try {
-      const data = await getGames(ageGroupCode);
+      const data = await getGames(code);
       setGames(data);
     } catch (e: any) {
       setError(e.message ?? "Error");
@@ -35,19 +36,25 @@ useEffect(() => {
   }
 
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (ageGroupCode) {
+      load(ageGroupCode);
+    }
   }, [ageGroupCode]);
 
   async function onStart(gameId: number) {
+    if (!childProfileId) return;
     setError(null);
     try {
       const res = await startAttempt(childProfileId, gameId);
-      // переходимо на сторінку гри
       window.location.href = `/child/game/${res.game.id}?attemptId=${res.attemptId}`;
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
+  }
+
+  function onExit() {
+    clearChildSession();
+    window.location.href = "/child/join";
   }
 
   return (
@@ -55,25 +62,10 @@ useEffect(() => {
       <h1>Вибір гри</h1>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
-        <label>
-          Age group code:
-          <input value={ageGroupCode} onChange={(e) => setAgeGroupCode(e.target.value)} style={{ marginLeft: 8 }} />
-        </label>
-
-        <label>
-          ChildProfileId:
-          <input
-            type="number"
-            value={childProfileId}
-            onChange={(e) => setChildProfileId(Number(e.target.value))}
-            style={{ marginLeft: 8, width: 90 }}
-          />
-        </label>
-
-        <button onClick={load} disabled={loading}>
+        <button onClick={onExit}>Вийти</button>
+        <button onClick={() => ageGroupCode && load(ageGroupCode)} disabled={loading || !ageGroupCode}>
           {loading ? "Завантажую..." : "Оновити"}
         </button>
-
         <Link href="/">На головну</Link>
       </div>
 
