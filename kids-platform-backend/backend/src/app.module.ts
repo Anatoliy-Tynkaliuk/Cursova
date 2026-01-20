@@ -7,10 +7,19 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { AttemptsModule } from './attempts/attempts.module';
 import { GamesModule } from "./games/games.module";
 import { ChildrenModule } from "./children/children.module";
+import { AdminModule } from "./admin/admin.module";
 
 
 @Module({
-  imports: [PrismaModule, AgeGroupsModule, AttemptsModule,GamesModule, AuthModule,ChildrenModule,],
+  imports: [
+    PrismaModule,
+    AgeGroupsModule,
+    AttemptsModule,
+    GamesModule,
+    AuthModule,
+    ChildrenModule,
+    AdminModule,
+  ],
     controllers: [AppController],
   providers: [AppService],
 })
