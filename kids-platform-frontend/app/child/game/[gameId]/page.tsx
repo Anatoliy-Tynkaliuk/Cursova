@@ -2,32 +2,35 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/api";
-
+import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
+import { getChildSession } from "@/lib/auth";
 export default function GamePage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
   const gameId = Number(params.gameId);
   const attemptIdFromUrl = search.get("attemptId");
+  const [childProfileId, setChildProfileId] = useState<number | null>(null);
 
-  const [childProfileId, setChildProfileId] = useState<number>(1);
   const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
 
   const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
   const [msg, setMsg] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  // fallback input (якщо немає options)
   const [textAnswer, setTextAnswer] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("childProfileId");
-    if (saved) setChildProfileId(Number(saved));
+    const session = getChildSession();
+    if (!session.childProfileId) {
+      window.location.href = "/child/join";
+      return;
+    }
+    setChildProfileId(session.childProfileId);
   }, []);
 
   useEffect(() => {
     async function boot() {
-      if (!attemptId) {
+      if (!attemptId && childProfileId) {
         setLoading(true);
         try {
           const res = await startAttempt(childProfileId, gameId);
@@ -41,7 +44,6 @@ export default function GamePage() {
     }
     boot().catch((e: any) => setMsg(e.message ?? "Error"));
   }, [attemptId, childProfileId, gameId]);
-
   const current = useMemo(() => {
     if (!task) return null;
     return {
