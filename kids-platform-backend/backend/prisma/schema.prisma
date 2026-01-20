@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  parent
+  admin
+}
+
+model User {
+  id           BigInt   @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(parent)
+  createdAt    DateTime @default(now())
+
+  parentLinks  ParentChild[]
+
+  @@map("users")
+}
+
+model AgeGroup {
+  id        BigInt   @id @default(autoincrement())
+  code      String   @unique
+  title     String
+  minAge    Int
+  maxAge    Int
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  children  ChildProfile[]
+  games     Game[]
+
+  @@map("age_groups")
+}
+
+model ChildProfile {
+  id         BigInt   @id @default(autoincrement())
+  name       String
+  ageGroupId BigInt
+  avatar     String?
+  settings   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  ageGroup   AgeGroup     @relation(fields: [ageGroupId], references: [id], onDelete: Restrict)
+  parents    ParentChild[]
+  invites    LinkInvite[]
+  attempts   Attempt[]
+  badges     ChildBadge[]
+
+  @@map("child_profiles")
+}
+
+model ParentChild {
+  parentUserId   BigInt
+  childProfileId BigInt
+  createdAt      DateTime @default(now())
+
+  parent User         @relation(fields: [parentUserId], references: [id], onDelete: Cascade)
+  child  ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+
+  @@id([parentUserId, childProfileId])
+  @@map("parent_child")
+}
+
+model LinkInvite {
+  id             BigInt   @id @default(autoincrement())
+  childProfileId BigInt
+  code           String   @unique
+  expiresAt      DateTime
+  lastUsedAt     DateTime?
+  isRevoked      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  child ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+
+  @@index([childProfileId])
+  @@map("link_invites")
+}
+
+model Module {
+  id          BigInt   @id @default(autoincrement())
+  code        String   @unique
+  title       String
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+
+  games       Game[]
+
+  @@map("modules")
+}
+
+model GameType {
+  id          BigInt   @id @default(autoincrement())
+  code        String   @unique
+  title       String
+  description String?
+  icon        String?
+  isActive    Boolean  @default(true)
+
+  games       Game[]
+
+  @@map("game_types")
+}
+
+model Game {
+  id            BigInt   @id @default(autoincrement())
+  moduleId      BigInt
+  gameTypeId    BigInt
+  title         String
+  description   String?
+  minAgeGroupId BigInt
+  difficulty    Int      @default(1)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  gameType    GameType @relation(fields: [gameTypeId], references: [id], onDelete: Restrict)
+  minAgeGroup AgeGroup @relation(fields: [minAgeGroupId], references: [id], onDelete: Restrict)
+
+  tasks    Task[]
+  attempts Attempt[]
+
+  @@index([minAgeGroupId, isActive])
+  @@map("games")
+}
+
+model Task {
+  id        BigInt   @id @default(autoincrement())
+  gameId    BigInt
+  position  Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  game     Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  versions TaskVersion[]
+  answers  TaskAnswer[]
+
+  @@unique([gameId, position])
+  @@map("tasks")
+}
+
+model TaskVersion {
+  id          BigInt   @id @default(autoincrement())
+  taskId      BigInt
+  version     Int
+  prompt      String
+  dataJson    Json     @default("{}")
+  correctJson Json
+  explanation String?
+  difficulty  Int      @default(1)
+  isCurrent   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  task    Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  answers TaskAnswer[]
+
+  @@unique([taskId, version])
+  @@index([taskId, isCurrent])
+  @@map("task_versions")
+}
+
+model Attempt {
+  id             BigInt   @id @default(autoincrement())
+  childProfileId BigInt
+  gameId         BigInt
+
+  score        Int     @default(0)
+  correctCount Int     @default(0)
+  totalCount   Int     @default(0)
+  durationSec  Int?
+
+  isFinished Boolean   @default(false)
+  finishedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  child   ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  game    Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  answers TaskAnswer[]
+
+  @@map("attempts")
+}
+
+model TaskAnswer {
+  id            BigInt   @id @default(autoincrement())
+  attemptId     BigInt
+  taskId        BigInt
+  taskVersionId BigInt
+  userAnswer    Json
+  isCorrect     Boolean  @default(false)
+  answeredAt    DateTime @default(now())
+
+  attempt     Attempt     @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  task        Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskVersion TaskVersion @relation(fields: [taskVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, taskId])
+  @@map("task_answers")
+}
+
+model Badge {
+  id          BigInt   @id @default(autoincrement())
+  code        String   @unique
+  title       String
+  description String?
+  icon        String?
+
+  childBadges ChildBadge[]
+
+  @@map("badges")
+}
+
+model ChildBadge {
+  childProfileId BigInt
+  badgeId        BigInt
+  earnedAt       DateTime @default(now())
+
+  child ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  badge Badge        @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([childProfileId, badgeId])
+  @@map("child_badges")
+}

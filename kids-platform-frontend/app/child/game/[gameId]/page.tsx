@@ -1,0 +1,149 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/api";
+
+export default function GamePage() {
+  const params = useParams<{ gameId: string }>();
+  const search = useSearchParams();
+  const gameId = Number(params.gameId);
+  const attemptIdFromUrl = search.get("attemptId");
+
+  const [childProfileId, setChildProfileId] = useState<number>(1);
+  const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
+
+  const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
+  const [msg, setMsg] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  // fallback input (якщо немає options)
+  const [textAnswer, setTextAnswer] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("childProfileId");
+    if (saved) setChildProfileId(Number(saved));
+  }, []);
+
+  useEffect(() => {
+    async function boot() {
+      if (!attemptId) {
+        setLoading(true);
+        try {
+          const res = await startAttempt(childProfileId, gameId);
+          setAttemptId(res.attemptId);
+          setTask(res.task);
+          setMsg("");
+        } finally {
+          setLoading(false);
+        }
+      }
+    }
+    boot().catch((e: any) => setMsg(e.message ?? "Error"));
+  }, [attemptId, childProfileId, gameId]);
+
+  const current = useMemo(() => {
+    if (!task) return null;
+    return {
+      taskId: task.taskId,
+      taskVersionId: task.taskVersion.id,
+      prompt: task.taskVersion.prompt,
+      data: task.taskVersion.data as any,
+    };
+  }, [task]);
+
+  const options: any[] = useMemo(() => {
+    const d = current?.data;
+    if (!d) return [];
+    if (Array.isArray(d.options)) return d.options;
+    return [];
+  }, [current]);
+
+  async function sendAnswer(userAnswer: any) {
+    if (!attemptId || !current) return;
+
+    setLoading(true);
+    setMsg("");
+    try {
+      const res = await submitAnswer(attemptId, {
+        taskId: current.taskId,
+        taskVersionId: current.taskVersionId,
+        userAnswer,
+      });
+
+      if ("finished" in res && res.finished) {
+        setMsg(`✅ Гру завершено! Score: ${res.summary?.score ?? "?"}`);
+        setTask(null);
+        return;
+      }
+
+      const next = (res as any).nextTask;
+      setTask({
+        taskId: next.taskId,
+        position: next.position,
+        type: "choose_answer",
+        taskVersion: {
+          id: next.taskVersion.id,
+          prompt: next.taskVersion.prompt,
+          data: next.taskVersion.data,
+        },
+      });
+
+      setMsg(res.isCorrect ? "✅ Правильно!" : "❌ Неправильно!");
+      setTextAnswer("");
+    } catch (e: any) {
+      setMsg(e.message ?? "Error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading && !current) {
+    return <div style={{ padding: 16 }}>Завантаження...</div>;
+  }
+
+  return (
+    <div style={{ padding: 16 }}>
+      <h1>Гра #{gameId}</h1>
+      {attemptId && <div style={{ fontSize: 12, opacity: 0.8 }}>attemptId: {attemptId}</div>}
+      {msg && <p>{msg}</p>}
+
+      {!current ? (
+        <p>Нема активного завдання.</p>
+      ) : (
+        <div style={{ border: "1px solid #333", padding: 12, borderRadius: 10 }}>
+          <div style={{ fontWeight: 700, marginBottom: 10 }}>{current.prompt}</div>
+
+          {options.length > 0 ? (
+            <div style={{ display: "grid", gap: 10, maxWidth: 320 }}>
+              {options.map((opt, idx) => (
+                <button
+                  key={idx}
+                  disabled={loading}
+                  onClick={() => sendAnswer({ answer: opt })}
+                  style={{ padding: 10, borderRadius: 10, cursor: "pointer" }}
+                >
+                  {String(opt)}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                value={textAnswer}
+                onChange={(e) => setTextAnswer(e.target.value)}
+                placeholder="Введи відповідь..."
+              />
+              <button
+                disabled={loading}
+                onClick={() => sendAnswer({ answer: isNaN(Number(textAnswer)) ? textAnswer : Number(textAnswer) })}
+              >
+                Відправити
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
