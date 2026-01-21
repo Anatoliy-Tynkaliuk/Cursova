@@ -6,12 +6,14 @@ import type {
   CreateAgeGroupDto,
   CreateGameDto,
   CreateGameTypeDto,
+  CreateBadgeDto,
   CreateModuleDto,
   CreateTaskDto,
   CreateTaskVersionDto,
   UpdateAgeGroupDto,
   UpdateGameDto,
   UpdateGameTypeDto,
+  UpdateBadgeDto,
   UpdateModuleDto,
   UpdateTaskDto,
   UpdateTaskVersionDto,
@@ -140,5 +142,25 @@ export class AdminController {
   @Delete("task-versions/:id")
   deleteTaskVersion(@Param("id") id: string) {
     return this.service.deleteTaskVersion(Number(id));
+  }
+
+  @Get("badges")
+  listBadges() {
+    return this.service.listBadges();
+  }
+
+  @Post("badges")
+  createBadge(@Body() body: CreateBadgeDto) {
+    return this.service.createBadge(body);
+  }
+
+  @Patch("badges/:id")
+  updateBadge(@Param("id") id: string, @Body() body: UpdateBadgeDto) {
+    return this.service.updateBadge(Number(id), body);
+  }
+
+  @Delete("badges/:id")
+  deleteBadge(@Param("id") id: string) {
+    return this.service.deleteBadge(Number(id));
   }
 }

@@ -35,9 +35,10 @@ export class ChildrenController {
     return this.children.getStats(req.user, Number(id));
   }
 
-  // child: вхід по коду (без JWT)
-  @Post("child/join")
-  join(@Body() body: { code: string }) {
-    return this.children.joinByCode(body.code);
+  // parent/admin: badges дитини
+  @UseGuards(JwtGuard)
+  @Get("children/:id/badges")
+  badges(@Req() req: any, @Param("id") id: string) {
+    return this.children.getBadges(req.user, Number(id));
   }
 }

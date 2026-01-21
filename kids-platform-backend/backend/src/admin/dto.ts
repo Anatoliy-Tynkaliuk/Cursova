@@ -63,3 +63,12 @@ export type CreateTaskVersionDto = {
 };
 
 export type UpdateTaskVersionDto = Partial<CreateTaskVersionDto>;
+
+export type CreateBadgeDto = {
+  code: string;
+  title: string;
+  description?: string;
+  icon?: string;
+};
+
+export type UpdateBadgeDto = Partial<CreateBadgeDto>;

@@ -25,6 +25,36 @@ function deepEqual(a: any, b: any): boolean {
 export class AttemptsService {
   constructor(private prisma: PrismaService) {}
 
+  private parseFinishedAttemptsThreshold(code: string) {
+    const match = code.match(/^FINISHED_(\d+)$/i);
+    if (!match) return null;
+    const value = Number(match[1]);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  private async awardBadges(childProfileId: bigint) {
+    const finishedAttempts = await this.prisma.attempt.count({
+      where: { childProfileId, isFinished: true },
+    });
+
+    const badges = await this.prisma.badge.findMany();
+
+    const eligibleBadges = badges.filter((badge) => {
+      const threshold = this.parseFinishedAttemptsThreshold(badge.code);
+      return threshold !== null && finishedAttempts >= threshold;
+    });
+
+    if (eligibleBadges.length === 0) return;
+
+    await this.prisma.childBadge.createMany({
+      data: eligibleBadges.map((badge) => ({
+        childProfileId,
+        badgeId: badge.id,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
   // ---------- START ----------
   async start(childProfileId: number, gameId: number) {
     if (!childProfileId || !gameId) {
@@ -161,6 +191,7 @@ export class AttemptsService {
           finishedAt: new Date(),
         },
       });
+      await this.awardBadges(attempt.childProfileId);
 
       return {
         attemptId,
@@ -211,6 +242,7 @@ export class AttemptsService {
         durationSec: dto?.durationSec ?? undefined,
       },
     });
+    await this.awardBadges(finished.childProfileId);
 
     return {
       attemptId,

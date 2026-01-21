@@ -11,8 +11,6 @@ export default function GamePage() {
   const gameId = Number(params.gameId);
   const attemptIdFromUrl = search.get("attemptId");
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
-
-  const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
 
   const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);

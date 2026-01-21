@@ -193,4 +193,49 @@ export class ChildrenService {
       })),
     };
   }
+
+  async getBadges(user: any, childId: number) {
+    if (user && user.role !== "parent" && user.role !== "admin") {
+      throw new ForbiddenException("Only parent/admin");
+    }
+
+    const child = await this.prisma.childProfile.findUnique({
+      where: { id: BigInt(childId) },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    if (user?.role === "parent") {
+      const link = await this.prisma.parentChild.findUnique({
+        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+      });
+      if (!link) throw new ForbiddenException("Not your child");
+    }
+
+    const finishedAttempts = await this.prisma.attempt.count({
+      where: { childProfileId: child.id, isFinished: true },
+    });
+
+    const badges = await this.prisma.badge.findMany({
+      orderBy: { id: "asc" },
+    });
+
+    const earned = await this.prisma.childBadge.findMany({
+      where: { childProfileId: child.id },
+      include: { badge: true },
+    });
+
+    const earnedSet = new Set(earned.map((b) => Number(b.badgeId)));
+
+    return {
+      finishedAttempts,
+      badges: badges.map((badge) => ({
+        id: Number(badge.id),
+        code: badge.code,
+        title: badge.title,
+        description: badge.description,
+        icon: badge.icon,
+        isEarned: earnedSet.has(Number(badge.id)),
+      })),
+    };
+  }
 }
