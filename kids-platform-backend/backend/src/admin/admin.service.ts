@@ -7,12 +7,14 @@ import {
   CreateModuleDto,
   CreateTaskDto,
   CreateTaskVersionDto,
+  CreateBadgeDto,
   UpdateAgeGroupDto,
   UpdateGameDto,
   UpdateGameTypeDto,
   UpdateModuleDto,
   UpdateTaskDto,
   UpdateTaskVersionDto,
+  UpdateBadgeDto,
 } from "./dto";
 
 @Injectable()
@@ -306,6 +308,47 @@ export class AdminService {
 
   async deleteTaskVersion(id: number) {
     await this.prisma.taskVersion.delete({ where: { id: BigInt(id) } });
+    return { ok: true };
+  }
+
+  async listBadges() {
+    const badges = await this.prisma.badge.findMany({ orderBy: { id: "asc" } });
+    return badges.map((b) => ({
+      id: Number(b.id),
+      code: b.code,
+      title: b.title,
+      description: b.description,
+      icon: b.icon,
+    }));
+  }
+
+  async createBadge(dto: CreateBadgeDto) {
+    const badge = await this.prisma.badge.create({
+      data: {
+        code: dto.code,
+        title: dto.title,
+        description: dto.description,
+        icon: dto.icon,
+      },
+    });
+    return { id: Number(badge.id) };
+  }
+
+  async updateBadge(id: number, dto: UpdateBadgeDto) {
+    const badge = await this.prisma.badge.update({
+      where: { id: BigInt(id) },
+      data: {
+        code: dto.code,
+        title: dto.title,
+        description: dto.description,
+        icon: dto.icon,
+      },
+    });
+    return { id: Number(badge.id) };
+  }
+
+  async deleteBadge(id: number) {
+    await this.prisma.badge.delete({ where: { id: BigInt(id) } });
     return { ok: true };
   }
 }

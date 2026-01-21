@@ -123,6 +123,14 @@ export type AdminTaskVersionItem = {
   isCurrent: boolean;
 };
 
+export type AdminBadgeItem = {
+  id: number;
+  code: string;
+  title: string;
+  description?: string | null;
+  icon?: string | null;
+};
+
 export async function getAdminModules() {
   return api<AdminModuleItem[]>("/admin/modules", "GET");
 }
@@ -203,6 +211,10 @@ export async function getAdminTaskVersions() {
   return api<AdminTaskVersionItem[]>("/admin/task-versions", "GET");
 }
 
+export async function getAdminBadges() {
+  return api<AdminBadgeItem[]>("/admin/badges", "GET");
+}
+
 export async function createAdminGame(payload: {
   moduleId: number;
   gameTypeId: number;
@@ -268,6 +280,31 @@ export async function deleteAdminTaskVersion(taskVersionId: number) {
   return api<{ ok: true }>(`/admin/task-versions/${taskVersionId}`, "DELETE");
 }
 
+export async function createAdminBadge(payload: {
+  code: string;
+  title: string;
+  description?: string;
+  icon?: string;
+}) {
+  return api<{ id: number }>("/admin/badges", "POST", payload);
+}
+
+export async function updateAdminBadge(
+  badgeId: number,
+  payload: {
+    code?: string;
+    title?: string;
+    description?: string;
+    icon?: string;
+  }
+) {
+  return api<{ id: number }>(`/admin/badges/${badgeId}`, "PATCH", payload);
+}
+
+export async function deleteAdminBadge(badgeId: number) {
+  return api<{ ok: true }>(`/admin/badges/${badgeId}`, "DELETE");
+}
+
 export async function updateAdminGame(
   gameId: number,
   payload: {
@@ -290,6 +327,28 @@ export async function joinByCode(code: string) {
     "POST",
     { code }
   );
+}
+
+export type ChildBadgeItem = {
+  id: number;
+  code: string;
+  title: string;
+  description?: string | null;
+  icon?: string | null;
+  isEarned: boolean;
+};
+
+export type ChildBadgesResponse = {
+  finishedAttempts: number;
+  badges: ChildBadgeItem[];
+};
+
+export async function getChildBadges(childId: number) {
+  return api<ChildBadgesResponse>(`/children/${childId}/badges`, "GET");
+}
+
+export async function getChildBadgesPublic(childId: number) {
+  return api<ChildBadgesResponse>(`/child/${childId}/badges`, "GET");
 }
 
 

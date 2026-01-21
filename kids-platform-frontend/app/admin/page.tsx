@@ -5,25 +5,30 @@ import {
   createAdminGame,
   createAdminAgeGroup,
   createAdminGameType,
+  createAdminBadge,
   createAdminTask,
   createAdminTaskVersion,
   deleteAdminAgeGroup,
+  deleteAdminBadge,
   deleteAdminGame,
   deleteAdminGameType,
   deleteAdminTask,
   deleteAdminTaskVersion,
   getAdminAgeGroups,
+  getAdminBadges,
   getAdminGames,
   getAdminGameTypes,
   getAdminModules,
   getAdminTasks,
   getAdminTaskVersions,
+  updateAdminBadge,
   updateAdminGame,
   updateAdminAgeGroup,
   updateAdminGameType,
   updateAdminTask,
   updateAdminTaskVersion,
   type AdminAgeGroupItem,
+  type AdminBadgeItem,
   type AdminGameItem,
   type AdminGameTypeItem,
   type AdminModuleItem,
@@ -39,6 +44,7 @@ export default function AdminPage() {
   const [games, setGames] = useState<AdminGameItem[]>([]);
   const [tasks, setTasks] = useState<AdminTaskItem[]>([]);
   const [taskVersions, setTaskVersions] = useState<AdminTaskVersionItem[]>([]);
+  const [badges, setBadges] = useState<AdminBadgeItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -77,6 +83,11 @@ export default function AdminPage() {
   const [taskDifficulty, setTaskDifficulty] = useState(1);
   const [taskIsCurrent, setTaskIsCurrent] = useState(true);
 
+  const [badgeCode, setBadgeCode] = useState("");
+  const [badgeTitle, setBadgeTitle] = useState("");
+  const [badgeDescription, setBadgeDescription] = useState("");
+  const [badgeIcon, setBadgeIcon] = useState("");
+
   const ageGroupFormValid =
     ageGroupCode.trim().length > 0 &&
     ageGroupTitle.trim().length > 0 &&
@@ -91,6 +102,7 @@ export default function AdminPage() {
 
   const taskFormValid = taskGameId !== "" && taskPosition > 0;
   const taskVersionFormValid = taskId !== "" && taskPrompt.trim().length > 0;
+  const badgeFormValid = badgeCode.trim().length > 0 && badgeTitle.trim().length > 0;
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -102,14 +114,22 @@ export default function AdminPage() {
       setLoading(true);
       setError(null);
       try {
-        const [modulesData, gameTypesData, ageGroupsData, gamesData, tasksData, taskVersionsData] =
-          await Promise.all([
+        const [
+          modulesData,
+          gameTypesData,
+          ageGroupsData,
+          gamesData,
+          tasksData,
+          taskVersionsData,
+          badgesData,
+        ] = await Promise.all([
           getAdminModules(),
           getAdminGameTypes(),
           getAdminAgeGroups(),
           getAdminGames(),
           getAdminTasks(),
           getAdminTaskVersions(),
+          getAdminBadges(),
         ]);
         setModules(modulesData);
         setGameTypes(gameTypesData);
@@ -117,6 +137,7 @@ export default function AdminPage() {
         setGames(gamesData);
         setTasks(tasksData);
         setTaskVersions(taskVersionsData);
+        setBadges(badgesData);
       } catch (e: any) {
         setError(e.message ?? "Error");
       } finally {
@@ -428,6 +449,57 @@ export default function AdminPage() {
     }
   }
 
+  async function onCreateBadge() {
+    if (!badgeFormValid) return;
+    setError(null);
+    setMessage(null);
+    try {
+      await createAdminBadge({
+        code: badgeCode.trim(),
+        title: badgeTitle.trim(),
+        description: badgeDescription.trim() || undefined,
+        icon: badgeIcon.trim() || undefined,
+      });
+      setMessage("Бейдж створено.");
+      setBadgeCode("");
+      setBadgeTitle("");
+      setBadgeDescription("");
+      setBadgeIcon("");
+      const badgesData = await getAdminBadges();
+      setBadges(badgesData);
+    } catch (e: any) {
+      setError(e.message ?? "Error");
+    }
+  }
+
+  async function onUpdateBadge(badge: AdminBadgeItem) {
+    setError(null);
+    setMessage(null);
+    try {
+      await updateAdminBadge(badge.id, {
+        code: badge.code,
+        title: badge.title,
+        description: badge.description ?? undefined,
+        icon: badge.icon ?? undefined,
+      });
+      setMessage("Бейдж оновлено.");
+    } catch (e: any) {
+      setError(e.message ?? "Error");
+    }
+  }
+
+  async function onDeleteBadge(badgeId: number) {
+    setError(null);
+    setMessage(null);
+    try {
+      await deleteAdminBadge(badgeId);
+      setMessage("Бейдж видалено.");
+      setBadges((prev) => prev.filter((badge) => badge.id !== badgeId));
+    } catch (e: any) {
+      setError(e.message ?? "Error");
+    }
+  }
+
   return (
     <div style={{ padding: 16, maxWidth: 1000 }}>
       <h1>Адмінка контенту</h1>
@@ -706,6 +778,95 @@ export default function AdminPage() {
             Створити версію
           </button>
         </div>
+      </section>
+
+      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+        <h2>Додати бейдж</h2>
+        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+          <input
+            placeholder="Код (наприклад FINISHED_5)"
+            value={badgeCode}
+            onChange={(e) => setBadgeCode(e.target.value)}
+          />
+          <input
+            placeholder="Назва"
+            value={badgeTitle}
+            onChange={(e) => setBadgeTitle(e.target.value)}
+          />
+          <textarea
+            placeholder="Опис (необов'язково)"
+            value={badgeDescription}
+            onChange={(e) => setBadgeDescription(e.target.value)}
+            rows={3}
+          />
+          <input
+            placeholder="Icon (emoji або URL)"
+            value={badgeIcon}
+            onChange={(e) => setBadgeIcon(e.target.value)}
+          />
+          <button disabled={!badgeFormValid} onClick={onCreateBadge}>
+            Створити бейдж
+          </button>
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 20 }}>
+        <h2>Бейджі</h2>
+        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+          {badges.map((badge) => (
+            <li key={badge.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
+              <div style={{ display: "grid", gap: 8 }}>
+                <input
+                  value={badge.title}
+                  onChange={(e) =>
+                    setBadges((prev) =>
+                      prev.map((item) =>
+                        item.id === badge.id ? { ...item, title: e.target.value } : item
+                      )
+                    )
+                  }
+                />
+                <input
+                  value={badge.code}
+                  onChange={(e) =>
+                    setBadges((prev) =>
+                      prev.map((item) =>
+                        item.id === badge.id ? { ...item, code: e.target.value } : item
+                      )
+                    )
+                  }
+                />
+                <textarea
+                  value={badge.description ?? ""}
+                  onChange={(e) =>
+                    setBadges((prev) =>
+                      prev.map((item) =>
+                        item.id === badge.id ? { ...item, description: e.target.value } : item
+                      )
+                    )
+                  }
+                  rows={2}
+                />
+                <input
+                  placeholder="Icon"
+                  value={badge.icon ?? ""}
+                  onChange={(e) =>
+                    setBadges((prev) =>
+                      prev.map((item) =>
+                        item.id === badge.id ? { ...item, icon: e.target.value } : item
+                      )
+                    )
+                  }
+                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => onUpdateBadge(badge)}>Зберегти</button>
+                  <button onClick={() => onDeleteBadge(badge.id)}>Видалити</button>
+                </div>
+              </div>
+            </li>
+          ))}
+          {badges.length === 0 && <li style={{ fontSize: 12, opacity: 0.7 }}>Немає бейджів</li>}
+        </ul>
       </section>
 
       <section style={{ marginBottom: 20 }}>
