@@ -51,7 +51,12 @@ export default function ChildHomePage() {
     window.location.href = "/child/join";
   }
 
-  return (
+    function onExit() {
+    clearChildSession();
+    window.location.href = "/child/join";
+  }
+
+return (
     <div style={{ padding: 16 }}>
       <h1>Вибір гри</h1>
 
