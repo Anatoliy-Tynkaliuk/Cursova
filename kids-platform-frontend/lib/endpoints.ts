@@ -35,6 +35,255 @@ export async function createInvite(childId: number) {
   );
 }
 
+export type ChildStats = {
+  child: { id: number; name: string; ageGroupCode: string };
+  summary: {
+    totalAttempts: number;
+    finishedAttempts: number;
+    totalScore: number;
+    totalCorrect: number;
+    totalQuestions: number;
+  };
+  attempts: Array<{
+    id: number;
+    game: { id: number; title: string; moduleCode: string; gameTypeCode: string };
+    score: number;
+    correctCount: number;
+    totalCount: number;
+    isFinished: boolean;
+    createdAt: string;
+    finishedAt: string | null;
+  }>;
+};
+
+export async function getChildStats(childId: number) {
+  return api<ChildStats>(`/children/${childId}/stats`, "GET");
+}
+
+export type AdminModuleItem = {
+  id: number;
+  code: string;
+  title: string;
+  description?: string | null;
+  icon?: string | null;
+  isActive: boolean;
+};
+
+export type AdminGameTypeItem = {
+  id: number;
+  code: string;
+  title: string;
+  description?: string | null;
+  icon?: string | null;
+  isActive: boolean;
+};
+
+export type AdminAgeGroupItem = {
+  id: number;
+  code: string;
+  title: string;
+  minAge: number;
+  maxAge: number;
+  sortOrder: number;
+  isActive: boolean;
+};
+
+export type AdminGameItem = {
+  id: number;
+  title: string;
+  description?: string | null;
+  moduleId: number;
+  moduleCode: string;
+  gameTypeId: number;
+  gameTypeCode: string;
+  minAgeGroupId: number;
+  minAgeGroupCode: string;
+  difficulty: number;
+  isActive: boolean;
+};
+
+export type AdminTaskItem = {
+  id: number;
+  gameId: number;
+  gameTitle: string;
+  position: number;
+  isActive: boolean;
+};
+
+export type AdminTaskVersionItem = {
+  id: number;
+  taskId: number;
+  taskPosition: number;
+  version: number;
+  prompt: string;
+  dataJson: unknown;
+  correctJson: unknown;
+  explanation?: string | null;
+  difficulty: number;
+  isCurrent: boolean;
+};
+
+export async function getAdminModules() {
+  return api<AdminModuleItem[]>("/admin/modules", "GET");
+}
+
+export async function getAdminGameTypes() {
+  return api<AdminGameTypeItem[]>("/admin/game-types", "GET");
+}
+
+export async function getAdminAgeGroups() {
+  return api<AdminAgeGroupItem[]>("/admin/age-groups", "GET");
+}
+
+export async function getAdminGames() {
+  return api<AdminGameItem[]>("/admin/games", "GET");
+}
+
+export async function createAdminAgeGroup(payload: {
+  code: string;
+  title: string;
+  minAge: number;
+  maxAge: number;
+  sortOrder?: number;
+  isActive?: boolean;
+}) {
+  return api<{ id: number }>("/admin/age-groups", "POST", payload);
+}
+
+export async function updateAdminAgeGroup(
+  ageGroupId: number,
+  payload: {
+    code?: string;
+    title?: string;
+    minAge?: number;
+    maxAge?: number;
+    sortOrder?: number;
+    isActive?: boolean;
+  }
+) {
+  return api<{ id: number }>(`/admin/age-groups/${ageGroupId}`, "PATCH", payload);
+}
+
+export async function deleteAdminAgeGroup(ageGroupId: number) {
+  return api<{ ok: true }>(`/admin/age-groups/${ageGroupId}`, "DELETE");
+}
+
+export async function createAdminGameType(payload: {
+  code: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  isActive?: boolean;
+}) {
+  return api<{ id: number }>("/admin/game-types", "POST", payload);
+}
+
+export async function updateAdminGameType(
+  gameTypeId: number,
+  payload: {
+    code?: string;
+    title?: string;
+    description?: string;
+    icon?: string;
+    isActive?: boolean;
+  }
+) {
+  return api<{ id: number }>(`/admin/game-types/${gameTypeId}`, "PATCH", payload);
+}
+
+export async function deleteAdminGameType(gameTypeId: number) {
+  return api<{ ok: true }>(`/admin/game-types/${gameTypeId}`, "DELETE");
+}
+
+export async function getAdminTasks() {
+  return api<AdminTaskItem[]>("/admin/tasks", "GET");
+}
+
+export async function getAdminTaskVersions() {
+  return api<AdminTaskVersionItem[]>("/admin/task-versions", "GET");
+}
+
+export async function createAdminGame(payload: {
+  moduleId: number;
+  gameTypeId: number;
+  minAgeGroupId: number;
+  title: string;
+  description?: string;
+  difficulty?: number;
+  isActive?: boolean;
+}) {
+  return api<{ id: number }>("/admin/games", "POST", payload);
+}
+
+export async function createAdminTask(payload: {
+  gameId: number;
+  position: number;
+  isActive?: boolean;
+}) {
+  return api<{ id: number }>("/admin/tasks", "POST", payload);
+}
+
+export async function updateAdminTask(
+  taskId: number,
+  payload: {
+    position?: number;
+    isActive?: boolean;
+  }
+) {
+  return api<{ id: number }>(`/admin/tasks/${taskId}`, "PATCH", payload);
+}
+
+export async function deleteAdminTask(taskId: number) {
+  return api<{ ok: true }>(`/admin/tasks/${taskId}`, "DELETE");
+}
+
+export async function createAdminTaskVersion(payload: {
+  taskId: number;
+  version: number;
+  prompt: string;
+  dataJson?: unknown;
+  correctJson: unknown;
+  explanation?: string;
+  difficulty?: number;
+  isCurrent?: boolean;
+}) {
+  return api<{ id: number }>("/admin/task-versions", "POST", payload);
+}
+
+export async function updateAdminTaskVersion(
+  taskVersionId: number,
+  payload: {
+    prompt?: string;
+    dataJson?: unknown;
+    correctJson?: unknown;
+    explanation?: string;
+    difficulty?: number;
+    isCurrent?: boolean;
+  }
+) {
+  return api<{ id: number }>(`/admin/task-versions/${taskVersionId}`, "PATCH", payload);
+}
+
+export async function deleteAdminTaskVersion(taskVersionId: number) {
+  return api<{ ok: true }>(`/admin/task-versions/${taskVersionId}`, "DELETE");
+}
+
+export async function updateAdminGame(
+  gameId: number,
+  payload: {
+    title?: string;
+    description?: string;
+    difficulty?: number;
+    isActive?: boolean;
+  }
+) {
+  return api<{ id: number }>(`/admin/games/${gameId}`, "PATCH", payload);
+}
+
+export async function deleteAdminGame(gameId: number) {
+  return api<{ ok: true }>(`/admin/games/${gameId}`, "DELETE");
+}
+
 export async function joinByCode(code: string) {
   return api<{ childProfileId: number; childName: string; ageGroupCode: string }>(
     "/child/join",

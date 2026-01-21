@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { login } from "@/lib/endpoints";
 import { setToken } from "@/lib/auth";
 
@@ -9,17 +9,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErr("");
     try {
       const data = await login(email, password);
       setToken(data.accessToken);
-      window.location.href = "/children";
+      window.location.href = data.user.role === "admin" ? "/admin" : "/children";
     } catch (e: any) {
       setErr(e.message ?? "Error");
     }
   }
+
   return (
     <div className="flex min-h-[70vh] items-center justify-center p-6">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow">

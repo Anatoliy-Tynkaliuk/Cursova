@@ -17,13 +17,12 @@ export default function Home() {
         <div className="hidden items-center gap-3 md:flex">
           <a className="rounded-full px-4 py-2 text-sm font-semibold text-slate-700" href="/login">
             Увійти
-
           </a>
-      <a className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white" href="/register">
+          <a className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white" href="/register">
             Реєстрація
           </a>
         </div>
-        </header>
+      </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pb-20">
         <section className="grid items-center gap-10 rounded-3xl bg-white px-8 py-14 shadow-sm md:grid-cols-[1.2fr_0.8fr]">

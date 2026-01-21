@@ -106,6 +106,9 @@ export default function ParentChildrenPage() {
               <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
                 <button onClick={() => onSelectChild(c)}>Увійти як дитина</button>
                 <button onClick={() => onInvite(c.id)}>Створити код</button>
+                <a href={`/children/${c.id}/stats`} style={{ alignSelf: "center" }}>
+                  Статистика
+                </a>
               </div>
             </li>
           ))}

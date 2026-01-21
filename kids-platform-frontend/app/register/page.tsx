@@ -20,7 +20,7 @@ export default function RegisterPage() {
       }
       const data = await register(email, password);
       setToken(data.accessToken);
-      window.location.href = "/children";
+      window.location.href = data.user.role === "admin" ? "/admin" : "/children";
     } catch (e: any) {
       setErr(e.message ?? "Error");
     }

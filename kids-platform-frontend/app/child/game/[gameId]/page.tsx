@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
+
 export default function GamePage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
@@ -11,11 +12,13 @@ export default function GamePage() {
   const attemptIdFromUrl = search.get("attemptId");
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
 
+  const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
 
   const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
   const [msg, setMsg] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [summary, setSummary] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null);
 
   const [textAnswer, setTextAnswer] = useState("");
 
@@ -58,6 +61,7 @@ export default function GamePage() {
     const d = current?.data;
     if (!d) return [];
     if (Array.isArray(d.options)) return d.options;
+    if (Array.isArray(d.items)) return d.items;
     return [];
   }, [current]);
 
@@ -74,7 +78,12 @@ export default function GamePage() {
       });
 
       if ("finished" in res && res.finished) {
-        setMsg(`✅ Гру завершено! Score: ${res.summary?.score ?? "?"}`);
+        setSummary({
+          score: res.summary?.score ?? 0,
+          correctCount: res.summary?.correctCount ?? 0,
+          totalCount: res.summary?.totalCount ?? 0,
+        });
+        setMsg("✅ Гру завершено!");
         setTask(null);
         return;
       }
@@ -111,7 +120,20 @@ export default function GamePage() {
       {msg && <p>{msg}</p>}
 
       {!current ? (
-        <p>Нема активного завдання.</p>
+        summary ? (
+          <div style={{ border: "1px solid #333", padding: 16, borderRadius: 10, maxWidth: 420 }}>
+            <h2 style={{ marginTop: 0 }}>Результат гри</h2>
+            <p>Бали: {summary.score}</p>
+            <p>
+              Правильні відповіді: {summary.correctCount} / {summary.totalCount}
+            </p>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <button onClick={() => (window.location.href = "/child")}>До списку ігор</button>
+            </div>
+          </div>
+        ) : (
+          <p>Нема активного завдання.</p>
+        )
       ) : (
         <div style={{ border: "1px solid #333", padding: 12, borderRadius: 10 }}>
           <div style={{ fontWeight: 700, marginBottom: 10 }}>{current.prompt}</div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getGames, startAttempt, GameListItem } from "@/lib/endpoints";
+import { getGames, GameListItem } from "@/lib/endpoints";
 import Link from "next/link";
 import { getChildSession, clearChildSession } from "@/lib/auth";
 
@@ -41,16 +41,14 @@ export default function ChildHomePage() {
     }
   }, [ageGroupCode]);
 
-  async function onStart(gameId: number) {
+  function onStart(gameId: number) {
     if (!childProfileId) return;
-    setError(null);
-    try {
-      const res = await startAttempt(childProfileId, gameId);
-      // переходимо на сторінку гри
-      window.location.href = `/child/game/${res.game.id}?attemptId=${res.attemptId}`;
-    } catch (e: any) {
-      setError(e.message ?? "Error");
-    }
+    window.location.href = `/child/game/${gameId}`;
+  }
+
+  function onExit() {
+    clearChildSession();
+    window.location.href = "/child/join";
   }
 
     function onExit() {
@@ -67,8 +65,6 @@ return (
         <button onClick={() => ageGroupCode && load(ageGroupCode)} disabled={loading || !ageGroupCode}>
           {loading ? "Завантажую..." : "Оновити"}
         </button>
-
-
         <Link href="/">На головну</Link>
       </div>
 

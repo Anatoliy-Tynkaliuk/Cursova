@@ -133,4 +133,64 @@ export class ChildrenService {
       ageGroupCode: invite.child.ageGroup.code,
     };
   }
+
+  async getStats(user: any, childId: number) {
+    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+
+    const child = await this.prisma.childProfile.findUnique({
+      where: { id: BigInt(childId) },
+      include: { ageGroup: true },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    if (user.role === "parent") {
+      const link = await this.prisma.parentChild.findUnique({
+        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+      });
+      if (!link) throw new ForbiddenException("Not your child");
+    }
+
+    const attempts = await this.prisma.attempt.findMany({
+      where: { childProfileId: child.id },
+      include: { game: { include: { module: true, gameType: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    const totalAttempts = attempts.length;
+    const finishedAttempts = attempts.filter((a) => a.isFinished).length;
+    const totalScore = attempts.reduce((acc, a) => acc + a.score, 0);
+    const totalCorrect = attempts.reduce((acc, a) => acc + a.correctCount, 0);
+    const totalQuestions = attempts.reduce((acc, a) => acc + a.totalCount, 0);
+
+    return {
+      child: {
+        id: Number(child.id),
+        name: child.name,
+        ageGroupCode: child.ageGroup.code,
+      },
+      summary: {
+        totalAttempts,
+        finishedAttempts,
+        totalScore,
+        totalCorrect,
+        totalQuestions,
+      },
+      attempts: attempts.map((a) => ({
+        id: Number(a.id),
+        game: {
+          id: Number(a.game.id),
+          title: a.game.title,
+          moduleCode: a.game.module.code,
+          gameTypeCode: a.game.gameType.code,
+        },
+        score: a.score,
+        correctCount: a.correctCount,
+        totalCount: a.totalCount,
+        isFinished: a.isFinished,
+        createdAt: a.createdAt,
+        finishedAt: a.finishedAt,
+      })),
+    };
+  }
 }
