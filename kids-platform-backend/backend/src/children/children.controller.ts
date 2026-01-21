@@ -28,6 +28,13 @@ export class ChildrenController {
     return this.children.createInvite(req.user, Number(id));
   }
 
+  // parent/admin: статистика дитини
+  @UseGuards(JwtGuard)
+  @Get("children/:id/stats")
+  stats(@Req() req: any, @Param("id") id: string) {
+    return this.children.getStats(req.user, Number(id));
+  }
+
   // child: вхід по коду (без JWT)
   @Post("child/join")
   join(@Body() body: { code: string }) {
