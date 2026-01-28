@@ -7,7 +7,8 @@
 .wrapper {
   position: relative;
   min-height: 100vh;
-  overflow: hidden;
+  overflow: clip;
+  
 }
 
 .background {
@@ -33,11 +34,11 @@
 .headerInner {
   margin: 0 auto;
   display: flex;
-  width: 100%;
+  width: 70%;
   max-width: 72rem;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
   padding: 16px 20px;
 }
 
@@ -95,7 +96,7 @@
 .helpButton {
   display: none;
   height: 36px;
-  width: 36px;
+  width: 70px;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
@@ -109,6 +110,7 @@
   border-radius: 9999px;
   background: linear-gradient(90deg, #a3e635, #22c55e);
   padding: 8px 16px;
+  margin-left: 15%;
   font-size: 13px;
   font-weight: 600;
   color: #1a0828;
@@ -120,11 +122,11 @@
   z-index: 10;
   margin: 0 auto;
   display: flex;
-  width: 100%;
+  width: 80%;
   max-width: 64rem;
   flex-direction: column;
   gap: 32px;
-  padding: 28px 20px 56px;
+  padding: 28px clamp(16px, 4vw, 32px) 56px;
 }
 
 .hero {
@@ -144,21 +146,48 @@
 .heroDecorLeft,
 .heroDecorRight {
   position: absolute;
-  top: 24px;
-  display: none;
-  height: 72px;
-  width: 72px;
+  top: 12px;
+  height: 150px;
+  width: 100px;
   filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.35));
+  opacity: 0.95;
+  pointer-events: none;
 }
 
-.heroDecorLeft {
-  left: -72px;
-  transform: rotate(-12deg);
-}
 
+.heroDecorLeft,
 .heroDecorRight {
-  right: -64px;
-  transform: rotate(6deg);
+  display: none;
+}
+
+
+/* Показуємо на планшеті і вище */
+@media (min-width: 768px) {
+  .heroDecorLeft,
+  .heroDecorRight {
+    display: block;
+  }
+
+  /* Замість мінусів — ставимо відступи в межах контейнера */
+  .heroDecorLeft {
+    left: clamp(8px, 2vw, 24px);
+    transform: rotate(-12deg);
+  }
+
+  .heroDecorRight {
+    right: clamp(8px, 2vw, 24px);
+    transform: rotate(6deg);
+  }
+}
+
+/* На великих — можна трохи винести назовні, але без обрізання */
+@media (min-width: 1024px) {
+  .heroDecorLeft {
+    left: -24px;
+  }
+  .heroDecorRight {
+    right: -24px;
+  }
 }
 
 .heroTitle {
@@ -183,8 +212,6 @@
   font-weight: 600;
   color: #1a0828;
   box-shadow: 0 12px 20px rgba(132, 204, 22, 0.3);
-  width: min(100%, 260px);
-  text-align: center;
 }
 
 .buttonPurple {
@@ -195,19 +222,20 @@
   font-weight: 600;
   color: #ffffff;
   box-shadow: 0 12px 20px rgba(217, 70, 239, 0.3);
-  width: min(100%, 280px);
-  text-align: center;
 }
 
 .featuresCard {
-  border-radius: 32px;
+  max-width: 100%;
+  margin-inline: auto;
+  border-radius: 24px;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(43, 18, 68, 0.7);
-  padding: 28px 20px;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(12px);
 }
+
 
 .featuresTitle {
   font-size: 16px;
@@ -219,25 +247,23 @@
   margin-top: 20px;
   display: grid;
   gap: 24px;
-  text-align: left;
+  justify-items: center;
 }
 
 .featureItem {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .featureIcon {
-  height: 54px;
-  width: 54px;
+  height: 115px;
+  width: 80px;
 }
 
 .featureText {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 1.3;
 }
 
 .footer {
@@ -257,8 +283,10 @@
   max-width: 64rem;
   flex-direction: column;
   gap: 20px;
-}
 
+  align-items: center;
+  text-align: center;
+}
 .footerLogo {
   display: flex;
   align-items: center;
@@ -266,6 +294,7 @@
   font-size: 15px;
   font-weight: 600;
   color: #ffffff;
+  justify-content: center;
 }
 
 .footerHeading {
@@ -278,7 +307,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  word-break: break-word;
 }
 
 .footerLinks a {
@@ -293,6 +321,7 @@
   display: flex;
   gap: 10px;
   font-size: 16px;
+  justify-content: center;
 }
 
 .footerSocial {
@@ -306,13 +335,11 @@
 }
 
 @media (min-width: 480px) {
-  .heroActions {
-    flex-direction: row;
-  }
 
   .headerInner {
     padding: 18px 24px;
   }
+
 
   .logoBadge {
     height: 38px;
@@ -332,43 +359,17 @@
   .buttonPurple {
     padding: 11px 24px;
     font-size: 13.5px;
-    width: auto;
   }
 
   .featureIcon {
-    height: 58px;
-    width: 58px;
+    height: 65px;
+    width: 45px;
   }
+
+  .featureText {
+  font-size: 16px;
+  font-weight: 600;
 }
-
-@media (max-width: 420px) {
-  .headerInner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .headerActions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .heroActions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .featuresGrid {
-    gap: 16px;
-  }
-
-  .featureItem {
-    gap: 12px;
-  }
-
-  .featureIcon {
-    height: 48px;
-    width: 48px;
-  }
 }
 
 @media (min-width: 640px) {
@@ -393,6 +394,7 @@
   color: #e9d5ff;
 }
 
+
 @media (min-width: 768px) {
   .nav {
     display: flex;
@@ -415,11 +417,27 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .footerInner {
+.footerInner {
     flex-direction: row;
-    align-items: flex-start;
     justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
   }
+
+.footerLogo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+.footerSocials {
+  display: flex;
+  gap: 10px;
+  font-size: 16px;
+}
+
 }
 
 @media (min-width: 1024px) {
@@ -442,19 +460,7 @@
     padding: 36px 32px 72px;
   }
 
-  .heroDecorLeft,
-  .heroDecorRight {
-    height: 96px;
-    width: 96px;
-  }
 
-  .heroDecorLeft {
-    left: -96px;
-  }
-
-  .heroDecorRight {
-    right: -80px;
-  }
 
   .heroTitle {
     font-size: 38px;
@@ -465,8 +471,8 @@
   }
 
   .featureIcon {
-    height: 64px;
-    width: 64px;
+    height: 115px;
+    width: 80px;
   }
 
   .featureText {
