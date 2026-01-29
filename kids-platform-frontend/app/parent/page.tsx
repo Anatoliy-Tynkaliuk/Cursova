@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "../parent/parent-dashboard.module.css";
 
-import { getChildren, createChild, createInvite } from "@/lib/endpoints";
+import { getChildren, createChild, createInvite, deleteChild } from "@/lib/endpoints";
 import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
 
 type Child = { id: number; name: string; ageGroupCode: string };
@@ -69,6 +69,21 @@ export default function ParentChildrenPage() {
       const r = await createInvite(childId);
       setInviteCode(r.code);
       setMsg("Код створено. Дай його дитині для входу.");
+    } catch (e: any) {
+      setErr(e.message ?? "Error");
+    }
+  }
+
+  async function onDeleteChild(childId: number, childName: string) {
+    const confirmed = window.confirm(`Видалити профіль дитини "${childName}"? Це дію не можна скасувати.`);
+    if (!confirmed) return;
+    setErr("");
+    setMsg("");
+    setInviteCode("");
+    try {
+      await deleteChild(childId);
+      setMsg(`Профіль "${childName}" видалено.`);
+      await load();
     } catch (e: any) {
       setErr(e.message ?? "Error");
     }

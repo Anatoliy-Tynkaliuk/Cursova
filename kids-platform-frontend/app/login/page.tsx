@@ -15,7 +15,7 @@ export default function LoginPage() {
     try {
       const data = await login(email, password);
       setToken(data.accessToken);
-      window.location.href = data.user.role === "admin" ? "/admin" : "/children";
+      window.location.href = data.user.role === "admin" ? "/admin" : "/parent";
     } catch (e: any) {
       setErr(e.message ?? "Error");
     }

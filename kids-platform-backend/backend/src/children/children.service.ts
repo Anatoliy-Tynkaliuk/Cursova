@@ -238,4 +238,28 @@ export class ChildrenService {
       })),
     };
   }
+
+  async deleteChild(user: any, childId: number) {
+    if (user.role !== "parent" && user.role !== "admin") {
+      throw new ForbiddenException("Only parent/admin");
+    }
+
+    const child = await this.prisma.childProfile.findUnique({
+      where: { id: BigInt(childId) },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    if (user.role === "parent") {
+      const link = await this.prisma.parentChild.findUnique({
+        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+      });
+      if (!link) throw new ForbiddenException("Not your child");
+    }
+
+    await this.prisma.childProfile.delete({
+      where: { id: child.id },
+    });
+
+    return { ok: true };
+  }
 }

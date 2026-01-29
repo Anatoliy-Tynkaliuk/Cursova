@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { JwtGuard } from "../auth/jwt.guard";
 import { ChildrenService } from "./children.service";
 import { CreateChildDto } from "./dto";
@@ -40,5 +40,12 @@ export class ChildrenController {
   @Get("children/:id/badges")
   badges(@Req() req: any, @Param("id") id: string) {
     return this.children.getBadges(req.user, Number(id));
+  }
+
+  // parent/admin: видалити дитину
+  @UseGuards(JwtGuard)
+  @Delete("children/:id")
+  remove(@Req() req: any, @Param("id") id: string) {
+    return this.children.deleteChild(req.user, Number(id));
   }
 }
