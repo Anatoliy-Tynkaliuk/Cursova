@@ -35,6 +35,10 @@ export async function createInvite(childId: number) {
   );
 }
 
+export async function deleteChild(childId: number) {
+  return api<{ ok: true }>(`/children/${childId}`, "DELETE");
+}
+
 export type ChildStats = {
   child: { id: number; name: string; ageGroupCode: string };
   summary: {

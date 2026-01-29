@@ -54,7 +54,7 @@ export default function ChildStatsPage() {
     <div style={{ padding: 16, maxWidth: 900 }}>
       <h1>Статистика дитини</h1>
       <div style={{ marginBottom: 12 }}>
-        <Link href="/children">← Назад до кабінету</Link>
+        <Link href="/parent">← Назад до кабінету</Link>
       </div>
 
       {loading && <p>Завантаження...</p>}
