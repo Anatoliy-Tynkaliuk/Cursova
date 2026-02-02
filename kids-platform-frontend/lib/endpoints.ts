@@ -1,10 +1,10 @@
 import { api } from "./api";
 
-export async function register(email: string, password: string) {
+export async function register(email: string, username: string, password: string) {
   return api<{ accessToken: string; user: { id: number; email: string; role: string } }>(
     "/auth/register",
     "POST",
-    { email, password }
+    { email, username, password }
   );
 }
 

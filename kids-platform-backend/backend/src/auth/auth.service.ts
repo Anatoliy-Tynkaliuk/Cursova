@@ -10,14 +10,16 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const email = dto.email.trim().toLowerCase();
+    const username = dto.username.trim();
 
     const exists = await this.prisma.user.findUnique({ where: { email } });
     if (exists) throw new BadRequestException("Email already in use");
+    if (!username) throw new BadRequestException("Username is required");
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const user = await this.prisma.user.create({
-      data: { email, passwordHash, role: "parent" },
+      data: { email, username, passwordHash, role: "parent" },
     });
 
     const payload = { sub: user.id.toString(), role: user.role, email: user.email };
