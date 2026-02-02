@@ -6,6 +6,7 @@ import { register } from "@/lib/endpoints";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [err, setErr] = useState("");
@@ -18,7 +19,7 @@ export default function RegisterPage() {
         setErr("Паролі не співпадають");
         return;
       }
-      const data = await register(email, password);
+      const data = await register(email, username, password);
       setToken(data.accessToken);
       window.location.href = data.user.role === "admin" ? "/admin" : "/parent";
     } catch (e: any) {
@@ -41,6 +42,14 @@ export default function RegisterPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className="rounded-lg border border-gray-300 px-3 py-2"
+            placeholder="Username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
           <input

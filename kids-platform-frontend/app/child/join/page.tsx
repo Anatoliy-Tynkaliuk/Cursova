@@ -14,7 +14,7 @@ export default function JoinPage() {
       const data = await joinByCode(code);
       localStorage.setItem("childProfileId", String(data.childProfileId));
       localStorage.setItem("ageGroupCode", data.ageGroupCode);
-      window.location.href = "/child";
+      window.location.href = "/child/subjects";
     } catch (e: any) {
       setMsg(e.message ?? "Error");
     }
