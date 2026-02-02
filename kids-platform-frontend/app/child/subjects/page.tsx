@@ -1,109 +1,117 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import styles from "./ChildSubjectsPage.module.css";
 
-const subjects = [
+type Subject = {
+  key: "logic" | "math" | "english";
+  title: string;
+  image: string;
+  href: string;
+};
+
+const subjects: Subject[] = [
   {
+    key: "logic",
     title: "Планета Логіки",
-    color: "from-purple-500 to-indigo-600",
-    emoji: "🪐",
+    image: "/Child_menu/planet_of_logics.png",
+    href: "/child/subjects/logics",
   },
   {
+    key: "math",
     title: "Планета Математика",
-    color: "from-orange-400 to-red-500",
-    emoji: "🌟",
+    image: "/Child_menu/planet_mathematic.png",
+    href: "/child/subjects/math",
   },
   {
+    key: "english",
     title: "Планета Англійська",
-    color: "from-blue-500 to-violet-600",
-    emoji: "🚀",
+    image: "/Child_menu/planet_english_languages.png",
+    href: "/child/subjects/english",
   },
 ];
 
 const stats = [
-  { label: "Рівень", value: "3", icon: "⭐️" },
-  { label: "Зірочок", value: "45", icon: "🌟" },
-  { label: "Досягнень", value: "5", icon: "🏆" },
+  { label: "Рівень", value: "3", icon: "⭐" },
+  { label: "Зірочки", value: "45", icon: "✨" },
+  { label: "Досягнення", value: "5", icon: "🏆" },
 ];
 
 export default function ChildSubjectsPage() {
+  const childName = "Марійко";
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1c1434] via-[#2a1a4d] to-[#35205a] px-4 py-8 text-white">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-2">
-            <p className="text-sm text-white/70">Твоя космічна подорож починається тут</p>
-            <h1 className="text-3xl font-extrabold text-white sm:text-4xl">
-              Привіт, Марійко!
-            </h1>
-          </div>
-          <Link
-            href="/child"
-            className="rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10"
-          >
-            Назад до ігор
+    <div className={styles.page}>
+      <Image
+        src="/Child_menu/background.png"
+        alt="space background"
+        fill
+        priority
+        className={styles.bgImg}
+      />
+      <div className={styles.overlay} />
+
+      <div className={styles.container}>
+        <header className={styles.topBar}>
+          <div className={styles.topTitle}>Меню дитини</div>
+
+          <Link href="/child" className={styles.backBtn}>
+            ← Назад
           </Link>
+        
         </header>
 
-        <section className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur">
-          <h2 className="text-lg font-semibold text-white/90">Обери планету знань</h2>
-          <p className="text-sm text-white/60">
-            Натисни на предмет, щоб розпочати подорож.
-          </p>
+        <h1 className={styles.greeting}>Привіт, {childName}!</h1>
+        <section className={styles.panel}>
+          <div className={styles.planetsGrid}>
+            {subjects.map((s) => (
+              <Link key={s.key} href={s.href} className={styles.planetCard}>
+                <Image src={s.image} alt={s.title} fill className={styles.planetBg} />
+                <div className={styles.planetOverlay} />
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {subjects.map((subject) => (
-              <button
-                key={subject.title}
-                className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 text-left transition hover:-translate-y-1 hover:border-white/30 hover:bg-white/10"
-                type="button"
-              >
-                <div
-                  className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${subject.color}`}
-                />
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${subject.color} text-3xl shadow-lg`}
-                  >
-                    {subject.emoji}
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold text-white">{subject.title}</div>
-                    <div className="text-sm text-white/60">Почати пригоди</div>
-                  </div>
+                <div className={styles.planetContent}>
+                  <div className={styles.planetTitle}>{s.title}</div>
+                  <div className={styles.planetHint}>Натисни, щоб почати</div>
                 </div>
-              </button>
+              </Link>
             ))}
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-white/10 bg-white/5 px-6 py-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.label} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg">
-                    {stat.icon}
-                  </div>
-                  <div>
-                    <div className="text-sm text-white/60">{stat.label}</div>
-                    <div className="text-xl font-bold text-white">{stat.value}</div>
-                  </div>
+        <section className={styles.statsPanel}>
+          <div className={styles.statsGrid}>
+            {stats.map((st) => (
+              <div key={st.label} className={styles.statCard}>
+                <div className={styles.statIcon}>{st.icon}</div>
+                <div className={styles.statText}>
+                  <div className={styles.statLabel}>{st.label}</div>
+                  <div className={styles.statValue}>{st.value}</div>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="flex flex-col gap-6 rounded-[28px] border border-white/10 bg-white/5 p-6 sm:flex-row sm:items-center">
-          <div className="flex h-32 w-32 items-center justify-center rounded-[24px] bg-gradient-to-br from-pink-400/70 via-purple-500/70 to-indigo-500/70 text-6xl shadow-lg">
-            👩‍🚀
-          </div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold">Нові місії вже чекають</h3>
-            <p className="text-sm text-white/70">
-              Досліджуй планети, збирай зірочки й відкривай нові досягнення.
-            </p>
+        <section className={styles.bottom}>
+          <div className={styles.bottomCard}>
+            <div className={styles.bottomTitle}>Нові місії вже чекають 🚀</div>
+
+            <div className={styles.bottomText}>
+              Обирай планету, збирай зірочки та відкривай нові досягнення!
+            </div>
+
+            <div className={styles.bottomLinks}>
+              <Link href="/child/achievements" className={styles.smallBtn}>
+                Досягнення
+              </Link>
+              <Link href="/child/profile" className={styles.smallBtn}>
+                Профіль
+              </Link>
+              <Link href="/child/settings" className={styles.smallBtn}>
+                Налаштування
+              </Link>
+            </div>
           </div>
         </section>
       </div>
