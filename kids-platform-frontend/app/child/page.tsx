@@ -85,6 +85,7 @@ export default function ChildHomePage() {
         <button onClick={() => ageGroupCode && load(ageGroupCode)} disabled={loading || !ageGroupCode}>
           {loading ? "Завантажую..." : "Оновити"}
         </button>
+        <Link href="/child/subjects">До меню планет</Link>
         <Link href="/">На головну</Link>
       </div>
 

@@ -90,8 +90,8 @@ export default function ParentChildrenPage() {
   }
 
   function onSelectChild(c: Child) {
-    setChildSession(c.id, c.ageGroupCode);
-    window.location.href = "/child";
+    setChildSession(c.id, c.ageGroupCode, c.name);
+    window.location.href = "/child/subjects";
   }
 
   function onLogout() {
