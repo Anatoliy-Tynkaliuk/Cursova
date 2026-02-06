@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { joinByCode } from "@/lib/endpoints";
-
+import { setChildSession } from "@/lib/auth";
 
 export default function JoinPage() {
   const [code, setCode] = useState("");
@@ -12,8 +12,7 @@ export default function JoinPage() {
     setMsg("");
     try {
       const data = await joinByCode(code);
-      localStorage.setItem("childProfileId", String(data.childProfileId));
-      localStorage.setItem("ageGroupCode", data.ageGroupCode);
+      setChildSession(data.childProfileId, data.ageGroupCode, data.childName);
       window.location.href = "/child/subjects";
     } catch (e: any) {
       setMsg(e.message ?? "Error");

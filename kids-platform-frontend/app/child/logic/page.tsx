@@ -4,16 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./logic.module.css";
 import { useEffect, useMemo, useState } from "react";
+import { getChildSession } from "@/lib/auth";
+import { getChildBadgesPublic, getGames, type ChildBadgeItem } from "@/lib/endpoints";
 
 type ChildStats = {
   level: number;
   stars: number;
   achievements: number;
-};
-
-type PlanetLogicResponse = {
-  childName: string;
-  stats: ChildStats;
 };
 
 type ModeCard = {
@@ -26,34 +23,49 @@ type ModeCard = {
 };
 
 export default function LogicPlanetPage() {
-  const [data, setData] = useState<PlanetLogicResponse | null>(null);
+  const [childName, setChildName] = useState("Друже");
+  const [stats, setStats] = useState<ChildStats>({ level: 1, stars: 0, achievements: 0 });
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 1) ПІДСТАВ СВІЙ BACKEND ENDPOINT
-  // Наприклад: /api/child/planet/logic або http://localhost:3001/api/child/logic
-  const endpoint = "/api/child/planet/logic";
-
   useEffect(() => {
-  const loadData = async () => {
-    try {
-      const res = await fetch("/api/child/planet/logic", {
-        credentials: "include", // якщо auth через cookie/session
-      });
-
-      if (!res.ok) throw new Error("Backend error");
-
-      const json = await res.json();
-      setData(json);
-
-    } catch (error) {
-      console.error("Failed to load child data:", error);
-    } finally {
-      setLoading(false);
+    const session = getChildSession();
+    if (!session.childProfileId || !session.ageGroupCode) {
+      window.location.href = "/child/join";
+      return;
     }
-  };
 
-  loadData();
-}, []);
+    setChildName(session.childName || "Друже");
+
+    const loadData = async () => {
+      try {
+        const [badgeData, gamesData] = await Promise.all([
+          getChildBadgesPublic(session.childProfileId!),
+          getGames(session.ageGroupCode!),
+        ]);
+
+        const finishedAttempts = badgeData.finishedAttempts;
+        const earnedBadges = badgeData.badges.filter((badge: ChildBadgeItem) => badge.isEarned).length;
+        const availableLogicGames = gamesData.filter((game) => game.moduleCode === "logic").length;
+
+        setStats({
+          level: Math.max(1, Math.floor(finishedAttempts / 5) + 1),
+          stars: finishedAttempts,
+          achievements: earnedBadges,
+        });
+
+        if (availableLogicGames === 0) {
+          setError("Поки немає доступних ігор з логіки для цієї вікової групи.");
+        }
+      } catch (err: any) {
+        setError(err.message ?? "Error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
 
   const modes: ModeCard[] = useMemo(
@@ -83,10 +95,6 @@ export default function LogicPlanetPage() {
     []
   );
 
-  const childName = data?.childName || "";
-
-  const stats = data?.stats ?? { level: 0, stars: 0, achievements: 0 };
-
   return (
     <div className={styles.page}>
       {/* BACKGROUND */}
@@ -95,7 +103,7 @@ export default function LogicPlanetPage() {
 
       {/* TOP BAR */}
       <header className={styles.topBar}>
-        <Link href="/child" className={styles.backBtn}>
+        <Link href="/child/subjects" className={styles.backBtn}>
           <span className={styles.backIcon}>←</span>
           Назад
         </Link>
@@ -193,6 +201,8 @@ export default function LogicPlanetPage() {
             </div>
           </div>
         </section>
+
+        {error && <p className={styles.subtitle}>{error}</p>}
 
         {/* DECOR PLANET (нижній правий як на фото) */}
         <div className={styles.cornerPlanet}>
