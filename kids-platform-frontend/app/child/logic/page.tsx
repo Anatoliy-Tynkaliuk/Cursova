@@ -120,7 +120,7 @@ export default function LogicPlanetPage() {
                   {/* Тут можеш підключити свої PNG з планетами/іконками */}
                   {m.icon === "logic" && (
                     <Image
-                      src="/assets/planets/logic-planet.png"
+                      src="/Planeta_logika/background_games_match.png"
                       alt="Зіставлення"
                       width={260}
                       height={200}
@@ -131,7 +131,7 @@ export default function LogicPlanetPage() {
 
                   {m.icon === "test" && (
                     <Image
-                      src="/assets/icons/test-clipboard.png"
+                      src="/Planeta_logika/background_games_test.png"
                       alt="Тест"
                       width={260}
                       height={200}
@@ -141,7 +141,7 @@ export default function LogicPlanetPage() {
 
                   {m.icon === "drag" && (
                     <Image
-                      src="/assets/icons/drag-chest.png"
+                      src="/Planeta_logika/background_games_dragging.png"
                       alt="Перетягування"
                       width={260}
                       height={200}
