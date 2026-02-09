@@ -5,7 +5,7 @@ import Link from "next/link";
 import styles from "./logic.module.css";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
-import { getChildBadgesPublic, getGames, type ChildBadgeItem } from "@/lib/endpoints";
+import { getChildBadgesPublic, getGames, type ChildBadgeItem, type GameListItem } from "@/lib/endpoints";
 
 type ChildStats = {
   level: number;
@@ -13,20 +13,18 @@ type ChildStats = {
   achievements: number;
 };
 
-type ModeCard = {
-  key: "match" | "test" | "drag";
-  title: string;
-  subtitle: string;
-  href: string;
-  // локальні іконки/картинки (можеш замінити на свої)
-  icon: "logic" | "test" | "drag";
-};
+const cardImages = [
+  "/Planeta_logika/background_games_match.png",
+  "/Planeta_logika/background_games_test.png",
+  "/Planeta_logika/background_games_dragging.png",
+];
 
 export default function LogicPlanetPage() {
   const [childName, setChildName] = useState("Друже");
   const [stats, setStats] = useState<ChildStats>({ level: 1, stars: 0, achievements: 0 });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [games, setGames] = useState<GameListItem[]>([]);
 
   useEffect(() => {
     const session = getChildSession();
@@ -46,7 +44,8 @@ export default function LogicPlanetPage() {
 
         const finishedAttempts = badgeData.finishedAttempts;
         const earnedBadges = badgeData.badges.filter((badge: ChildBadgeItem) => badge.isEarned).length;
-        const availableLogicGames = gamesData.filter((game) => game.moduleCode === "logic").length;
+        const logicGames = gamesData.filter((game) => game.moduleCode === "logic");
+        setGames(logicGames);
 
         setStats({
           level: Math.max(1, Math.floor(finishedAttempts / 5) + 1),
@@ -54,7 +53,7 @@ export default function LogicPlanetPage() {
           achievements: earnedBadges,
         });
 
-        if (availableLogicGames === 0) {
+        if (logicGames.length === 0) {
           setError("Поки немає доступних ігор з логіки для цієї вікової групи.");
         }
       } catch (err: any) {
@@ -68,32 +67,7 @@ export default function LogicPlanetPage() {
   }, []);
 
 
-  const modes: ModeCard[] = useMemo(
-    () => [
-      {
-        key: "match",
-        title: "Зіставлення",
-        subtitle: "Знаходь пари предметів",
-        href: "/child/logic/match",
-        icon: "logic",
-      },
-      {
-        key: "test",
-        title: "Тест",
-        subtitle: "Відповідай на запитання",
-        href: "/child/logic/test",
-        icon: "test",
-      },
-      {
-        key: "drag",
-        title: "Перетягування",
-        subtitle: "Переміщай елементи",
-        href: "/child/logic/drag",
-        icon: "drag",
-      },
-    ],
-    []
-  );
+  const emptyState = useMemo(() => !loading && games.length === 0, [games.length, loading]);
 
   return (
     <div className={styles.page}>
@@ -119,57 +93,37 @@ export default function LogicPlanetPage() {
           </p>
         </div>
 
-        {/* MODE CARDS */}
+        {/* GAME CARDS */}
         <section className={styles.cardsWrap}>
-          {modes.map((m) => (
-            <div key={m.key} className={styles.card}>
+          {games.map((game, index) => (
+            <div key={game.id} className={styles.card}>
               <div className={styles.cardInner}>
                 <div className={styles.cardArt}>
-                  {/* Тут можеш підключити свої PNG з планетами/іконками */}
-                  {m.icon === "logic" && (
-                    <Image
-                      src="/Planeta_logika/background_games_match.png"
-                      alt="Зіставлення"
-                      width={260}
-                      height={200}
-                      className={styles.cardImg}
-                      priority
-                    />
-                  )}
-
-                  {m.icon === "test" && (
-                    <Image
-                      src="/Planeta_logika/background_games_test.png"
-                      alt="Тест"
-                      width={260}
-                      height={200}
-                      className={styles.cardImg}
-                    />
-                  )}
-
-                  {m.icon === "drag" && (
-                    <Image
-                      src="/Planeta_logika/background_games_dragging.png"
-                      alt="Перетягування"
-                      width={260}
-                      height={200}
-                      className={styles.cardImg}
-                    />
-                  )}
+                  <Image
+                    src={cardImages[index % cardImages.length]}
+                    alt={game.title}
+                    width={260}
+                    height={200}
+                    className={styles.cardImg}
+                    priority={index === 0}
+                  />
                 </div>
 
                 <div className={styles.cardText}>
-                  <h3 className={styles.cardTitle}>{m.title}</h3>
-                  <p className={styles.cardSubtitle}>{m.subtitle}</p>
+                  <h3 className={styles.cardTitle}>{game.title}</h3>
+                  <p className={styles.cardSubtitle}>Складність: {game.difficulty}</p>
                 </div>
 
-                <Link href={m.href} className={styles.playBtn}>
+                <Link href={`/child/game/${game.id}`} className={styles.playBtn}>
                   Грати
                 </Link>
               </div>
             </div>
           ))}
         </section>
+
+        {emptyState && <p className={styles.subtitle}>Поки немає доступних ігор.</p>}
+        {error && <p className={styles.subtitle}>{error}</p>}
 
         {/* STATS BAR */}
         <section className={styles.statsBar}>
@@ -202,12 +156,11 @@ export default function LogicPlanetPage() {
           </div>
         </section>
 
-        {error && <p className={styles.subtitle}>{error}</p>}
 
         {/* DECOR PLANET (нижній правий як на фото) */}
         <div className={styles.cornerPlanet}>
           <Image
-            src="/assets/planets/logic-planet.png"
+            src="/Child_menu/planet_of_logic.png"
             alt="Logic Planet"
             width={260}
             height={220}

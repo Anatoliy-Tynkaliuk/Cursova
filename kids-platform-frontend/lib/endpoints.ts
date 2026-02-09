@@ -50,7 +50,7 @@ export type ChildStats = {
   };
   attempts: Array<{
     id: number;
-    game: { id: number; title: string; moduleCode: string; gameTypeCode: string };
+    game: { id: number; title: string; moduleCode: string };
     score: number;
     correctCount: number;
     totalCount: number;
@@ -360,7 +360,6 @@ export type GameListItem = {
   id: number;
   title: string;
   moduleCode: string;
-  gameTypeCode: string;
   minAgeGroupCode: string;
   difficulty: number;
 };
@@ -371,11 +370,10 @@ export async function getGames(ageGroupCode: string) {
 
 export type StartAttemptResponse = {
   attemptId: number;
-  game: { id: number; title: string; moduleCode: string; gameTypeCode: string };
+  game: { id: number; title: string; moduleCode: string };
   task: {
     taskId: number;
     position: number;
-    type: string;
     taskVersion: { id: number; prompt: string; data: any };
   };
 };

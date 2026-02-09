@@ -4,7 +4,6 @@ export type Game = {
   id: number;
   title: string;
   moduleCode: string;     // зробили string, щоб можна було додавати нові предмети без змін
-  gameTypeCode: string;   // теж string
 };
 
 export type TaskVersion = {
@@ -16,7 +15,6 @@ export type TaskVersion = {
 export type TaskDTO = {
   taskId: number;
   taskVersion: TaskVersion;
-  type: string; // code з game_types
 };
 
 export type AttemptStartResponse = {

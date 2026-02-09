@@ -90,7 +90,6 @@ export default function GamePage() {
       setTask({
         taskId: next.taskId,
         position: next.position,
-        type: "choose_answer",
         taskVersion: {
           id: next.taskVersion.id,
           prompt: next.taskVersion.prompt,

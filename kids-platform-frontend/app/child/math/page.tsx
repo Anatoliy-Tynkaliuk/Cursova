@@ -1,16 +1,30 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getChildBadgesPublic, getGames, type ChildBadgeItem, type GameListItem } from "@/lib/endpoints";
+import styles from "./math.module.css";
+import { getChildBadgesPublic, getGames, type GameListItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 
+const cardImages = [
+  "/Planeta_logika/background_games_match.png",
+  "/Planeta_logika/background_games_test.png",
+  "/Planeta_logika/background_games_dragging.png",
+];
+
+type ChildStats = {
+  level: number;
+  stars: number;
+  achievements: number;
+};
+
 export default function MathPlanetPage() {
-  const [games, setGames] = useState<GameListItem[]>([]);
-  const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
-  const [finishedAttempts, setFinishedAttempts] = useState(0);
   const [childName, setChildName] = useState("Друже");
+  const [stats, setStats] = useState<ChildStats>({ level: 1, stars: 0, achievements: 0 });
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [games, setGames] = useState<GameListItem[]>([]);
 
   useEffect(() => {
     const session = getChildSession();
@@ -27,54 +41,118 @@ export default function MathPlanetPage() {
           getGames(session.ageGroupCode!),
           getChildBadgesPublic(session.childProfileId!),
         ]);
-        setGames(gamesData);
-        setBadges(badgeData.badges);
-        setFinishedAttempts(badgeData.finishedAttempts);
+        const mathGames = gamesData.filter((game) => game.moduleCode === "math");
+        setGames(mathGames);
+        const earnedBadges = badgeData.badges.filter((badge) => badge.isEarned).length;
+        setStats({
+          level: Math.max(1, Math.floor(badgeData.finishedAttempts / 5) + 1),
+          stars: badgeData.finishedAttempts,
+          achievements: earnedBadges,
+        });
       } catch (e: any) {
         setError(e.message ?? "Error");
+      } finally {
+        setLoading(false);
       }
     }
 
     load().catch((e: any) => setError(e.message ?? "Error"));
   }, []);
 
-  const mathGames = useMemo(() => games.filter((game) => game.moduleCode === "math"), [games]);
-  const earnedBadges = useMemo(() => badges.filter((badge) => badge.isEarned).length, [badges]);
+  const emptyState = useMemo(() => !loading && games.length === 0, [games.length, loading]);
 
   return (
-    <div style={{ padding: 16, maxWidth: 900 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-        <h1 style={{ margin: 0 }}>Планета Математика</h1>
-        <Link href="/child/subjects">← Назад до меню</Link>
+    <div className={styles.page}>
+      <div className={styles.bg} />
+      <div className={styles.overlay} />
+
+      <header className={styles.topBar}>
+        <Link href="/child/subjects" className={styles.backBtn}>
+          <span className={styles.backIcon}>←</span>
+          Назад
+        </Link>
       </header>
 
-      <p>Привіт, {childName}! Тут зібрані ігри з математики для твоєї вікової групи.</p>
+      <main className={styles.container}>
+        <div className={styles.hero}>
+          <h1 className={styles.title}>Планета Математика</h1>
+          <div className={styles.titleGlow} />
+          <p className={styles.subtitle}>
+            Привіт, <b>{loading ? "..." : childName}</b>! Обирай гру та вдосконалюй навички рахунку.
+          </p>
+        </div>
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-        <div>Завершено ігор: {finishedAttempts}</div>
-        <div>Досягнень: {earnedBadges}</div>
-        <div>Доступних ігор: {mathGames.length}</div>
-      </div>
+        <section className={styles.cardsWrap}>
+          {games.map((game, index) => (
+            <div key={game.id} className={styles.card}>
+              <div className={styles.cardInner}>
+                <div className={styles.cardArt}>
+                  <Image
+                    src={cardImages[index % cardImages.length]}
+                    alt={game.title}
+                    width={260}
+                    height={200}
+                    className={styles.cardImg}
+                    priority={index === 0}
+                  />
+                </div>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+                <div className={styles.cardText}>
+                  <h3 className={styles.cardTitle}>{game.title}</h3>
+                  <p className={styles.cardSubtitle}>Складність: {game.difficulty}</p>
+                </div>
 
-      {mathGames.length === 0 ? (
-        <p>Поки немає ігор з математики для цієї вікової групи.</p>
-      ) : (
-        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 10 }}>
-          {mathGames.map((game) => (
-            <li key={game.id} style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>
-              <div style={{ fontWeight: 600 }}>{game.title}</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
-                type: {game.gameTypeCode} | diff: {game.difficulty}
+                <Link href={`/child/game/${game.id}`} className={styles.playBtn}>
+                  Грати
+                </Link>
               </div>
-              <button style={{ marginTop: 8 }} onClick={() => (window.location.href = `/child/game/${game.id}`)}>
-                Почати гру
-              </button>
-            </li>
+            </div>
           ))}
-        </ul>
-      )}
+        </section>
+
+        {emptyState && <p className={styles.subtitle}>Поки немає ігор з математики для цієї вікової групи.</p>}
+        {error && <p className={styles.subtitle}>{error}</p>}
+
+        <section className={styles.statsBar}>
+          <div className={styles.statItem}>
+            <div className={styles.statIcon}>⭐</div>
+            <div className={styles.statMeta}>
+              <div className={styles.statLabel}>Рівень</div>
+              <div className={styles.statValue}>{stats.level}</div>
+            </div>
+          </div>
+
+          <div className={styles.statDivider} />
+
+          <div className={styles.statItem}>
+            <div className={styles.statIcon}>✨</div>
+            <div className={styles.statMeta}>
+              <div className={styles.statLabel}>Зірочок</div>
+              <div className={styles.statValue}>{stats.stars}</div>
+            </div>
+          </div>
+
+          <div className={styles.statDivider} />
+
+          <div className={styles.statItem}>
+            <div className={styles.statIcon}>🏆</div>
+            <div className={styles.statMeta}>
+              <div className={styles.statLabel}>Досягнень</div>
+              <div className={styles.statValue}>{stats.achievements}</div>
+            </div>
+          </div>
+        </section>
+
+        <div className={styles.cornerPlanet}>
+          <Image
+            src="/Child_menu/planet_mathematics.png"
+            alt="Math Planet"
+            width={260}
+            height={220}
+            className={styles.cornerPlanetImg}
+          />
+        </div>
+      </main>
     </div>
   );
 }
