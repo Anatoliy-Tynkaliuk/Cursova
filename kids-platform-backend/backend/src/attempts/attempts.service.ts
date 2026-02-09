@@ -65,7 +65,6 @@ export class AttemptsService {
       where: { id: BigInt(gameId) },
       include: {
         module: true,
-        gameType: true,
       },
     });
 
@@ -104,12 +103,10 @@ export class AttemptsService {
         id: Number(game.id),
         title: game.title,
         moduleCode: game.module.code,
-        gameTypeCode: game.gameType.code,
       },
       task: {
         taskId: Number(task.id),
         position: task.position,
-        type: game.gameType.code,
         taskVersion: {
           id: Number(tv.id),
           prompt: tv.prompt,

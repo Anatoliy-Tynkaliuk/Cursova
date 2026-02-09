@@ -85,6 +85,7 @@ export default function ChildHomePage() {
         <button onClick={() => ageGroupCode && load(ageGroupCode)} disabled={loading || !ageGroupCode}>
           {loading ? "Завантажую..." : "Оновити"}
         </button>
+        <Link href="/child/subjects">До меню планет</Link>
         <Link href="/">На головну</Link>
       </div>
 
@@ -135,7 +136,7 @@ export default function ChildHomePage() {
             <li key={g.id} style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>
               <div style={{ fontWeight: 600 }}>{g.title}</div>
               <div style={{ fontSize: 12, opacity: 0.8 }}>
-                module: {g.moduleCode} | type: {g.gameTypeCode} | diff: {g.difficulty}
+                module: {g.moduleCode} | diff: {g.difficulty}
               </div>
               <button style={{ marginTop: 8 }} onClick={() => onStart(g.id)}>
                 Почати

@@ -182,7 +182,6 @@ export class ChildrenService {
           id: Number(a.game.id),
           title: a.game.title,
           moduleCode: a.game.module.code,
-          gameTypeCode: a.game.gameType.code,
         },
         score: a.score,
         correctCount: a.correctCount,

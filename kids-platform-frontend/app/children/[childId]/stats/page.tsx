@@ -120,7 +120,7 @@ export default function ChildStatsPage() {
                 <li key={attempt.id} style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
                   <div style={{ fontWeight: 600 }}>{attempt.game.title}</div>
                   <div style={{ fontSize: 12, opacity: 0.8 }}>
-                    module: {attempt.game.moduleCode} | type: {attempt.game.gameTypeCode}
+                    module: {attempt.game.moduleCode}
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.8 }}>
                     Результат: {attempt.correctCount}/{attempt.totalCount} | Бали: {attempt.score}

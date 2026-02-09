@@ -90,7 +90,6 @@ export default function GamePage() {
       setTask({
         taskId: next.taskId,
         position: next.position,
-        type: "choose_answer",
         taskVersion: {
           id: next.taskVersion.id,
           prompt: next.taskVersion.prompt,
@@ -126,7 +125,7 @@ export default function GamePage() {
               Правильні відповіді: {summary.correctCount} / {summary.totalCount}
             </p>
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <button onClick={() => (window.location.href = "/child")}>До списку ігор</button>
+              <button onClick={() => (window.location.href = "/child/subjects")}>До меню планет</button>
             </div>
           </div>
         ) : (

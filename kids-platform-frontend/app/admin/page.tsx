@@ -4,14 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import {
   createAdminGame,
   createAdminAgeGroup,
-  createAdminGameType,
   createAdminBadge,
   createAdminTask,
   createAdminTaskVersion,
   deleteAdminAgeGroup,
   deleteAdminBadge,
   deleteAdminGame,
-  deleteAdminGameType,
   deleteAdminTask,
   deleteAdminTaskVersion,
   getAdminAgeGroups,
@@ -24,7 +22,6 @@ import {
   updateAdminBadge,
   updateAdminGame,
   updateAdminAgeGroup,
-  updateAdminGameType,
   updateAdminTask,
   updateAdminTaskVersion,
   type AdminAgeGroupItem,
@@ -55,12 +52,6 @@ export default function AdminPage() {
   const [ageGroupMaxAge, setAgeGroupMaxAge] = useState(5);
   const [ageGroupSortOrder, setAgeGroupSortOrder] = useState(1);
   const [ageGroupIsActive, setAgeGroupIsActive] = useState(true);
-
-  const [gameTypeCode, setGameTypeCode] = useState("");
-  const [gameTypeTitle, setGameTypeTitle] = useState("");
-  const [gameTypeDescription, setGameTypeDescription] = useState("");
-  const [gameTypeIcon, setGameTypeIcon] = useState("");
-  const [gameTypeIsActive, setGameTypeIsActive] = useState(true);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -93,7 +84,6 @@ export default function AdminPage() {
     ageGroupTitle.trim().length > 0 &&
     ageGroupMinAge >= 0 &&
     ageGroupMaxAge >= ageGroupMinAge;
-  const gameTypeFormValid = gameTypeCode.trim().length > 0 && gameTypeTitle.trim().length > 0;
   const formValid =
     title.trim().length > 0 &&
     moduleId !== "" &&
@@ -147,6 +137,12 @@ export default function AdminPage() {
 
     load().catch((e: any) => setError(e.message ?? "Error"));
   }, []);
+
+  useEffect(() => {
+    if (gameTypeId === "" && gameTypes.length > 0) {
+      setGameTypeId(gameTypes[0].id);
+    }
+  }, [gameTypeId, gameTypes]);
 
   const groupedTasks = useMemo(() => {
     return tasks.reduce<Record<number, AdminTaskItem[]>>((acc, task) => {
@@ -227,60 +223,6 @@ export default function AdminPage() {
       await deleteAdminAgeGroup(groupId);
       setMessage("Вікову групу видалено.");
       setAgeGroups((prev) => prev.filter((group) => group.id !== groupId));
-    } catch (e: any) {
-      setError(e.message ?? "Error");
-    }
-  }
-
-  async function onCreateGameType() {
-    if (!gameTypeFormValid) return;
-    setError(null);
-    setMessage(null);
-    try {
-      await createAdminGameType({
-        code: gameTypeCode.trim(),
-        title: gameTypeTitle.trim(),
-        description: gameTypeDescription.trim() || undefined,
-        icon: gameTypeIcon.trim() || undefined,
-        isActive: gameTypeIsActive,
-      });
-      setMessage("Тип гри створено.");
-      setGameTypeCode("");
-      setGameTypeTitle("");
-      setGameTypeDescription("");
-      setGameTypeIcon("");
-      setGameTypeIsActive(true);
-      const gameTypesData = await getAdminGameTypes();
-      setGameTypes(gameTypesData);
-    } catch (e: any) {
-      setError(e.message ?? "Error");
-    }
-  }
-
-  async function onUpdateGameType(type: AdminGameTypeItem) {
-    setError(null);
-    setMessage(null);
-    try {
-      await updateAdminGameType(type.id, {
-        code: type.code,
-        title: type.title,
-        description: type.description ?? undefined,
-        icon: type.icon ?? undefined,
-        isActive: type.isActive,
-      });
-      setMessage("Тип гри оновлено.");
-    } catch (e: any) {
-      setError(e.message ?? "Error");
-    }
-  }
-
-  async function onDeleteGameType(typeId: number) {
-    setError(null);
-    setMessage(null);
-    try {
-      await deleteAdminGameType(typeId);
-      setMessage("Тип гри видалено.");
-      setGameTypes((prev) => prev.filter((type) => type.id !== typeId));
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -565,44 +507,6 @@ export default function AdminPage() {
       </section>
 
       <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-        <h2>Додати тип гри</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
-          <input
-            placeholder="Код (наприклад quiz)"
-            value={gameTypeCode}
-            onChange={(e) => setGameTypeCode(e.target.value)}
-          />
-          <input
-            placeholder="Назва"
-            value={gameTypeTitle}
-            onChange={(e) => setGameTypeTitle(e.target.value)}
-          />
-          <textarea
-            placeholder="Опис (необов'язково)"
-            value={gameTypeDescription}
-            onChange={(e) => setGameTypeDescription(e.target.value)}
-            rows={3}
-          />
-          <input
-            placeholder="Icon URL (необов'язково)"
-            value={gameTypeIcon}
-            onChange={(e) => setGameTypeIcon(e.target.value)}
-          />
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="checkbox"
-              checked={gameTypeIsActive}
-              onChange={(e) => setGameTypeIsActive(e.target.checked)}
-            />
-            Активний
-          </label>
-          <button disabled={!gameTypeFormValid} onClick={onCreateGameType}>
-            Створити тип гри
-          </button>
-        </div>
-      </section>
-
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
         <h2>Додати гру</h2>
         <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
           <input
@@ -621,14 +525,6 @@ export default function AdminPage() {
             {modules.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.title}
-              </option>
-            ))}
-          </select>
-          <select value={gameTypeId} onChange={(e) => setGameTypeId(Number(e.target.value))}>
-            <option value="">Тип гри</option>
-            {gameTypes.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.title}
               </option>
             ))}
           </select>
@@ -975,79 +871,6 @@ export default function AdminPage() {
       </section>
 
       <section style={{ marginBottom: 20 }}>
-        <h2>Типи ігор</h2>
-        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
-          {gameTypes.map((type) => (
-            <li key={type.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
-              <div style={{ display: "grid", gap: 8 }}>
-                <input
-                  value={type.title}
-                  onChange={(e) =>
-                    setGameTypes((prev) =>
-                      prev.map((item) =>
-                        item.id === type.id ? { ...item, title: e.target.value } : item
-                      )
-                    )
-                  }
-                />
-                <input
-                  value={type.code}
-                  onChange={(e) =>
-                    setGameTypes((prev) =>
-                      prev.map((item) =>
-                        item.id === type.id ? { ...item, code: e.target.value } : item
-                      )
-                    )
-                  }
-                />
-                <textarea
-                  value={type.description ?? ""}
-                  onChange={(e) =>
-                    setGameTypes((prev) =>
-                      prev.map((item) =>
-                        item.id === type.id ? { ...item, description: e.target.value } : item
-                      )
-                    )
-                  }
-                  rows={2}
-                />
-                <input
-                  placeholder="Icon URL"
-                  value={type.icon ?? ""}
-                  onChange={(e) =>
-                    setGameTypes((prev) =>
-                      prev.map((item) =>
-                        item.id === type.id ? { ...item, icon: e.target.value } : item
-                      )
-                    )
-                  }
-                />
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input
-                    type="checkbox"
-                    checked={type.isActive}
-                    onChange={(e) =>
-                      setGameTypes((prev) =>
-                        prev.map((item) =>
-                          item.id === type.id ? { ...item, isActive: e.target.checked } : item
-                        )
-                      )
-                    }
-                  />
-                  Активний
-                </label>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => onUpdateGameType(type)}>Зберегти</button>
-                  <button onClick={() => onDeleteGameType(type.id)}>Видалити</button>
-                </div>
-              </div>
-            </li>
-          ))}
-          {gameTypes.length === 0 && <li style={{ fontSize: 12, opacity: 0.7 }}>Немає типів</li>}
-        </ul>
-      </section>
-
-      <section style={{ marginBottom: 20 }}>
         <h2>Модулі</h2>
         <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
           {modules.map((m) => (
@@ -1084,7 +907,7 @@ export default function AdminPage() {
                 rows={2}
               />
               <div style={{ fontSize: 12, opacity: 0.8 }}>
-                module: {g.moduleCode} | type: {g.gameTypeCode} | age: {g.minAgeGroupCode}
+                module: {g.moduleCode} | age: {g.minAgeGroupCode}
               </div>
               <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 Складність
