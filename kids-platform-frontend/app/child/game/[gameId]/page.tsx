@@ -5,11 +5,33 @@ import { useParams, useSearchParams } from "next/navigation";
 import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 
+function normalizeDifficulty(value: string | null): number | null {
+  if (!value) return null;
+
+  const numeric = Number(value);
+  if (Number.isInteger(numeric) && numeric > 0) {
+    return numeric;
+  }
+
+  const map: Record<string, number> = {
+    easy: 1,
+    medium: 2,
+    hard: 3,
+  };
+
+  return map[value.toLowerCase()] ?? null;
+}
+
 export default function GamePage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
   const gameId = Number(params.gameId);
   const attemptIdFromUrl = search.get("attemptId");
+  const difficultyFromUrl = search.get("difficulty");
+  const normalizedDifficulty = normalizeDifficulty(difficultyFromUrl);
+  const levelFromUrl = search.get("level");
+  const selectedLevel = Number.isInteger(Number(levelFromUrl)) && Number(levelFromUrl) > 0 ? Number(levelFromUrl) : null;
+
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
 
@@ -26,15 +48,25 @@ export default function GamePage() {
       window.location.href = "/child/join";
       return;
     }
+
+    if (!attemptIdFromUrl && normalizedDifficulty === null) {
+      window.location.href = `/child/game/${gameId}/difficulty`;
+      return;
+    }
+
     setChildProfileId(session.childProfileId);
-  }, []);
+  }, [attemptIdFromUrl, gameId, normalizedDifficulty]);
 
   useEffect(() => {
     async function boot() {
       if (!attemptId && childProfileId) {
         setLoading(true);
         try {
-          const res = await startAttempt(childProfileId, gameId);
+          const res = await startAttempt(
+            childProfileId,
+            gameId,
+            normalizedDifficulty !== null ? normalizedDifficulty : undefined,
+          );
           setAttemptId(res.attemptId);
           setTask(res.task);
           setMsg("");
@@ -44,7 +76,8 @@ export default function GamePage() {
       }
     }
     boot().catch((e: any) => setMsg(e.message ?? "Error"));
-  }, [attemptId, childProfileId, gameId]);
+  }, [attemptId, childProfileId, gameId, normalizedDifficulty]);
+
   const current = useMemo(() => {
     if (!task) return null;
     return {
@@ -113,6 +146,7 @@ export default function GamePage() {
   return (
     <div style={{ padding: 16 }}>
       <h1>Гра #{gameId}</h1>
+      {selectedLevel && <div style={{ fontSize: 12, opacity: 0.8 }}>Обраний рівень: {selectedLevel}</div>}
       {attemptId && <div style={{ fontSize: 12, opacity: 0.8 }}>attemptId: {attemptId}</div>}
       {msg && <p>{msg}</p>}
 
