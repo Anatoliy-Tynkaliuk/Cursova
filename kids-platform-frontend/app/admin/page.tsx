@@ -73,10 +73,7 @@ export default function AdminPage() {
   const [levelGameId, setLevelGameId] = useState<number | "">("");
   const [levelDifficulty, setLevelDifficulty] = useState(1);
   const [levelTitle, setLevelTitle] = useState("");
-  const [levelNumber, setLevelNumber] = useState<number | "">("");
   const [levelIsActive, setLevelIsActive] = useState(true);
-  const [quickLevelsGameId, setQuickLevelsGameId] = useState<number | "">("");
-  const [quickLevelsPerDifficulty, setQuickLevelsPerDifficulty] = useState(5);
 
   const [taskGameId, setTaskGameId] = useState<number | "">("");
   const [taskLevelId, setTaskLevelId] = useState<number | "">("");
@@ -114,9 +111,6 @@ export default function AdminPage() {
     minAgeGroupId !== "";
 
   const levelFormValid = levelGameId !== "" && levelTitle.trim().length > 0 && [1, 2, 3].includes(levelDifficulty);
-  const quickLevelsFormValid =
-    quickLevelsGameId !== "" && Number.isInteger(quickLevelsPerDifficulty) && quickLevelsPerDifficulty > 0;
-
   const levelsByGameDifficulty = useMemo(() => {
     return gameLevels.reduce<Record<string, number>>((acc, level) => {
       const key = `${level.gameId}:${level.difficulty}`;
@@ -309,34 +303,8 @@ export default function AdminPage() {
       setDescription("");
       setDifficulty(1);
       setLevelGameId(createdGame.id);
-      setQuickLevelsGameId(createdGame.id);
       const gamesData = await getAdminGames();
       setGames(gamesData);
-    } catch (e: any) {
-      setError(e.message ?? "Error");
-    }
-  }
-
-  async function onCreateLevelsForAllDifficulties() {
-    if (!quickLevelsFormValid || quickLevelsGameId === "") return;
-
-    setError(null);
-    setMessage(null);
-
-    try {
-      for (const difficultyItem of [1, 2, 3]) {
-        for (let i = 1; i <= quickLevelsPerDifficulty; i++) {
-          await createAdminGameLevel({
-            gameId: quickLevelsGameId,
-            difficulty: difficultyItem,
-            title: `Рівень ${i} (Складність ${difficultyItem})`,
-          });
-        }
-      }
-
-      setMessage(`Додано по ${quickLevelsPerDifficulty} рівнів для кожної складності (1, 2, 3).`);
-      const levelsData = await getAdminGameLevels();
-      setGameLevels(levelsData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -380,13 +348,11 @@ export default function AdminPage() {
         gameId: levelGameId,
         difficulty: levelDifficulty,
         title: levelTitle.trim(),
-        levelNumber: levelNumber === "" ? undefined : levelNumber,
         isActive: levelIsActive,
       });
 
       setMessage("Рівень створено.");
       setLevelTitle("");
-      setLevelNumber("");
       setLevelDifficulty(1);
       setLevelIsActive(true);
 
@@ -755,7 +721,7 @@ export default function AdminPage() {
             <input
               type="number"
               min={1}
-              max={5}
+              max={3}
               value={difficulty}
               onChange={(e) => setDifficulty(Number(e.target.value))}
               className={styles.smallInput}
@@ -775,43 +741,6 @@ export default function AdminPage() {
           >
             Створити гру
           </button>
-        </div>
-      </section>
-
-      <section className={styles.sectionCard}>
-        <h2>Швидко додати рівні для всіх складностей гри</h2>
-        <div className={styles.formGridWide}>
-          <select
-            value={quickLevelsGameId}
-            onChange={(e) => setQuickLevelsGameId(Number(e.target.value))}
-          >
-            <option value="">Гра</option>
-            {games.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.title}
-              </option>
-            ))}
-          </select>
-
-          <label className={styles.inlineLabel}>
-            Рівнів на кожну складність
-            <input
-              type="number"
-              min={1}
-              value={quickLevelsPerDifficulty}
-              onChange={(e) => setQuickLevelsPerDifficulty(Number(e.target.value))}
-              className={styles.smallInputWide}
-            />
-          </label>
-
-          <button disabled={!quickLevelsFormValid} onClick={onCreateLevelsForAllDifficulties}>
-            Додати рівні 1-3
-          </button>
-
-          <div className={styles.helperTextMuted}>
-            Автоматично створює рівні для складностей 1, 2, 3 з назвами формату
-            <code className={styles.codeInline}>Рівень N (Складність D)</code>
-          </div>
         </div>
       </section>
 
@@ -839,19 +768,6 @@ export default function AdminPage() {
             value={levelTitle}
             onChange={(e) => setLevelTitle(e.target.value)}
           />
-          <label className={styles.inlineLabel}>
-            Номер рівня (необов'язково)
-            <input
-              type="number"
-              min={1}
-              value={levelNumber}
-              onChange={(e) => {
-                const value = e.target.value;
-                setLevelNumber(value ? Number(value) : "");
-              }}
-              className={styles.smallInputLevel}
-            />
-          </label>
           <label className={styles.inlineLabel}>
             <input
               type="checkbox"
