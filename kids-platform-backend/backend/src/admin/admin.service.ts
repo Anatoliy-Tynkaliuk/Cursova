@@ -23,31 +23,39 @@ import {
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
+  private async ensureBaseGameTypes() {
+    await this.prisma.gameType.upsert({
+      where: { code: "test" },
+      update: { title: "Тест", isActive: true },
+      create: { code: "test", title: "Тест", isActive: true },
+    });
+
+    await this.prisma.gameType.upsert({
+      where: { code: "drag" },
+      update: { title: "Перетягування", isActive: true },
+      create: { code: "drag", title: "Перетягування", isActive: true },
+    });
+  }
+
   private async resolveGameTypeId(gameTypeId?: number) {
+    await this.ensureBaseGameTypes();
+
     if (gameTypeId) {
       return BigInt(gameTypeId);
     }
 
-    const existingType = await this.prisma.gameType.findFirst({
-      orderBy: { id: "asc" },
+    const fallbackType = await this.prisma.gameType.findFirst({
+      where: { code: "test" },
       select: { id: true },
     });
 
-    if (existingType) {
-      return existingType.id;
+    if (!fallbackType) {
+      throw new BadRequestException("default game type is not configured");
     }
 
-    const defaultType = await this.prisma.gameType.create({
-      data: {
-        code: "default",
-        title: "Default",
-        isActive: true,
-      },
-      select: { id: true },
-    });
-
-    return defaultType.id;
+    return fallbackType.id;
   }
+
 
   private async ensureTaskLevelBelongsToGame(gameId: bigint, levelId: number) {
     const level = await this.prisma.gameLevel.findFirst({
@@ -159,7 +167,12 @@ export class AdminService {
   }
 
   async listGameTypes() {
-    const types = await this.prisma.gameType.findMany({ orderBy: { id: "asc" } });
+    await this.ensureBaseGameTypes();
+
+    const types = await this.prisma.gameType.findMany({
+      where: { code: { in: ["test", "drag"] } },
+      orderBy: { id: "asc" },
+    });
     return types.map((t) => ({
       id: Number(t.id),
       code: t.code,

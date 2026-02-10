@@ -18,6 +18,7 @@ import {
   getAdminBadges,
   getAdminGames,
   getAdminGameLevels,
+  getAdminGameTypes,
   getAdminModules,
   getAdminTasks,
   getAdminTaskVersions,
@@ -31,6 +32,7 @@ import {
   type AdminBadgeItem,
   type AdminGameItem,
   type AdminGameLevelItem,
+  type AdminGameTypeItem,
   type AdminModuleItem,
   type AdminTaskItem,
   type AdminTaskVersionItem,
@@ -41,6 +43,7 @@ export default function AdminPage() {
   const parseSelectNumber = (value: string): number | "" => (value === "" ? "" : Number(value));
 
   const [modules, setModules] = useState<AdminModuleItem[]>([]);
+  const [gameTypes, setGameTypes] = useState<AdminGameTypeItem[]>([]);
   const [ageGroups, setAgeGroups] = useState<AdminAgeGroupItem[]>([]);
   const [games, setGames] = useState<AdminGameItem[]>([]);
   const [gameLevels, setGameLevels] = useState<AdminGameLevelItem[]>([]);
@@ -61,6 +64,7 @@ export default function AdminPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [moduleId, setModuleId] = useState<number | "">("");
+  const [gameTypeId, setGameTypeId] = useState<number | "">("");
   const [minAgeGroupId, setMinAgeGroupId] = useState<number | "">("");
   const [difficulty, setDifficulty] = useState(1);
   const [isActive, setIsActive] = useState(true);
@@ -81,6 +85,11 @@ export default function AdminPage() {
   const [taskId, setTaskId] = useState<number | "">("");
   const [taskVersion, setTaskVersion] = useState(1);
   const [taskPrompt, setTaskPrompt] = useState("");
+  const [testOptionsText, setTestOptionsText] = useState("");
+  const [testCorrectAnswer, setTestCorrectAnswer] = useState("");
+  const [dragItemsText, setDragItemsText] = useState("");
+  const [dragTargetsText, setDragTargetsText] = useState("");
+  const [dragPairsText, setDragPairsText] = useState("");
   const [taskDataJson, setTaskDataJson] = useState("{\"options\":[]}");
   const [taskCorrectJson, setTaskCorrectJson] = useState("{\"answer\":\"\"}");
   const [taskExplanation, setTaskExplanation] = useState("");
@@ -100,6 +109,7 @@ export default function AdminPage() {
   const formValid =
     title.trim().length > 0 &&
     moduleId !== "" &&
+    gameTypeId !== "" &&
     minAgeGroupId !== "";
 
   const levelFormValid = levelGameId !== "" && levelTitle.trim().length > 0 && [1, 2, 3].includes(levelDifficulty);
@@ -123,6 +133,21 @@ export default function AdminPage() {
 
   const taskRequiresLevel = selectedTaskGameLevels.length > 0;
   const taskFormValid = taskGameId !== "" && taskPosition > 0 && (!taskRequiresLevel || taskLevelId !== "");
+
+  const selectedTask = useMemo(
+    () => (taskId === "" ? null : tasks.find((item) => item.id === taskId) ?? null),
+    [taskId, tasks],
+  );
+
+  const selectedTaskGame = useMemo(
+    () => (selectedTask ? games.find((item) => item.id === selectedTask.gameId) ?? null : null),
+    [games, selectedTask],
+  );
+
+  const selectedTaskTypeCode = (selectedTaskGame?.gameTypeCode ?? "").toLowerCase();
+  const isTestTaskType = selectedTaskTypeCode === "test";
+  const isDragTaskType = selectedTaskTypeCode === "drag";
+
   const taskVersionFormValid = taskId !== "" && taskPrompt.trim().length > 0;
   const badgeFormValid = badgeCode.trim().length > 0 && badgeTitle.trim().length > 0;
 
@@ -138,6 +163,7 @@ export default function AdminPage() {
       try {
         const [
           modulesData,
+          gameTypesData,
           ageGroupsData,
           gamesData,
           gameLevelsData,
@@ -146,6 +172,7 @@ export default function AdminPage() {
           badgesData,
         ] = await Promise.all([
           getAdminModules(),
+          getAdminGameTypes(),
           getAdminAgeGroups(),
           getAdminGames(),
           getAdminGameLevels(),
@@ -154,6 +181,7 @@ export default function AdminPage() {
           getAdminBadges(),
         ]);
         setModules(modulesData);
+        setGameTypes(gameTypesData);
         setAgeGroups(ageGroupsData);
         setGames(gamesData);
         setGameLevels(gameLevelsData);
@@ -169,6 +197,13 @@ export default function AdminPage() {
 
     load().catch((e: any) => setError(e.message ?? "Error"));
   }, []);
+
+  useEffect(() => {
+    if (gameTypeId === "" && gameTypes.length > 0) {
+      const preferred = gameTypes.find((item) => item.code.toLowerCase() === "test") ?? gameTypes[0];
+      setGameTypeId(preferred.id);
+    }
+  }, [gameTypeId, gameTypes]);
 
   const groupedTasks = useMemo(() => {
     return tasks.reduce<Record<number, AdminTaskItem[]>>((acc, task) => {
@@ -255,12 +290,13 @@ export default function AdminPage() {
   }
 
   async function onCreateGame() {
-    if (!formValid || moduleId === "" || minAgeGroupId === "") return;
+    if (!formValid || moduleId === "" || gameTypeId === "" || minAgeGroupId === "") return;
     setError(null);
     setMessage(null);
     try {
       const createdGame = await createAdminGame({
         moduleId,
+        gameTypeId,
         minAgeGroupId,
         title: title.trim(),
         description: description.trim() || undefined,
@@ -450,8 +486,57 @@ export default function AdminPage() {
     setError(null);
     setMessage(null);
     try {
-      const dataJson = taskDataJson.trim() ? JSON.parse(taskDataJson) : {};
-      const correctJson = taskCorrectJson.trim() ? JSON.parse(taskCorrectJson) : {};
+      let dataJson: unknown = {};
+      let correctJson: unknown = {};
+
+      if (isTestTaskType) {
+        const options = testOptionsText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+        if (options.length < 2) {
+          throw new Error("Для тесту додай мінімум 2 варіанти відповіді");
+        }
+
+        if (!testCorrectAnswer.trim()) {
+          throw new Error("Для тесту вкажи правильну відповідь");
+        }
+
+        dataJson = { options };
+        correctJson = { answer: testCorrectAnswer.trim() };
+      } else if (isDragTaskType) {
+        const items = dragItemsText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const targets = dragTargetsText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const pairs = dragPairsText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => {
+            const [item, target] = line.split("=>").map((value) => value.trim());
+            if (!item || !target) {
+              throw new Error("Пари для перетягування заповнюй у форматі: елемент => ціль");
+            }
+            return { item, target };
+          });
+
+        if (items.length === 0 || targets.length === 0 || pairs.length === 0) {
+          throw new Error("Для перетягування додай елементи, цілі та відповідності");
+        }
+
+        dataJson = { items, targets };
+        correctJson = { pairs };
+      } else {
+        dataJson = taskDataJson.trim() ? JSON.parse(taskDataJson) : {};
+        correctJson = taskCorrectJson.trim() ? JSON.parse(taskCorrectJson) : {};
+      }
+
       await createAdminTaskVersion({
         taskId,
         version: taskVersion,
@@ -464,6 +549,11 @@ export default function AdminPage() {
       });
       setMessage("Версію завдання створено.");
       setTaskPrompt("");
+      setTestOptionsText("");
+      setTestCorrectAnswer("");
+      setDragItemsText("");
+      setDragTargetsText("");
+      setDragPairsText("");
       setTaskDataJson("{\"options\":[]}");
       setTaskCorrectJson("{\"answer\":\"\"}");
       setTaskExplanation("");
@@ -471,9 +561,10 @@ export default function AdminPage() {
       const taskVersionsData = await getAdminTaskVersions();
       setTaskVersions(taskVersionsData);
     } catch (e: any) {
-      setError(e.message ?? "Невірний JSON для dataJson або correctJson");
+      setError(e.message ?? "Помилка створення версії завдання");
     }
   }
+
 
   async function onUpdateTaskVersion(version: AdminTaskVersionItem) {
     setError(null);
@@ -639,6 +730,14 @@ export default function AdminPage() {
             {modules.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.title}
+              </option>
+            ))}
+          </select>
+          <select value={gameTypeId} onChange={(e) => setGameTypeId(parseSelectNumber(e.target.value))}>
+            <option value="">Тип гри</option>
+            {gameTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.title}
               </option>
             ))}
           </select>
@@ -833,6 +932,9 @@ export default function AdminPage() {
 
       <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
         <h2>Додати завдання</h2>
+        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 10 }}>
+          Кроки: 1) Обери гру. 2) Обери рівень для потрібної складності. 3) Створи завдання. 4) Нижче додай версію завдання — поля залежать від типу гри.
+        </div>
         <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
           <select
             value={taskGameId}
@@ -901,15 +1003,27 @@ export default function AdminPage() {
 
       <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
         <h2>Додати версію завдання</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+        <div style={{ display: "grid", gap: 12, maxWidth: 560 }}>
           <select value={taskId} onChange={(e) => setTaskId(Number(e.target.value))}>
             <option value="">Завдання</option>
-            {tasks.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.gameTitle} — #{t.position}
-              </option>
-            ))}
+            {tasks.map((t) => {
+              const game = games.find((item) => item.id === t.gameId);
+              return (
+                <option key={t.id} value={t.id}>
+                  {t.gameTitle} ({game?.gameTypeCode ?? "unknown"}) — #{t.position}
+                </option>
+              );
+            })}
           </select>
+
+          {selectedTaskGame && (
+            <div style={{ fontSize: 12, background: "#f5f5f5", borderRadius: 8, padding: 10 }}>
+              Тип гри для цього завдання: <b>{selectedTaskGame.gameTypeCode}</b>.
+              {isTestTaskType && " Заповни запитання, варіанти відповідей і правильну відповідь."}
+              {isDragTaskType && " Заповни запитання, елементи для перетягування, цілі та відповідності."}
+            </div>
+          )}
+
           <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
             Версія
             <input
@@ -920,23 +1034,69 @@ export default function AdminPage() {
               style={{ width: 80 }}
             />
           </label>
+
           <input
-            placeholder="Prompt"
+            placeholder={isTestTaskType ? "Запитання тесту" : isDragTaskType ? "Інструкція для перетягування" : "Prompt"}
             value={taskPrompt}
             onChange={(e) => setTaskPrompt(e.target.value)}
           />
-          <textarea
-            placeholder="dataJson (JSON)"
-            value={taskDataJson}
-            onChange={(e) => setTaskDataJson(e.target.value)}
-            rows={4}
-          />
-          <textarea
-            placeholder="correctJson (JSON)"
-            value={taskCorrectJson}
-            onChange={(e) => setTaskCorrectJson(e.target.value)}
-            rows={3}
-          />
+
+          {isTestTaskType && (
+            <>
+              <textarea
+                placeholder={"Варіанти відповіді, кожен з нового рядка\nНаприклад:\n2+2=3\n2+2=4"}
+                value={testOptionsText}
+                onChange={(e) => setTestOptionsText(e.target.value)}
+                rows={5}
+              />
+              <input
+                placeholder="Правильна відповідь (точний текст)"
+                value={testCorrectAnswer}
+                onChange={(e) => setTestCorrectAnswer(e.target.value)}
+              />
+            </>
+          )}
+
+          {isDragTaskType && (
+            <>
+              <textarea
+                placeholder={"Елементи для перетягування (кожен з нового рядка)"}
+                value={dragItemsText}
+                onChange={(e) => setDragItemsText(e.target.value)}
+                rows={4}
+              />
+              <textarea
+                placeholder={"Цілі (кожна з нового рядка)"}
+                value={dragTargetsText}
+                onChange={(e) => setDragTargetsText(e.target.value)}
+                rows={4}
+              />
+              <textarea
+                placeholder={"Правильні пари у форматі елемент => ціль\nНаприклад:\nЯблуко => Фрукт\nМорква => Овоч"}
+                value={dragPairsText}
+                onChange={(e) => setDragPairsText(e.target.value)}
+                rows={5}
+              />
+            </>
+          )}
+
+          {!isTestTaskType && !isDragTaskType && (
+            <>
+              <textarea
+                placeholder="dataJson (JSON)"
+                value={taskDataJson}
+                onChange={(e) => setTaskDataJson(e.target.value)}
+                rows={4}
+              />
+              <textarea
+                placeholder="correctJson (JSON)"
+                value={taskCorrectJson}
+                onChange={(e) => setTaskCorrectJson(e.target.value)}
+                rows={3}
+              />
+            </>
+          )}
+
           <input
             placeholder="Пояснення (необов'язково)"
             value={taskExplanation}
