@@ -138,6 +138,7 @@ export default function AdminPage() {
     () => (selectedTask ? games.find((item) => item.id === selectedTask.gameId) ?? null : null),
     [games, selectedTask],
   );
+  const linkedTaskDifficulty = selectedTask?.difficulty ?? null;
 
   const selectedTaskTypeCode = (selectedTaskGame?.gameTypeCode ?? "").toLowerCase();
   const isTestTaskType = selectedTaskTypeCode === "test";
@@ -226,6 +227,12 @@ export default function AdminPage() {
     const list = groupedTasks[taskGameId] ?? [];
     return list.some((t) => t.position === taskPosition);
   }, [groupedTasks, taskGameId, taskPosition]);
+
+  useEffect(() => {
+    if (linkedTaskDifficulty !== null) {
+      setTaskDifficulty(linkedTaskDifficulty);
+    }
+  }, [linkedTaskDifficulty]);
 
   async function onCreateAgeGroup() {
     if (!ageGroupFormValid) return;
@@ -921,7 +928,13 @@ export default function AdminPage() {
       <section className={styles.sectionCard}>
         <h2>Додати версію завдання</h2>
         <div style={{ display: "grid", gap: 12, maxWidth: 560 }}>
-          <select value={taskId} onChange={(e) => setTaskId(Number(e.target.value))}>
+          <select
+            value={taskId}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTaskId(value ? Number(value) : "");
+            }}
+          >
             <option value="">Завдання</option>
             {tasks.map((t) => {
               const game = games.find((item) => item.id === t.gameId);
@@ -1028,8 +1041,14 @@ export default function AdminPage() {
               value={taskDifficulty}
               onChange={(e) => setTaskDifficulty(Number(e.target.value))}
               className={styles.smallInput}
+              disabled={linkedTaskDifficulty !== null}
             />
           </label>
+          {linkedTaskDifficulty !== null && (
+            <div style={{ fontSize: 12, color: "#6b7280" }}>
+              Для завдання з рівнем складність визначається автоматично: D{linkedTaskDifficulty}.
+            </div>
+          )}
           <label className={styles.inlineLabel}>
             <input
               type="checkbox"

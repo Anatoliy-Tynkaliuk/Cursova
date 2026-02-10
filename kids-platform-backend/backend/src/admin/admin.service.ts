@@ -479,6 +479,21 @@ export class AdminService {
   }
 
   async createTaskVersion(dto: CreateTaskVersionDto) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: BigInt(dto.taskId) },
+      include: {
+        level: {
+          select: { difficulty: true },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException("Task not found");
+    }
+
+    const resolvedDifficulty = task.level ? task.level.difficulty : (dto.difficulty ?? 1);
+
     const version = await this.prisma.taskVersion.create({
       data: {
         taskId: BigInt(dto.taskId),
@@ -487,7 +502,7 @@ export class AdminService {
         dataJson: dto.dataJson ?? {},
         correctJson: dto.correctJson,
         explanation: dto.explanation,
-        difficulty: dto.difficulty ?? 1,
+        difficulty: resolvedDifficulty,
         isCurrent: dto.isCurrent ?? false,
       },
     });
@@ -495,6 +510,39 @@ export class AdminService {
   }
 
   async updateTaskVersion(id: number, dto: UpdateTaskVersionDto) {
+    if (dto.taskId !== undefined || dto.difficulty !== undefined) {
+      const currentVersion = await this.prisma.taskVersion.findUnique({
+        where: { id: BigInt(id) },
+        select: { taskId: true },
+      });
+
+      if (!currentVersion) {
+        throw new NotFoundException("Task version not found");
+      }
+
+      const effectiveTaskId = dto.taskId ?? Number(currentVersion.taskId);
+      const task = await this.prisma.task.findUnique({
+        where: { id: BigInt(effectiveTaskId) },
+        include: {
+          level: {
+            select: { difficulty: true },
+          },
+        },
+      });
+
+      if (!task) {
+        throw new NotFoundException("Task not found");
+      }
+
+      if (task.level && dto.difficulty !== undefined && dto.difficulty !== task.level.difficulty) {
+        throw new BadRequestException("Task version difficulty must match linked level difficulty");
+      }
+
+      if (task.level) {
+        dto.difficulty = task.level.difficulty;
+      }
+    }
+
     const version = await this.prisma.taskVersion.update({
       where: { id: BigInt(id) },
       data: {
