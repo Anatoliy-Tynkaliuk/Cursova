@@ -5,16 +5,27 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
 import { getGames, type GameListItem } from "@/lib/endpoints";
+import styles from "./difficulty.module.css";
 
 const difficultyLabels: Record<number, string> = {
-  1: "Легко",
-  2: "Середньо",
-  3: "Складно",
+  1: "Легкий",
+  2: "Середній",
+  3: "Важкий",
+};
+
+const difficultyMeta: Record<
+  number,
+  { color: "green" | "yellow" | "red"; badge: string }
+> = {
+  1: { color: "green", badge: "✓" },
+  2: { color: "yellow", badge: "★" },
+  3: { color: "red", badge: "🔥" },
 };
 
 export default function GameDifficultyPage() {
   const params = useParams<{ gameId: string }>();
   const gameId = Number(params.gameId);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [game, setGame] = useState<GameListItem | null>(null);
@@ -39,9 +50,13 @@ export default function GameDifficultyPage() {
         }
 
         setGame(currentGame);
+
         const defaultDifficulty =
-          currentGame.availableDifficulties?.[0] ?? currentGame.difficultyLevels?.[0] ?? currentGame.difficulty;
-        setSelectedDifficulty(defaultDifficulty);
+          currentGame.availableDifficulties?.[0] ??
+          currentGame.difficultyLevels?.[0] ??
+          currentGame.difficulty;
+
+        setSelectedDifficulty(defaultDifficulty ?? 1);
       } catch (e: any) {
         setError(e.message ?? "Сталася помилка");
       } finally {
@@ -55,57 +70,108 @@ export default function GameDifficultyPage() {
     });
   }, [gameId]);
 
+  const difficulties = useMemo(() => {
+    // Якщо бек дає конкретні difficultyLevels — беремо їх, інакше дефолт 1..3
+    const list = game?.difficultyLevels?.length ? game.difficultyLevels : [1, 2, 3];
+    // Відфільтруємо на випадок якщо десь прийде 0 або 4
+    return list.filter((d) => d === 1 || d === 2 || d === 3);
+  }, [game]);
+
+  const difficultyCounts = useMemo(() => {
+    const map = new Map<number, number>();
+    (game?.difficultyTaskCounts ?? []).forEach((x) => map.set(x.difficulty, x.count));
+    return map;
+  }, [game]);
+
   const levelSelectLink = useMemo(
     () => `/child/game/${gameId}/levels?difficulty=${selectedDifficulty}`,
-    [gameId, selectedDifficulty],
+    [gameId, selectedDifficulty]
   );
 
   return (
-    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 16 }}>
-      <section style={{ width: "100%", maxWidth: 460, border: "1px solid #ddd", borderRadius: 16, padding: 20 }}>
-        <h1 style={{ marginTop: 0, marginBottom: 8 }}>Вибір складності</h1>
+    <div className={styles.page}>
+      <div className={styles.bg} />
+      <div className={styles.overlay} />
 
-        {loading ? (
-          <p>Завантаження...</p>
-        ) : error ? (
-          <>
-            <p>{error}</p>
-            <Link href="/child/subjects">Повернутися до планет</Link>
-          </>
-        ) : (
-          <>
-            <p style={{ marginTop: 0 }}>
-              Гра: <b>{game?.title ?? `#${gameId}`}</b>
-            </p>
+      <main className={styles.container}>
+        <header className={styles.topBar}>
+          <Link href="/child/subjects" className={styles.backBtn}>
+            ← Назад
+          </Link>
+        </header>
 
-            <label style={{ display: "grid", gap: 6, marginBottom: 16 }}>
-              <span>Оберіть рівень складності:</span>
-              <select
-                value={selectedDifficulty}
-                onChange={(event) => setSelectedDifficulty(Number(event.target.value))}
-              >
-                {(game?.difficultyLevels ?? [1, 2, 3]).map((difficulty) => {
-                  const count = (game?.difficultyTaskCounts ?? []).find((item) => item.difficulty === difficulty)?.count ?? 0;
-                  return (
-                    <option key={difficulty} value={difficulty}>
-                      {(difficultyLabels[difficulty] ?? `Рівень ${difficulty}`) + ` (${count} рівнів)`}
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
+        <section className={styles.panel}>
+          <h1 className={styles.title}>Обери складність</h1>
+          <div className={styles.titleGlow} />
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <Link href={levelSelectLink} style={{ padding: "10px 14px", border: "1px solid #333", borderRadius: 8 }}>
-                Обрати рівень
-              </Link>
-              <Link href="/child/subjects" style={{ padding: "10px 14px" }}>
-                Назад
+          {loading ? (
+            <p className={styles.stateText}>Завантаження...</p>
+          ) : error ? (
+            <div className={styles.stateBox}>
+              <p className={styles.errorText}>{error}</p>
+              <Link href="/child/subjects" className={styles.linkInline}>
+                Повернутися до планет
               </Link>
             </div>
-          </>
-        )}
-      </section>
-    </main>
+          ) : (
+            <>
+              <p className={styles.gameLine}>
+                Гра: <b>{game?.title ?? `#${gameId}`}</b>
+              </p>
+
+              <div className={styles.list} role="radiogroup" aria-label="Вибір складності">
+                {difficulties.map((difficulty) => {
+                  const meta = difficultyMeta[difficulty] ?? difficultyMeta[1];
+                  const label = difficultyLabels[difficulty] ?? `Рівень ${difficulty}`;
+                  const count = difficultyCounts.get(difficulty) ?? 0;
+                  const active = selectedDifficulty === difficulty;
+
+                  return (
+                    <button
+                      key={difficulty}
+                      type="button"
+                      className={[
+                        styles.card,
+                        styles[`left_${meta.color}`],
+                        active ? styles.active : "",
+                      ].join(" ")}
+                      onClick={() => setSelectedDifficulty(difficulty)}
+                      role="radio"
+                      aria-checked={active}
+                    >
+                      <div className={styles.leftBar}>
+                        <div className={styles.badge}>
+                          <span className={styles.badgeText}>{label}</span>
+                          <span className={styles.badgeIcon}>{meta.badge}</span>
+                        </div>
+                      </div>
+
+                      <div className={styles.rightArea}>
+                        <div className={styles.bigText}>{label}</div>
+                        <div className={styles.smallText}>
+                          {count > 0 ? `${count} рівнів` : "Є рівні для проходження"}
+                        </div>
+                      </div>
+
+                      <div className={styles.glow} aria-hidden="true" />
+                      {active && <div className={styles.cornerTick}>✓</div>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className={styles.actions}>
+                <Link href={levelSelectLink} className={styles.primaryBtn}>
+                  Обрати рівень
+                </Link>
+                <Link href="/child/subjects" className={styles.secondaryBtn}>
+                  Назад
+                </Link>
+              </div>
+            </>
+          )}
+        </section>
+      </main>
+    </div>
   );
 }
