@@ -38,6 +38,7 @@ import {
   type AdminTaskVersionItem,
 } from "@/lib/endpoints";
 import { isLoggedIn } from "@/lib/auth";
+import styles from "./admin.module.css";
 
 export default function AdminPage() {
   const parseSelectNumber = (value: string): number | "" => (value === "" ? "" : Number(value));
@@ -648,15 +649,15 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={{ padding: 16, maxWidth: 1000 }}>
+    <div className={styles.page}>
       <h1>Адмінка контенту</h1>
       {loading && <p>Завантаження...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {message && <p style={{ color: "green" }}>{message}</p>}
+      {error && <p className={styles.errorText}>{error}</p>}
+      {message && <p className={styles.successText}>{message}</p>}
 
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <section className={styles.sectionCard}>
         <h2>Додати вікову групу</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+        <div className={styles.formGrid}>
           <input
             placeholder="Код (наприклад 6_8)"
             value={ageGroupCode}
@@ -667,37 +668,37 @@ export default function AdminPage() {
             value={ageGroupTitle}
             onChange={(e) => setAgeGroupTitle(e.target.value)}
           />
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Мін. вік
             <input
               type="number"
               min={0}
               value={ageGroupMinAge}
               onChange={(e) => setAgeGroupMinAge(Number(e.target.value))}
-              style={{ width: 80 }}
+              className={styles.smallInput}
             />
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Макс. вік
             <input
               type="number"
               min={0}
               value={ageGroupMaxAge}
               onChange={(e) => setAgeGroupMaxAge(Number(e.target.value))}
-              style={{ width: 80 }}
+              className={styles.smallInput}
             />
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Порядок
             <input
               type="number"
               min={1}
               value={ageGroupSortOrder}
               onChange={(e) => setAgeGroupSortOrder(Number(e.target.value))}
-              style={{ width: 80 }}
+              className={styles.smallInput}
             />
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             <input
               type="checkbox"
               checked={ageGroupIsActive}
@@ -711,9 +712,9 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <section className={styles.sectionCard}>
         <h2>Додати гру</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+        <div className={styles.formGrid}>
           <input
             placeholder="Назва гри"
             value={title}
@@ -749,7 +750,7 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Складність
             <input
               type="number"
@@ -757,10 +758,10 @@ export default function AdminPage() {
               max={5}
               value={difficulty}
               onChange={(e) => setDifficulty(Number(e.target.value))}
-              style={{ width: 80 }}
+              className={styles.smallInput}
             />
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             <input
               type="checkbox"
               checked={isActive}
@@ -777,9 +778,9 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <section className={styles.sectionCard}>
         <h2>Швидко додати рівні для всіх складностей гри</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 520 }}>
+        <div className={styles.formGridWide}>
           <select
             value={quickLevelsGameId}
             onChange={(e) => setQuickLevelsGameId(Number(e.target.value))}
@@ -792,14 +793,14 @@ export default function AdminPage() {
             ))}
           </select>
 
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Рівнів на кожну складність
             <input
               type="number"
               min={1}
               value={quickLevelsPerDifficulty}
               onChange={(e) => setQuickLevelsPerDifficulty(Number(e.target.value))}
-              style={{ width: 90 }}
+              className={styles.smallInputWide}
             />
           </label>
 
@@ -807,16 +808,16 @@ export default function AdminPage() {
             Додати рівні 1-3
           </button>
 
-          <div style={{ fontSize: 12, opacity: 0.75 }}>
+          <div className={styles.helperTextMuted}>
             Автоматично створює рівні для складностей 1, 2, 3 з назвами формату
-            <code style={{ marginLeft: 6 }}>Рівень N (Складність D)</code>
+            <code className={styles.codeInline}>Рівень N (Складність D)</code>
           </div>
         </div>
       </section>
 
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <section className={styles.sectionCard}>
         <h2>Додати рівень гри</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+        <div className={styles.formGrid}>
           <select value={levelGameId} onChange={(e) => setLevelGameId(Number(e.target.value))}>
             <option value="">Гра</option>
             {games.map((g) => (
@@ -825,7 +826,7 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Складність
             <select value={levelDifficulty} onChange={(e) => setLevelDifficulty(Number(e.target.value))}>
               <option value={1}>1</option>
@@ -838,7 +839,7 @@ export default function AdminPage() {
             value={levelTitle}
             onChange={(e) => setLevelTitle(e.target.value)}
           />
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Номер рівня (необов'язково)
             <input
               type="number"
@@ -848,10 +849,10 @@ export default function AdminPage() {
                 const value = e.target.value;
                 setLevelNumber(value ? Number(value) : "");
               }}
-              style={{ width: 100 }}
+              className={styles.smallInputLevel}
             />
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             <input
               type="checkbox"
               checked={levelIsActive}
@@ -865,18 +866,18 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section style={{ marginBottom: 20 }}>
+      <section className={styles.sectionSpacing}>
         <h2>Рівні ігор</h2>
         {gameLevels.length === 0 ? (
           <p>Немає рівнів.</p>
         ) : (
-          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+          <ul className={styles.listGrid}>
             {gameLevels.map((level) => (
-              <li key={level.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
-                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
+              <li key={level.id} className={styles.listItem}>
+                <div className={styles.metaText}>
                   {level.gameTitle} • D{level.difficulty}
                 </div>
-                <div style={{ display: "grid", gap: 8 }}>
+                <div className={styles.editGrid}>
                   <input
                     value={level.title}
                     onChange={(e) =>
@@ -887,7 +888,7 @@ export default function AdminPage() {
                       )
                     }
                   />
-                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <label className={styles.inlineLabel}>
                     Номер
                     <input
                       type="number"
@@ -902,10 +903,10 @@ export default function AdminPage() {
                           )
                         )
                       }
-                      style={{ width: 90 }}
+                      className={styles.smallInputWide}
                     />
                   </label>
-                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <label className={styles.inlineLabel}>
                     <input
                       type="checkbox"
                       checked={level.isActive}
@@ -919,7 +920,7 @@ export default function AdminPage() {
                     />
                     Активний
                   </label>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div className={styles.actionsRow}>
                     <button onClick={() => onUpdateGameLevel(level)}>Зберегти</button>
                     <button onClick={() => onDeleteGameLevel(level.id)}>Видалити</button>
                   </div>
@@ -930,12 +931,12 @@ export default function AdminPage() {
         )}
       </section>
 
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <section className={styles.sectionCard}>
         <h2>Додати завдання</h2>
-        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 10 }}>
+        <div className={styles.helperText}>
           Кроки: 1) Обери гру. 2) Обери рівень для потрібної складності. 3) Створи завдання. 4) Нижче додай версію завдання — поля залежать від типу гри.
         </div>
-        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+        <div className={styles.formGrid}>
           <select
             value={taskGameId}
             onChange={(e) => {
@@ -967,17 +968,17 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Позиція
             <input
               type="number"
               min={1}
               value={taskPosition}
               onChange={(e) => setTaskPosition(Number(e.target.value))}
-              style={{ width: 80 }}
+              className={styles.smallInput}
             />
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             <input
               type="checkbox"
               checked={taskIsActive}
@@ -1001,7 +1002,7 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <section className={styles.sectionCard}>
         <h2>Додати версію завдання</h2>
         <div style={{ display: "grid", gap: 12, maxWidth: 560 }}>
           <select value={taskId} onChange={(e) => setTaskId(Number(e.target.value))}>
@@ -1024,14 +1025,14 @@ export default function AdminPage() {
             </div>
           )}
 
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Версія
             <input
               type="number"
               min={1}
               value={taskVersion}
               onChange={(e) => setTaskVersion(Number(e.target.value))}
-              style={{ width: 80 }}
+              className={styles.smallInput}
             />
           </label>
 
@@ -1102,7 +1103,7 @@ export default function AdminPage() {
             value={taskExplanation}
             onChange={(e) => setTaskExplanation(e.target.value)}
           />
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             Складність
             <input
               type="number"
@@ -1110,10 +1111,10 @@ export default function AdminPage() {
               max={5}
               value={taskDifficulty}
               onChange={(e) => setTaskDifficulty(Number(e.target.value))}
-              style={{ width: 80 }}
+              className={styles.smallInput}
             />
           </label>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className={styles.inlineLabel}>
             <input
               type="checkbox"
               checked={taskIsCurrent}
@@ -1127,9 +1128,9 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <section className={styles.sectionCard}>
         <h2>Додати бейдж</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+        <div className={styles.formGrid}>
           <input
             placeholder="Код (наприклад FINISHED_5)"
             value={badgeCode}
@@ -1157,12 +1158,12 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section style={{ marginBottom: 20 }}>
+      <section className={styles.sectionSpacing}>
         <h2>Бейджі</h2>
-        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+        <ul className={styles.listGrid}>
           {badges.map((badge) => (
-            <li key={badge.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
-              <div style={{ display: "grid", gap: 8 }}>
+            <li key={badge.id} className={styles.listItem}>
+              <div className={styles.editGrid}>
                 <input
                   value={badge.title}
                   onChange={(e) =>
@@ -1205,23 +1206,23 @@ export default function AdminPage() {
                     )
                   }
                 />
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className={styles.actionsRow}>
                   <button onClick={() => onUpdateBadge(badge)}>Зберегти</button>
                   <button onClick={() => onDeleteBadge(badge.id)}>Видалити</button>
                 </div>
               </div>
             </li>
           ))}
-          {badges.length === 0 && <li style={{ fontSize: 12, opacity: 0.7 }}>Немає бейджів</li>}
+          {badges.length === 0 && <li className={styles.emptyState}>Немає бейджів</li>}
         </ul>
       </section>
 
-      <section style={{ marginBottom: 20 }}>
+      <section className={styles.sectionSpacing}>
         <h2>Вікові групи</h2>
-        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+        <ul className={styles.listGrid}>
           {ageGroups.map((group) => (
-            <li key={group.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
-              <div style={{ display: "grid", gap: 8 }}>
+            <li key={group.id} className={styles.listItem}>
+              <div className={styles.editGrid}>
                 <input
                   value={group.title}
                   onChange={(e) =>
@@ -1242,7 +1243,7 @@ export default function AdminPage() {
                     )
                   }
                 />
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label className={styles.inlineLabel}>
                   Мін. вік
                   <input
                     type="number"
@@ -1257,10 +1258,10 @@ export default function AdminPage() {
                         )
                       )
                     }
-                    style={{ width: 80 }}
+                    className={styles.smallInput}
                   />
                 </label>
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label className={styles.inlineLabel}>
                   Макс. вік
                   <input
                     type="number"
@@ -1275,10 +1276,10 @@ export default function AdminPage() {
                         )
                       )
                     }
-                    style={{ width: 80 }}
+                    className={styles.smallInput}
                   />
                 </label>
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label className={styles.inlineLabel}>
                   Порядок
                   <input
                     type="number"
@@ -1293,10 +1294,10 @@ export default function AdminPage() {
                         )
                       )
                     }
-                    style={{ width: 80 }}
+                    className={styles.smallInput}
                   />
                 </label>
-                <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label className={styles.inlineLabel}>
                   <input
                     type="checkbox"
                     checked={group.isActive}
@@ -1310,22 +1311,22 @@ export default function AdminPage() {
                   />
                   Активна
                 </label>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className={styles.actionsRow}>
                   <button onClick={() => onUpdateAgeGroup(group)}>Зберегти</button>
                   <button onClick={() => onDeleteAgeGroup(group.id)}>Видалити</button>
                 </div>
               </div>
             </li>
           ))}
-          {ageGroups.length === 0 && <li style={{ fontSize: 12, opacity: 0.7 }}>Немає груп</li>}
+          {ageGroups.length === 0 && <li className={styles.emptyState}>Немає груп</li>}
         </ul>
       </section>
 
-      <section style={{ marginBottom: 20 }}>
+      <section className={styles.sectionSpacing}>
         <h2>Модулі</h2>
-        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+        <ul className={styles.listGrid}>
           {modules.map((m) => (
-            <li key={m.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
+            <li key={m.id} className={styles.listItem}>
               <div style={{ fontWeight: 600 }}>{m.title}</div>
               <div style={{ fontSize: 12, opacity: 0.8 }}>{m.code}</div>
             </li>
@@ -1333,11 +1334,11 @@ export default function AdminPage() {
         </ul>
       </section>
 
-      <section style={{ marginBottom: 20 }}>
+      <section className={styles.sectionSpacing}>
         <h2>Ігри</h2>
         <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 10 }}>
           {games.map((g) => (
-            <li key={g.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
+            <li key={g.id} className={styles.listItem}>
               <input
                 value={g.title}
                 onChange={(e) =>
@@ -1363,7 +1364,7 @@ export default function AdminPage() {
               <div style={{ fontSize: 12, opacity: 0.8 }}>
                 Рівні: D1={levelsByGameDifficulty[`${g.id}:1`] ?? 0}, D2={levelsByGameDifficulty[`${g.id}:2`] ?? 0}, D3={levelsByGameDifficulty[`${g.id}:3`] ?? 0}
               </div>
-              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <label className={styles.inlineLabel}>
                 Складність
                 <input
                   type="number"
@@ -1377,10 +1378,10 @@ export default function AdminPage() {
                       )
                     )
                   }
-                  style={{ width: 80 }}
+                  className={styles.smallInput}
                 />
               </label>
-              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <label className={styles.inlineLabel}>
                 <input
                   type="checkbox"
                   checked={g.isActive}
@@ -1394,7 +1395,7 @@ export default function AdminPage() {
                 />
                 Активна
               </label>
-              <div style={{ display: "flex", gap: 8 }}>
+              <div className={styles.actionsRow}>
                 <button onClick={() => onUpdateGame(g)}>Зберегти</button>
                 <button onClick={() => onDeleteGame(g.id)}>Видалити</button>
               </div>
@@ -1417,7 +1418,7 @@ export default function AdminPage() {
                     <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>
                       Рівень: {t.levelNumber ? `D${t.difficulty} • ${t.levelNumber}` : "без рівня"}
                     </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div className={styles.inlineLabel}>
                       <select
                         value={t.levelId ?? ""}
                         onChange={(e) => {
@@ -1451,7 +1452,7 @@ export default function AdminPage() {
                               )
                             )
                           }
-                          style={{ width: 80 }}
+                          className={styles.smallInput}
                         />
                       </label>
                       <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -1534,21 +1535,21 @@ export default function AdminPage() {
                               />
                               Поточна версія
                             </label>
-                            <div style={{ display: "flex", gap: 8 }}>
+                            <div className={styles.actionsRow}>
                               <button onClick={() => onUpdateTaskVersion(v)}>Зберегти</button>
                               <button onClick={() => onDeleteTaskVersion(v.id)}>Видалити</button>
                             </div>
                           </li>
                         ))}
                         {(!groupedTaskVersions[t.id] || groupedTaskVersions[t.id].length === 0) && (
-                          <li style={{ fontSize: 12, opacity: 0.7 }}>Немає версій</li>
+                          <li className={styles.emptyState}>Немає версій</li>
                         )}
                       </ul>
                     </div>
                   </li>
                 ))}
                 {(!groupedTasks[g.id] || groupedTasks[g.id].length === 0) && (
-                  <li style={{ fontSize: 12, opacity: 0.7 }}>Немає завдань</li>
+                  <li className={styles.emptyState}>Немає завдань</li>
                 )}
               </ul>
             </div>
