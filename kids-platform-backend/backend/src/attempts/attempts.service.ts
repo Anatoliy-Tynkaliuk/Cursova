@@ -96,6 +96,11 @@ export class AttemptsService {
 
     if (!attempt || !attempt.level) return;
 
+    const isSuccessfulAttempt = attempt.isFinished && attempt.correctCount > 0;
+    if (!isSuccessfulAttempt) {
+      return;
+    }
+
     const targetUnlockedLevel = attempt.level.levelNumber + 1;
 
     const progress = await this.getOrCreateLevelProgress(

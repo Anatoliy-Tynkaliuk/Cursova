@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   CreateAgeGroupDto,
@@ -22,6 +22,24 @@ import {
 @Injectable()
 export class AdminService {
   constructor(private prisma: PrismaService) {}
+
+  private async ensureTaskLevelBelongsToGame(gameId: bigint, levelId: number) {
+    const level = await this.prisma.gameLevel.findFirst({
+      where: {
+        id: BigInt(levelId),
+        gameId,
+        isActive: true,
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    if (!level) {
+      throw new BadRequestException("levelId is invalid for selected game");
+    }
+
+    return level.id;
+  }
 
   async listAgeGroups() {
     const groups = await this.prisma.ageGroup.findMany({ orderBy: { id: "asc" } });
@@ -338,10 +356,13 @@ export class AdminService {
   }
 
   async createTask(dto: CreateTaskDto) {
+    const gameId = BigInt(dto.gameId);
+    const levelId = dto.levelId !== undefined ? await this.ensureTaskLevelBelongsToGame(gameId, dto.levelId) : undefined;
+
     const task = await this.prisma.task.create({
       data: {
-        gameId: BigInt(dto.gameId),
-        levelId: dto.levelId ? BigInt(dto.levelId) : undefined,
+        gameId,
+        levelId,
         position: dto.position,
         isActive: dto.isActive ?? true,
       },
@@ -350,11 +371,41 @@ export class AdminService {
   }
 
   async updateTask(id: number, dto: UpdateTaskDto) {
+    const currentTask = await this.prisma.task.findUnique({
+      where: { id: BigInt(id) },
+      select: { gameId: true, levelId: true },
+    });
+
+    if (!currentTask) {
+      throw new NotFoundException("Task not found");
+    }
+
+    const targetGameId = dto.gameId !== undefined ? BigInt(dto.gameId) : currentTask.gameId;
+
+    let levelId: bigint | null | undefined = undefined;
+    if (dto.levelId !== undefined) {
+      levelId = dto.levelId === null ? null : await this.ensureTaskLevelBelongsToGame(targetGameId, dto.levelId);
+    } else if (dto.gameId !== undefined && currentTask.levelId) {
+      const existingLevelMatchesGame = await this.prisma.gameLevel.findFirst({
+        where: {
+          id: currentTask.levelId,
+          gameId: targetGameId,
+          isActive: true,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (!existingLevelMatchesGame) {
+        throw new BadRequestException("Existing level does not belong to selected game. Provide levelId or null.");
+      }
+    }
+
     const task = await this.prisma.task.update({
       where: { id: BigInt(id) },
       data: {
         gameId: dto.gameId ? BigInt(dto.gameId) : undefined,
-        levelId: dto.levelId ? BigInt(dto.levelId) : undefined,
+        levelId,
         position: dto.position,
         isActive: dto.isActive,
       },

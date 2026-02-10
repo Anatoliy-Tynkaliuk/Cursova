@@ -50,7 +50,12 @@ export type CreateTaskDto = {
   isActive?: boolean;
 };
 
-export type UpdateTaskDto = Partial<CreateTaskDto>;
+export type UpdateTaskDto = {
+  gameId?: number;
+  levelId?: number | null;
+  position?: number;
+  isActive?: boolean;
+};
 
 export type CreateTaskVersionDto = {
   taskId: number;

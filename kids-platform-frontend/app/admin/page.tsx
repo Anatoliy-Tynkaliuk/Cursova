@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   createAdminGame,
+  createAdminGameLevel,
   createAdminAgeGroup,
   createAdminBadge,
   createAdminTask,
@@ -10,23 +11,27 @@ import {
   deleteAdminAgeGroup,
   deleteAdminBadge,
   deleteAdminGame,
+  deleteAdminGameLevel,
   deleteAdminTask,
   deleteAdminTaskVersion,
   getAdminAgeGroups,
   getAdminBadges,
   getAdminGames,
+  getAdminGameLevels,
   getAdminGameTypes,
   getAdminModules,
   getAdminTasks,
   getAdminTaskVersions,
   updateAdminBadge,
   updateAdminGame,
+  updateAdminGameLevel,
   updateAdminAgeGroup,
   updateAdminTask,
   updateAdminTaskVersion,
   type AdminAgeGroupItem,
   type AdminBadgeItem,
   type AdminGameItem,
+  type AdminGameLevelItem,
   type AdminGameTypeItem,
   type AdminModuleItem,
   type AdminTaskItem,
@@ -39,6 +44,7 @@ export default function AdminPage() {
   const [gameTypes, setGameTypes] = useState<AdminGameTypeItem[]>([]);
   const [ageGroups, setAgeGroups] = useState<AdminAgeGroupItem[]>([]);
   const [games, setGames] = useState<AdminGameItem[]>([]);
+  const [gameLevels, setGameLevels] = useState<AdminGameLevelItem[]>([]);
   const [tasks, setTasks] = useState<AdminTaskItem[]>([]);
   const [taskVersions, setTaskVersions] = useState<AdminTaskVersionItem[]>([]);
   const [badges, setBadges] = useState<AdminBadgeItem[]>([]);
@@ -61,7 +67,16 @@ export default function AdminPage() {
   const [difficulty, setDifficulty] = useState(1);
   const [isActive, setIsActive] = useState(true);
 
+  const [levelGameId, setLevelGameId] = useState<number | "">("");
+  const [levelDifficulty, setLevelDifficulty] = useState(1);
+  const [levelTitle, setLevelTitle] = useState("");
+  const [levelNumber, setLevelNumber] = useState<number | "">("");
+  const [levelIsActive, setLevelIsActive] = useState(true);
+  const [quickLevelsGameId, setQuickLevelsGameId] = useState<number | "">("");
+  const [quickLevelsPerDifficulty, setQuickLevelsPerDifficulty] = useState(5);
+
   const [taskGameId, setTaskGameId] = useState<number | "">("");
+  const [taskLevelId, setTaskLevelId] = useState<number | "">("");
   const [taskPosition, setTaskPosition] = useState(1);
   const [taskIsActive, setTaskIsActive] = useState(true);
 
@@ -90,7 +105,27 @@ export default function AdminPage() {
     gameTypeId !== "" &&
     minAgeGroupId !== "";
 
-  const taskFormValid = taskGameId !== "" && taskPosition > 0;
+  const levelFormValid = levelGameId !== "" && levelTitle.trim().length > 0 && [1, 2, 3].includes(levelDifficulty);
+  const quickLevelsFormValid =
+    quickLevelsGameId !== "" && Number.isInteger(quickLevelsPerDifficulty) && quickLevelsPerDifficulty > 0;
+
+  const levelsByGameDifficulty = useMemo(() => {
+    return gameLevels.reduce<Record<string, number>>((acc, level) => {
+      const key = `${level.gameId}:${level.difficulty}`;
+      if (level.isActive && !level.deletedAt) {
+        acc[key] = (acc[key] ?? 0) + 1;
+      }
+      return acc;
+    }, {});
+  }, [gameLevels]);
+
+  const selectedTaskGameLevels = useMemo(
+    () => (taskGameId === "" ? [] : gameLevels.filter((level) => level.gameId === taskGameId && level.isActive && !level.deletedAt)),
+    [gameLevels, taskGameId],
+  );
+
+  const taskRequiresLevel = selectedTaskGameLevels.length > 0;
+  const taskFormValid = taskGameId !== "" && taskPosition > 0 && (!taskRequiresLevel || taskLevelId !== "");
   const taskVersionFormValid = taskId !== "" && taskPrompt.trim().length > 0;
   const badgeFormValid = badgeCode.trim().length > 0 && badgeTitle.trim().length > 0;
 
@@ -109,6 +144,7 @@ export default function AdminPage() {
           gameTypesData,
           ageGroupsData,
           gamesData,
+          gameLevelsData,
           tasksData,
           taskVersionsData,
           badgesData,
@@ -117,6 +153,7 @@ export default function AdminPage() {
           getAdminGameTypes(),
           getAdminAgeGroups(),
           getAdminGames(),
+          getAdminGameLevels(),
           getAdminTasks(),
           getAdminTaskVersions(),
           getAdminBadges(),
@@ -125,6 +162,7 @@ export default function AdminPage() {
         setGameTypes(gameTypesData);
         setAgeGroups(ageGroupsData);
         setGames(gamesData);
+        setGameLevels(gameLevelsData);
         setTasks(tasksData);
         setTaskVersions(taskVersionsData);
         setBadges(badgesData);
@@ -233,7 +271,7 @@ export default function AdminPage() {
     setError(null);
     setMessage(null);
     try {
-      await createAdminGame({
+      const createdGame = await createAdminGame({
         moduleId,
         gameTypeId,
         minAgeGroupId,
@@ -246,8 +284,35 @@ export default function AdminPage() {
       setTitle("");
       setDescription("");
       setDifficulty(1);
+      setLevelGameId(createdGame.id);
+      setQuickLevelsGameId(createdGame.id);
       const gamesData = await getAdminGames();
       setGames(gamesData);
+    } catch (e: any) {
+      setError(e.message ?? "Error");
+    }
+  }
+
+  async function onCreateLevelsForAllDifficulties() {
+    if (!quickLevelsFormValid || quickLevelsGameId === "") return;
+
+    setError(null);
+    setMessage(null);
+
+    try {
+      for (const difficultyItem of [1, 2, 3]) {
+        for (let i = 1; i <= quickLevelsPerDifficulty; i++) {
+          await createAdminGameLevel({
+            gameId: quickLevelsGameId,
+            difficulty: difficultyItem,
+            title: `Рівень ${i} (Складність ${difficultyItem})`,
+          });
+        }
+      }
+
+      setMessage(`Додано по ${quickLevelsPerDifficulty} рівнів для кожної складності (1, 2, 3).`);
+      const levelsData = await getAdminGameLevels();
+      setGameLevels(levelsData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -281,6 +346,65 @@ export default function AdminPage() {
     }
   }
 
+  async function onCreateGameLevel() {
+    if (!levelFormValid || levelGameId === "") return;
+
+    setError(null);
+    setMessage(null);
+    try {
+      await createAdminGameLevel({
+        gameId: levelGameId,
+        difficulty: levelDifficulty,
+        title: levelTitle.trim(),
+        levelNumber: levelNumber === "" ? undefined : levelNumber,
+        isActive: levelIsActive,
+      });
+
+      setMessage("Рівень створено.");
+      setLevelTitle("");
+      setLevelNumber("");
+      setLevelDifficulty(1);
+      setLevelIsActive(true);
+
+      const levelsData = await getAdminGameLevels();
+      setGameLevels(levelsData);
+    } catch (e: any) {
+      setError(e.message ?? "Error");
+    }
+  }
+
+  async function onUpdateGameLevel(level: AdminGameLevelItem) {
+    setError(null);
+    setMessage(null);
+    try {
+      await updateAdminGameLevel(level.id, {
+        title: level.title,
+        levelNumber: level.levelNumber,
+        isActive: level.isActive,
+      });
+      setMessage("Рівень оновлено.");
+    } catch (e: any) {
+      setError(e.message ?? "Error");
+    }
+  }
+
+  async function onDeleteGameLevel(levelId: number) {
+    setError(null);
+    setMessage(null);
+    try {
+      await deleteAdminGameLevel(levelId);
+      setMessage("Рівень видалено.");
+      const [levelsData, tasksData] = await Promise.all([
+        getAdminGameLevels(),
+        getAdminTasks(),
+      ]);
+      setGameLevels(levelsData);
+      setTasks(tasksData);
+    } catch (e: any) {
+      setError(e.message ?? "Error");
+    }
+  }
+
   async function onCreateTask() {
     if (!taskFormValid || taskGameId === "") return;
     if (taskPositionTaken) {
@@ -292,11 +416,13 @@ export default function AdminPage() {
     try {
       await createAdminTask({
         gameId: taskGameId,
+        levelId: taskLevelId === "" ? undefined : taskLevelId,
         position: taskPosition,
         isActive: taskIsActive,
       });
       setMessage("Завдання створено.");
       setTaskPosition(1);
+      setTaskLevelId("");
       const tasksData = await getAdminTasks();
       setTasks(tasksData);
     } catch (e: any) {
@@ -309,6 +435,7 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await updateAdminTask(task.id, {
+        levelId: task.levelId,
         position: task.position,
         isActive: task.isActive,
       });
@@ -562,6 +689,159 @@ export default function AdminPage() {
       </section>
 
       <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+        <h2>Швидко додати рівні для всіх складностей гри</h2>
+        <div style={{ display: "grid", gap: 12, maxWidth: 520 }}>
+          <select
+            value={quickLevelsGameId}
+            onChange={(e) => setQuickLevelsGameId(Number(e.target.value))}
+          >
+            <option value="">Гра</option>
+            {games.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.title}
+              </option>
+            ))}
+          </select>
+
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            Рівнів на кожну складність
+            <input
+              type="number"
+              min={1}
+              value={quickLevelsPerDifficulty}
+              onChange={(e) => setQuickLevelsPerDifficulty(Number(e.target.value))}
+              style={{ width: 90 }}
+            />
+          </label>
+
+          <button disabled={!quickLevelsFormValid} onClick={onCreateLevelsForAllDifficulties}>
+            Додати рівні 1-3
+          </button>
+
+          <div style={{ fontSize: 12, opacity: 0.75 }}>
+            Автоматично створює рівні для складностей 1, 2, 3 з назвами формату
+            <code style={{ marginLeft: 6 }}>Рівень N (Складність D)</code>
+          </div>
+        </div>
+      </section>
+
+      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
+        <h2>Додати рівень гри</h2>
+        <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
+          <select value={levelGameId} onChange={(e) => setLevelGameId(Number(e.target.value))}>
+            <option value="">Гра</option>
+            {games.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.title}
+              </option>
+            ))}
+          </select>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            Складність
+            <select value={levelDifficulty} onChange={(e) => setLevelDifficulty(Number(e.target.value))}>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+            </select>
+          </label>
+          <input
+            placeholder="Назва рівня"
+            value={levelTitle}
+            onChange={(e) => setLevelTitle(e.target.value)}
+          />
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            Номер рівня (необов'язково)
+            <input
+              type="number"
+              min={1}
+              value={levelNumber}
+              onChange={(e) => {
+                const value = e.target.value;
+                setLevelNumber(value ? Number(value) : "");
+              }}
+              style={{ width: 100 }}
+            />
+          </label>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="checkbox"
+              checked={levelIsActive}
+              onChange={(e) => setLevelIsActive(e.target.checked)}
+            />
+            Активний
+          </label>
+          <button disabled={!levelFormValid} onClick={onCreateGameLevel}>
+            Створити рівень
+          </button>
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 20 }}>
+        <h2>Рівні ігор</h2>
+        {gameLevels.length === 0 ? (
+          <p>Немає рівнів.</p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
+            {gameLevels.map((level) => (
+              <li key={level.id} style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>
+                  {level.gameTitle} • D{level.difficulty}
+                </div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <input
+                    value={level.title}
+                    onChange={(e) =>
+                      setGameLevels((prev) =>
+                        prev.map((item) =>
+                          item.id === level.id ? { ...item, title: e.target.value } : item
+                        )
+                      )
+                    }
+                  />
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    Номер
+                    <input
+                      type="number"
+                      min={1}
+                      value={level.levelNumber}
+                      onChange={(e) =>
+                        setGameLevels((prev) =>
+                          prev.map((item) =>
+                            item.id === level.id
+                              ? { ...item, levelNumber: Number(e.target.value) }
+                              : item
+                          )
+                        )
+                      }
+                      style={{ width: 90 }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <input
+                      type="checkbox"
+                      checked={level.isActive}
+                      onChange={(e) =>
+                        setGameLevels((prev) =>
+                          prev.map((item) =>
+                            item.id === level.id ? { ...item, isActive: e.target.checked } : item
+                          )
+                        )
+                      }
+                    />
+                    Активний
+                  </label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => onUpdateGameLevel(level)}>Зберегти</button>
+                    <button onClick={() => onDeleteGameLevel(level.id)}>Видалити</button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section style={{ border: "1px solid #333", borderRadius: 10, padding: 16, marginBottom: 20 }}>
         <h2>Додати завдання</h2>
         <div style={{ display: "grid", gap: 12, maxWidth: 480 }}>
           <select
@@ -570,12 +850,28 @@ export default function AdminPage() {
               const value = Number(e.target.value);
               setTaskGameId(value);
               setTaskPosition(value ? nextPositionForGame : 1);
+              setTaskLevelId("");
             }}
           >
             <option value="">Гра</option>
             {games.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.title}
+              </option>
+            ))}
+          </select>
+          <select
+            value={taskLevelId}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTaskLevelId(value ? Number(value) : "");
+            }}
+            disabled={taskGameId === ""}
+          >
+            <option value="">{taskRequiresLevel ? "Оберіть рівень" : "Без привʼязки до рівня"}</option>
+            {selectedTaskGameLevels.map((level) => (
+              <option key={level.id} value={level.id}>
+                D{level.difficulty} • Рівень {level.levelNumber} — {level.title}
               </option>
             ))}
           </select>
@@ -603,6 +899,11 @@ export default function AdminPage() {
           {taskPositionTaken && (
             <div style={{ fontSize: 12, color: "#b45309" }}>
               Для цієї гри вже є завдання з позицією {taskPosition}. Вибери іншу позицію.
+            </div>
+          )}
+          {taskRequiresLevel && taskLevelId === "" && (
+            <div style={{ fontSize: 12, color: "#b45309" }}>
+              Для цієї гри вже налаштовані рівні — обери конкретний рівень.
             </div>
           )}
         </div>
@@ -909,6 +1210,9 @@ export default function AdminPage() {
               <div style={{ fontSize: 12, opacity: 0.8 }}>
                 module: {g.moduleCode} | age: {g.minAgeGroupCode}
               </div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>
+                Рівні: D1={levelsByGameDifficulty[`${g.id}:1`] ?? 0}, D2={levelsByGameDifficulty[`${g.id}:2`] ?? 0}, D3={levelsByGameDifficulty[`${g.id}:3`] ?? 0}
+              </div>
               <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 Складність
                 <input
@@ -960,7 +1264,30 @@ export default function AdminPage() {
               <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 6 }}>
                 {(groupedTasks[g.id] ?? []).map((t) => (
                   <li key={t.id} style={{ border: "1px solid #eee", borderRadius: 6, padding: 8 }}>
+                    <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>
+                      Рівень: {t.levelNumber ? `D${t.difficulty} • ${t.levelNumber}` : "без рівня"}
+                    </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <select
+                        value={t.levelId ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setTasks((prev) =>
+                            prev.map((item) =>
+                              item.id === t.id ? { ...item, levelId: value ? Number(value) : null } : item
+                            )
+                          );
+                        }}
+                      >
+                        <option value="">Без рівня</option>
+                        {(gameLevels
+                          .filter((level) => level.gameId === g.id && level.isActive && !level.deletedAt)
+                          .map((level) => (
+                            <option key={level.id} value={level.id}>
+                              D{level.difficulty} • Рівень {level.levelNumber}
+                            </option>
+                          ))) || null}
+                      </select>
                       <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
                         Позиція
                         <input
