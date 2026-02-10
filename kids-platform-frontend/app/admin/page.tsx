@@ -40,6 +40,8 @@ import {
 import { isLoggedIn } from "@/lib/auth";
 
 export default function AdminPage() {
+  const parseSelectNumber = (value: string): number | "" => (value === "" ? "" : Number(value));
+
   const [modules, setModules] = useState<AdminModuleItem[]>([]);
   const [gameTypes, setGameTypes] = useState<AdminGameTypeItem[]>([]);
   const [ageGroups, setAgeGroups] = useState<AdminAgeGroupItem[]>([]);
@@ -647,7 +649,7 @@ export default function AdminPage() {
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
           />
-          <select value={moduleId} onChange={(e) => setModuleId(Number(e.target.value))}>
+          <select value={moduleId} onChange={(e) => setModuleId(parseSelectNumber(e.target.value))}>
             <option value="">Модуль</option>
             {modules.map((m) => (
               <option key={m.id} value={m.id}>
@@ -655,7 +657,15 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <select value={minAgeGroupId} onChange={(e) => setMinAgeGroupId(Number(e.target.value))}>
+          <select value={gameTypeId} onChange={(e) => setGameTypeId(parseSelectNumber(e.target.value))}>
+            <option value="">Тип гри</option>
+            {gameTypes.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.title}
+              </option>
+            ))}
+          </select>
+          <select value={minAgeGroupId} onChange={(e) => setMinAgeGroupId(parseSelectNumber(e.target.value))}>
             <option value="">Вікова група</option>
             {ageGroups.map((g) => (
               <option key={g.id} value={g.id}>
@@ -682,7 +692,11 @@ export default function AdminPage() {
             />
             Активна
           </label>
-          <button disabled={!formValid} onClick={onCreateGame}>
+          <button
+            disabled={!formValid}
+            onClick={onCreateGame}
+            title={gameTypes.length === 0 ? "Спочатку створіть або активуйте хоча б 1 тип гри" : undefined}
+          >
             Створити гру
           </button>
         </div>
