@@ -33,7 +33,7 @@ export type UpdateGameTypeDto = Partial<CreateGameTypeDto>;
 
 export type CreateGameDto = {
   moduleId: number;
-  gameTypeId: number;
+  gameTypeId?: number;
   minAgeGroupId: number;
   title: string;
   description?: string;
@@ -50,7 +50,12 @@ export type CreateTaskDto = {
   isActive?: boolean;
 };
 
-export type UpdateTaskDto = Partial<CreateTaskDto>;
+export type UpdateTaskDto = {
+  gameId?: number;
+  levelId?: number | null;
+  position?: number;
+  isActive?: boolean;
+};
 
 export type CreateTaskVersionDto = {
   taskId: number;

@@ -34,6 +34,9 @@ export default function GamePage() {
   const levelIdFromUrl = search.get("levelId");
   const selectedLevelId = Number.isInteger(Number(levelIdFromUrl)) && Number(levelIdFromUrl) > 0 ? Number(levelIdFromUrl) : null;
 
+  const effectiveLevel = selectedLevelId !== null ? null : selectedLevel;
+  const effectiveLevelId = selectedLevelId;
+
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
 
@@ -56,13 +59,13 @@ export default function GamePage() {
       return;
     }
 
-    if (!attemptIdFromUrl && normalizedDifficulty !== null && selectedLevel === null && selectedLevelId === null) {
+    if (!attemptIdFromUrl && normalizedDifficulty !== null && effectiveLevel === null && effectiveLevelId === null) {
       window.location.href = `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`;
       return;
     }
 
     setChildProfileId(session.childProfileId);
-  }, [attemptIdFromUrl, gameId, normalizedDifficulty, selectedLevel, selectedLevelId]);
+  }, [attemptIdFromUrl, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
 
   useEffect(() => {
     async function boot() {
@@ -73,8 +76,8 @@ export default function GamePage() {
             childProfileId,
             gameId,
             normalizedDifficulty!,
-            selectedLevel !== null ? selectedLevel : undefined,
-            selectedLevelId !== null ? selectedLevelId : undefined,
+            effectiveLevel !== null ? effectiveLevel : undefined,
+            effectiveLevelId !== null ? effectiveLevelId : undefined,
           );
           setAttemptId(res.attemptId);
           setTask(res.task);
@@ -85,7 +88,7 @@ export default function GamePage() {
       }
     }
     boot().catch((e: any) => setMsg(e.message ?? "Error"));
-  }, [attemptId, childProfileId, gameId, normalizedDifficulty, selectedLevel, selectedLevelId]);
+  }, [attemptId, childProfileId, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
 
   const current = useMemo(() => {
     if (!task) return null;
@@ -155,7 +158,7 @@ export default function GamePage() {
   return (
     <div style={{ padding: 16 }}>
       <h1>Гра #{gameId}</h1>
-      {selectedLevel && <div style={{ fontSize: 12, opacity: 0.8 }}>Обраний рівень: {selectedLevel}</div>}
+      {effectiveLevel && <div style={{ fontSize: 12, opacity: 0.8 }}>Обраний рівень: {effectiveLevel}</div>}
       {selectedLevelId && <div style={{ fontSize: 12, opacity: 0.8 }}>levelId: {selectedLevelId}</div>}
       {attemptId && <div style={{ fontSize: 12, opacity: 0.8 }}>attemptId: {attemptId}</div>}
       {msg && <p>{msg}</p>}

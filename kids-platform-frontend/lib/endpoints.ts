@@ -290,7 +290,7 @@ export async function createAdminTask(payload: {
 export async function updateAdminTask(
   taskId: number,
   payload: {
-    levelId?: number;
+    levelId?: number | null;
     position?: number;
     isActive?: boolean;
   }
