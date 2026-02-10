@@ -45,6 +45,7 @@ export type UpdateGameDto = Partial<CreateGameDto>;
 
 export type CreateTaskDto = {
   gameId: number;
+  levelId?: number;
   position: number;
   isActive?: boolean;
 };
@@ -72,3 +73,18 @@ export type CreateBadgeDto = {
 };
 
 export type UpdateBadgeDto = Partial<CreateBadgeDto>;
+
+
+export type CreateGameLevelDto = {
+  gameId: number;
+  difficulty: number;
+  levelNumber?: number;
+  title: string;
+  isActive?: boolean;
+};
+
+export type UpdateGameLevelDto = {
+  title?: string;
+  levelNumber?: number;
+  isActive?: boolean;
+};

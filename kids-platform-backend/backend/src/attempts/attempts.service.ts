@@ -55,14 +55,93 @@ export class AttemptsService {
     });
   }
 
+  private async getOrCreateLevelProgress(childProfileId: bigint, gameId: bigint, difficulty: number) {
+    let progress = await this.prisma.childLevelProgress.findUnique({
+      where: {
+        childProfileId_gameId_difficulty: {
+          childProfileId,
+          gameId,
+          difficulty,
+        },
+      },
+    });
+
+    if (!progress) {
+      progress = await this.prisma.childLevelProgress.create({
+        data: {
+          childProfileId,
+          gameId,
+          difficulty,
+          maxUnlockedLevel: 1,
+        },
+      });
+    }
+
+    return progress;
+  }
+
+  private async unlockNextLevelIfNeeded(attemptId: bigint) {
+    const attempt = await this.prisma.attempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        level: {
+          select: {
+            gameId: true,
+            difficulty: true,
+            levelNumber: true,
+          },
+        },
+      },
+    });
+
+    if (!attempt || !attempt.level) return;
+
+    const targetUnlockedLevel = attempt.level.levelNumber + 1;
+
+    const progress = await this.getOrCreateLevelProgress(
+      attempt.childProfileId,
+      attempt.level.gameId,
+      attempt.level.difficulty,
+    );
+
+    if (targetUnlockedLevel <= progress.maxUnlockedLevel) {
+      return;
+    }
+
+    await this.prisma.childLevelProgress.update({
+      where: {
+        childProfileId_gameId_difficulty: {
+          childProfileId: attempt.childProfileId,
+          gameId: attempt.level.gameId,
+          difficulty: attempt.level.difficulty,
+        },
+      },
+      data: {
+        maxUnlockedLevel: targetUnlockedLevel,
+      },
+    });
+  }
+
   // ---------- START ----------
-  async start(childProfileId: number, gameId: number, difficulty?: number) {
+  async start(childProfileId: number, gameId: number, difficulty: number, level?: number, levelId?: number) {
     if (!childProfileId || !gameId) {
       throw new BadRequestException("childProfileId and gameId are required");
     }
 
-    if (difficulty !== undefined && (!Number.isInteger(difficulty) || difficulty < 1)) {
+    if (!Number.isInteger(difficulty) || difficulty < 1) {
       throw new BadRequestException("difficulty must be a positive integer");
+    }
+
+    if (level !== undefined && (!Number.isInteger(level) || level < 1)) {
+      throw new BadRequestException("level must be a positive integer");
+    }
+
+    if (levelId !== undefined && (!Number.isInteger(levelId) || levelId < 1)) {
+      throw new BadRequestException("levelId must be a positive integer");
+    }
+
+    if (level !== undefined && levelId !== undefined) {
+      throw new BadRequestException("Use either level or levelId, not both");
     }
 
     const game = await this.prisma.game.findUnique({
@@ -76,33 +155,82 @@ export class AttemptsService {
       throw new NotFoundException("Game not found or inactive");
     }
 
+    let selectedLevel = null as null | {
+      id: bigint;
+      levelNumber: number;
+      title: string;
+    };
+
+    if (levelId !== undefined) {
+      selectedLevel = await this.prisma.gameLevel.findFirst({
+        where: {
+          id: BigInt(levelId),
+          gameId: BigInt(gameId),
+          difficulty,
+          isActive: true,
+          deletedAt: null,
+        },
+        select: { id: true, levelNumber: true, title: true },
+      });
+
+      if (!selectedLevel) {
+        throw new NotFoundException("Level not found or inactive for this game/difficulty");
+      }
+    } else {
+      selectedLevel = await this.prisma.gameLevel.findFirst({
+        where: {
+          gameId: BigInt(gameId),
+          difficulty,
+          isActive: true,
+          deletedAt: null,
+          ...(level !== undefined ? { levelNumber: level } : {}),
+        },
+        orderBy: { levelNumber: "asc" },
+        select: { id: true, levelNumber: true, title: true },
+      });
+
+      if (!selectedLevel) {
+        if (level !== undefined) {
+          throw new NotFoundException(`Level ${level} is not available for this game and difficulty`);
+        }
+        throw new NotFoundException("No active levels for this game and difficulty");
+      }
+    }
+
+    const progress = await this.getOrCreateLevelProgress(BigInt(childProfileId), BigInt(gameId), difficulty);
+    if (selectedLevel.levelNumber > progress.maxUnlockedLevel) {
+      throw new BadRequestException("Selected level is locked for this child");
+    }
+
     const task = await this.prisma.task.findFirst({
-      where: { gameId: BigInt(gameId), isActive: true },
+      where: {
+        gameId: BigInt(gameId),
+        levelId: selectedLevel.id,
+        isActive: true,
+      },
       orderBy: { position: "asc" },
     });
 
-    if (!task) throw new NotFoundException("No tasks for this game");
+    if (!task) throw new NotFoundException("No tasks for selected level");
 
     const tv = await this.prisma.taskVersion.findFirst({
       where: {
         taskId: task.id,
         isCurrent: true,
-        ...(difficulty !== undefined ? { difficulty } : {}),
+        difficulty,
       },
       orderBy: [{ version: "desc" }],
     });
 
     if (!tv) {
-      if (difficulty !== undefined) {
-        throw new NotFoundException(`No current task version for difficulty ${difficulty}`);
-      }
-      throw new NotFoundException("No current task version");
+      throw new NotFoundException(`No current task version for difficulty ${difficulty}`);
     }
 
     const attempt = await this.prisma.attempt.create({
       data: {
         childProfileId: BigInt(childProfileId),
         gameId: BigInt(gameId),
+        levelId: selectedLevel.id,
         score: 0,
         correctCount: 0,
         totalCount: 0,
@@ -116,6 +244,11 @@ export class AttemptsService {
         id: Number(game.id),
         title: game.title,
         moduleCode: game.module.code,
+      },
+      level: {
+        id: Number(selectedLevel.id),
+        number: selectedLevel.levelNumber,
+        title: selectedLevel.title,
       },
       task: {
         taskId: Number(task.id),
@@ -154,7 +287,6 @@ export class AttemptsService {
 
     const isCorrect = deepEqual(dto.userAnswer, tv.correctJson);
 
-    // запис відповіді (якщо вдруге на те ж саме task — впаде по @@unique(attemptId, taskId))
     await this.prisma.taskAnswer.create({
       data: {
         attemptId: BigInt(attemptId),
@@ -165,7 +297,6 @@ export class AttemptsService {
       },
     });
 
-    // оновити attempt
     const updated = await this.prisma.attempt.update({
       where: { id: BigInt(attemptId) },
       data: {
@@ -175,25 +306,39 @@ export class AttemptsService {
       },
     });
 
-    // знайти позицію поточного task
     const currentTask = await this.prisma.task.findUnique({
       where: { id: BigInt(dto.taskId) },
-      select: { position: true, gameId: true },
+      select: { position: true, gameId: true, levelId: true },
     });
     if (!currentTask) throw new BadRequestException("Task not found");
 
-    // наступний task
     const nextTask = await this.prisma.task.findFirst({
       where: {
         gameId: currentTask.gameId,
+        levelId: attempt.levelId,
         isActive: true,
         position: { gt: currentTask.position },
+        versions: {
+          some: {
+            isCurrent: true,
+            difficulty: tv.difficulty,
+          },
+        },
       },
       orderBy: { position: "asc" },
+      include: {
+        versions: {
+          where: {
+            isCurrent: true,
+            difficulty: tv.difficulty,
+          },
+          orderBy: { version: "desc" },
+          take: 1,
+        },
+      },
     });
 
     if (!nextTask) {
-      // фініш
       const finished = await this.prisma.attempt.update({
         where: { id: BigInt(attemptId) },
         data: {
@@ -202,6 +347,7 @@ export class AttemptsService {
         },
       });
       await this.awardBadges(attempt.childProfileId);
+      await this.unlockNextLevelIfNeeded(BigInt(attemptId));
 
       return {
         attemptId,
@@ -215,14 +361,7 @@ export class AttemptsService {
       };
     }
 
-    const nextTv = await this.prisma.taskVersion.findFirst({
-      where: {
-        taskId: nextTask.id,
-        isCurrent: true,
-        difficulty: tv.difficulty,
-      },
-      orderBy: [{ version: "desc" }],
-    });
+    const nextTv = nextTask.versions[0];
     if (!nextTv) throw new NotFoundException("No current task version for next task");
 
     return {
@@ -257,6 +396,7 @@ export class AttemptsService {
       },
     });
     await this.awardBadges(finished.childProfileId);
+    await this.unlockNextLevelIfNeeded(BigInt(attemptId));
 
     return {
       attemptId,

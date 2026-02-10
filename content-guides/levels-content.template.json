@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "metadata": {
+    "project": "Kids Learning Platform",
+    "moduleCode": "logic",
+    "language": "uk",
+    "notes": "Шаблон для контент-редакторів. Один файл може містити кілька рівнів."
+  },
+  "game": {
+    "id": 1,
+    "title": "Знайди правильну відповідь",
+    "difficulty": 1
+  },
+  "levels": [
+    {
+      "levelNumber": 1,
+      "title": "Базовий рівень",
+      "isActive": true,
+      "tasks": [
+        {
+          "position": 1,
+          "isActive": true,
+          "version": {
+            "version": 1,
+            "isCurrent": true,
+            "difficulty": 1,
+            "prompt": "Скільки буде 2 + 3?",
+            "dataJson": {
+              "options": [4, 5, 6],
+              "type": "choose_answer"
+            },
+            "correctJson": {
+              "answer": 5
+            },
+            "explanation": "2 + 3 = 5"
+          }
+        },
+        {
+          "position": 2,
+          "isActive": true,
+          "version": {
+            "version": 1,
+            "isCurrent": true,
+            "difficulty": 1,
+            "prompt": "Яка літера йде після 'A'?",
+            "dataJson": {
+              "options": ["B", "C", "D"],
+              "type": "choose_answer"
+            },
+            "correctJson": {
+              "answer": "B"
+            },
+            "explanation": "Після A іде B"
+          }
+        }
+      ]
+    },
+    {
+      "levelNumber": 2,
+      "title": "Трохи складніше",
+      "isActive": true,
+      "tasks": [
+        {
+          "position": 1,
+          "isActive": true,
+          "version": {
+            "version": 1,
+            "isCurrent": true,
+            "difficulty": 1,
+            "prompt": "Оберіть число більше за 7",
+            "dataJson": {
+              "options": [6, 8, 7],
+              "type": "choose_answer"
+            },
+            "correctJson": {
+              "answer": 8
+            },
+            "explanation": "Єдине число > 7 — це 8"
+          }
+        }
+      ]
+    }
+  ],
+  "validationRules": {
+    "levelNumbersMustBeUnique": true,
+    "taskPositionsMustStartAt1AndBeSequential": true,
+    "oneCurrentVersionPerTaskAndDifficulty": true,
+    "difficultyInVersionMustMatchGameDifficulty": true
+  }
+}

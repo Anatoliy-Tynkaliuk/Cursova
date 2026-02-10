@@ -1,5 +1,7 @@
 export class StartAttemptDto {
   childProfileId!: number;
   gameId!: number;
-  difficulty?: number;
+  difficulty!: number;
+  level?: number;
+  levelId?: number;
 }

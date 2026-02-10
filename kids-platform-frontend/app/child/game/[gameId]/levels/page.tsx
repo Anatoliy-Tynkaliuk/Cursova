@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
-import { getGames, type GameListItem } from "@/lib/endpoints";
+import { getGameLevels, type GameLevelsResponse } from "@/lib/endpoints";
 
 const difficultyLabels: Record<number, string> = {
   1: "Легко",
@@ -26,8 +26,7 @@ export default function GameLevelsPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [game, setGame] = useState<GameListItem | null>(null);
-  const [levelsCount, setLevelsCount] = useState(0);
+  const [levelsData, setLevelsData] = useState<GameLevelsResponse | null>(null);
 
   useEffect(() => {
     if (!difficulty) {
@@ -44,17 +43,8 @@ export default function GameLevelsPage() {
     async function loadData() {
       setError(null);
       try {
-        const games = await getGames(session.ageGroupCode!);
-        const currentGame = games.find((item) => item.id === gameId) ?? null;
-
-        if (!currentGame) {
-          setError("Гру не знайдено для поточної вікової групи.");
-          return;
-        }
-
-        const count = (currentGame.difficultyTaskCounts ?? []).find((item) => item.difficulty === difficulty)?.count ?? 0;
-        setGame(currentGame);
-        setLevelsCount(count);
+        const data = await getGameLevels(gameId, difficulty, session.childProfileId!);
+        setLevelsData(data);
       } catch (e: any) {
         setError(e.message ?? "Сталася помилка");
       } finally {
@@ -69,12 +59,13 @@ export default function GameLevelsPage() {
   }, [difficulty, gameId]);
 
   const levelLinks = useMemo(() => {
-    if (!difficulty || levelsCount <= 0) return [];
-    return Array.from({ length: levelsCount }, (_, index) => ({
-      level: index + 1,
-      href: `/child/game/${gameId}?difficulty=${difficulty}&level=${index + 1}`,
+    if (!difficulty || !levelsData) return [];
+
+    return levelsData.levels.map((item) => ({
+      ...item,
+      href: `/child/game/${gameId}?difficulty=${difficulty}&level=${item.level}&levelId=${item.levelId}`,
     }));
-  }, [difficulty, gameId, levelsCount]);
+  }, [difficulty, gameId, levelsData]);
 
   return (
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 16 }}>
@@ -91,30 +82,58 @@ export default function GameLevelsPage() {
         ) : (
           <>
             <p style={{ marginTop: 0 }}>
-              Гра: <b>{game?.title ?? `#${gameId}`}</b>
+              Гра: <b>{levelsData?.gameTitle ?? `#${gameId}`}</b>
             </p>
             <p>
               Складність: <b>{difficulty ? (difficultyLabels[difficulty] ?? `Рівень ${difficulty}`) : "—"}</b>
             </p>
 
-            {levelsCount > 0 ? (
+            {levelLinks.length > 0 ? (
               <>
                 <p>Оберіть рівень цієї складності:</p>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
-                  {levelLinks.map((item) => (
-                    <Link
-                      key={item.level}
-                      href={item.href}
-                      style={{
-                        border: "1px solid #333",
-                        borderRadius: 10,
-                        padding: "10px 8px",
-                        textAlign: "center",
-                      }}
-                    >
-                      Рівень {item.level}
-                    </Link>
-                  ))}
+                  {levelLinks.map((item) => {
+                    const bg = item.state === "completed" ? "#d1fae5" : item.state === "locked" ? "#f3f4f6" : "#fff";
+                    const color = item.state === "locked" ? "#9ca3af" : "#111";
+                    const label = item.state === "completed" ? "✓" : item.state === "locked" ? "🔒" : "▶";
+
+                    if (item.isLocked) {
+                      return (
+                        <div
+                          key={item.level}
+                          style={{
+                            border: "1px solid #d1d5db",
+                            borderRadius: 10,
+                            padding: "10px 8px",
+                            textAlign: "center",
+                            background: bg,
+                            color,
+                          }}
+                        >
+                          {label} Рівень {item.level}
+                          <div style={{ fontSize: 11 }}>{item.title}</div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={item.level}
+                        href={item.href}
+                        style={{
+                          border: "1px solid #333",
+                          borderRadius: 10,
+                          padding: "10px 8px",
+                          textAlign: "center",
+                          background: bg,
+                          color,
+                        }}
+                      >
+                        {label} Рівень {item.level}
+                          <div style={{ fontSize: 11 }}>{item.title}</div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </>
             ) : (

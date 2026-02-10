@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import {
   CreateAgeGroupDto,
@@ -15,6 +15,8 @@ import {
   UpdateTaskDto,
   UpdateTaskVersionDto,
   UpdateBadgeDto,
+  CreateGameLevelDto,
+  UpdateGameLevelDto,
 } from "./dto";
 
 @Injectable()
@@ -212,24 +214,134 @@ export class AdminService {
     return { ok: true };
   }
 
+  async listGameLevels(gameId?: number) {
+    const levels = await this.prisma.gameLevel.findMany({
+      where: {
+        ...(gameId ? { gameId: BigInt(gameId) } : {}),
+      },
+      include: { game: true },
+      orderBy: [{ gameId: "asc" }, { difficulty: "asc" }, { levelNumber: "asc" }],
+    });
+
+    return levels.map((level) => ({
+      id: Number(level.id),
+      gameId: Number(level.gameId),
+      gameTitle: level.game.title,
+      difficulty: level.difficulty,
+      levelNumber: level.levelNumber,
+      title: level.title,
+      isActive: level.isActive,
+      deletedAt: level.deletedAt,
+      createdAt: level.createdAt,
+      updatedAt: level.updatedAt,
+    }));
+  }
+
+  async createGameLevel(dto: CreateGameLevelDto) {
+    if (![1, 2, 3].includes(dto.difficulty)) {
+      throw new BadRequestException("difficulty must be one of 1, 2, 3");
+    }
+
+    const level = await this.prisma.$transaction(async (tx) => {
+      let levelNumber = dto.levelNumber;
+
+      if (!levelNumber) {
+        const maxLevel = await tx.gameLevel.aggregate({
+          where: {
+            gameId: BigInt(dto.gameId),
+            difficulty: dto.difficulty,
+            deletedAt: null,
+          },
+          _max: { levelNumber: true },
+        });
+        levelNumber = (maxLevel._max.levelNumber ?? 0) + 1;
+      }
+
+      return tx.gameLevel.create({
+        data: {
+          gameId: BigInt(dto.gameId),
+          difficulty: dto.difficulty,
+          levelNumber,
+          title: dto.title,
+          isActive: dto.isActive ?? true,
+        },
+      });
+    });
+
+    return { id: Number(level.id) };
+  }
+
+  async updateGameLevel(id: number, dto: UpdateGameLevelDto) {
+    const level = await this.prisma.gameLevel.update({
+      where: { id: BigInt(id) },
+      data: {
+        title: dto.title,
+        levelNumber: dto.levelNumber,
+        isActive: dto.isActive,
+      },
+    });
+    return { id: Number(level.id) };
+  }
+
+  async deleteGameLevel(id: number) {
+    await this.prisma.gameLevel.update({
+      where: { id: BigInt(id) },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+      },
+    });
+    return { ok: true };
+  }
+
   async listTasks() {
     const tasks = await this.prisma.task.findMany({
       orderBy: { id: "asc" },
       include: { game: true },
     });
-    return tasks.map((t) => ({
-      id: Number(t.id),
-      gameId: Number(t.gameId),
-      gameTitle: t.game.title,
-      position: t.position,
-      isActive: t.isActive,
-    }));
+
+    const levelIds = Array.from(
+      new Set(tasks.filter((task) => task.levelId !== null).map((task) => task.levelId!.toString())),
+    );
+
+    const levels = levelIds.length
+      ? await this.prisma.gameLevel.findMany({
+          where: {
+            id: {
+              in: levelIds.map((id) => BigInt(id)),
+            },
+          },
+          select: {
+            id: true,
+            levelNumber: true,
+            difficulty: true,
+          },
+        })
+      : [];
+
+    const levelById = new Map(levels.map((level) => [level.id.toString(), level]));
+
+    return tasks.map((t) => {
+      const level = t.levelId ? levelById.get(t.levelId.toString()) : undefined;
+
+      return {
+        id: Number(t.id),
+        gameId: Number(t.gameId),
+        gameTitle: t.game.title,
+        levelId: t.levelId ? Number(t.levelId) : null,
+        levelNumber: level?.levelNumber ?? null,
+        difficulty: level?.difficulty ?? null,
+        position: t.position,
+        isActive: t.isActive,
+      };
+    });
   }
 
   async createTask(dto: CreateTaskDto) {
     const task = await this.prisma.task.create({
       data: {
         gameId: BigInt(dto.gameId),
+        levelId: dto.levelId ? BigInt(dto.levelId) : undefined,
         position: dto.position,
         isActive: dto.isActive ?? true,
       },
@@ -242,6 +354,7 @@ export class AdminService {
       where: { id: BigInt(id) },
       data: {
         gameId: dto.gameId ? BigInt(dto.gameId) : undefined,
+        levelId: dto.levelId ? BigInt(dto.levelId) : undefined,
         position: dto.position,
         isActive: dto.isActive,
       },
