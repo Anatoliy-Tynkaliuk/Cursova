@@ -362,6 +362,9 @@ export type GameListItem = {
   moduleCode: string;
   minAgeGroupCode: string;
   difficulty: number;
+  difficultyLevels: number[];
+  availableDifficulties: number[];
+  difficultyTaskCounts: Array<{ difficulty: number; count: number }>;
 };
 
 export async function getGames(ageGroupCode: string) {
@@ -378,8 +381,12 @@ export type StartAttemptResponse = {
   };
 };
 
-export async function startAttempt(childProfileId: number, gameId: number) {
-  return api<StartAttemptResponse>("/attempts/start", "POST", { childProfileId, gameId });
+export async function startAttempt(childProfileId: number, gameId: number, difficulty?: number) {
+  return api<StartAttemptResponse>("/attempts/start", "POST", {
+    childProfileId,
+    gameId,
+    ...(difficulty !== undefined ? { difficulty } : {}),
+  });
 }
 
 export type AnswerResponse =

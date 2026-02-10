@@ -56,9 +56,13 @@ export class AttemptsService {
   }
 
   // ---------- START ----------
-  async start(childProfileId: number, gameId: number) {
+  async start(childProfileId: number, gameId: number, difficulty?: number) {
     if (!childProfileId || !gameId) {
       throw new BadRequestException("childProfileId and gameId are required");
+    }
+
+    if (difficulty !== undefined && (!Number.isInteger(difficulty) || difficulty < 1)) {
+      throw new BadRequestException("difficulty must be a positive integer");
     }
 
     const game = await this.prisma.game.findUnique({
@@ -72,6 +76,29 @@ export class AttemptsService {
       throw new NotFoundException("Game not found or inactive");
     }
 
+    const task = await this.prisma.task.findFirst({
+      where: { gameId: BigInt(gameId), isActive: true },
+      orderBy: { position: "asc" },
+    });
+
+    if (!task) throw new NotFoundException("No tasks for this game");
+
+    const tv = await this.prisma.taskVersion.findFirst({
+      where: {
+        taskId: task.id,
+        isCurrent: true,
+        ...(difficulty !== undefined ? { difficulty } : {}),
+      },
+      orderBy: [{ version: "desc" }],
+    });
+
+    if (!tv) {
+      if (difficulty !== undefined) {
+        throw new NotFoundException(`No current task version for difficulty ${difficulty}`);
+      }
+      throw new NotFoundException("No current task version");
+    }
+
     const attempt = await this.prisma.attempt.create({
       data: {
         childProfileId: BigInt(childProfileId),
@@ -82,20 +109,6 @@ export class AttemptsService {
         isFinished: false,
       },
     });
-
-    const task = await this.prisma.task.findFirst({
-      where: { gameId: BigInt(gameId), isActive: true },
-      orderBy: { position: "asc" },
-    });
-
-    if (!task) throw new NotFoundException("No tasks for this game");
-
-    const tv = await this.prisma.taskVersion.findFirst({
-      where: { taskId: task.id, isCurrent: true },
-      orderBy: { version: "desc" },
-    });
-
-    if (!tv) throw new NotFoundException("No current task version");
 
     return {
       attemptId: Number(attempt.id),
@@ -203,8 +216,12 @@ export class AttemptsService {
     }
 
     const nextTv = await this.prisma.taskVersion.findFirst({
-      where: { taskId: nextTask.id, isCurrent: true },
-      orderBy: { version: "desc" },
+      where: {
+        taskId: nextTask.id,
+        isCurrent: true,
+        difficulty: tv.difficulty,
+      },
+      orderBy: [{ version: "desc" }],
     });
     if (!nextTv) throw new NotFoundException("No current task version for next task");
 

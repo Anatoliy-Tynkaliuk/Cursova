@@ -66,7 +66,6 @@ export default function LogicPlanetPage() {
     loadData();
   }, []);
 
-
   const emptyState = useMemo(() => !loading && games.length === 0, [games.length, loading]);
 
   return (
@@ -111,10 +110,10 @@ export default function LogicPlanetPage() {
 
                 <div className={styles.cardText}>
                   <h3 className={styles.cardTitle}>{game.title}</h3>
-                  <p className={styles.cardSubtitle}>Складність: {game.difficulty}</p>
+                  <p className={styles.cardSubtitle}>Натисни “Грати”, щоб обрати складність на наступному екрані.</p>
                 </div>
 
-                <Link href={`/child/game/${game.id}`} className={styles.playBtn}>
+                <Link href={`/child/game/${game.id}/difficulty`} className={styles.playBtn}>
                   Грати
                 </Link>
               </div>

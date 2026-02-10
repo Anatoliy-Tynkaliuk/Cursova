@@ -10,7 +10,7 @@ export class AttemptsController {
 
   @Post("start")
   start(@Body() dto: StartAttemptDto) {
-    return this.attemptsService.start(dto.childProfileId, dto.gameId);
+    return this.attemptsService.start(dto.childProfileId, dto.gameId, dto.difficulty);
   }
 
   @Post(":attemptId/answer")
