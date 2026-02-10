@@ -285,7 +285,7 @@ export default function AdminPage() {
   }
 
   async function onCreateGame() {
-    if (!formValid || moduleId === "" || gameTypeId === "" || minAgeGroupId === "") return;
+    if (!formValid || typeof moduleId !== "number" || typeof gameTypeId !== "number" || typeof minAgeGroupId !== "number") return;
     setError(null);
     setMessage(null);
     try {
@@ -339,7 +339,7 @@ export default function AdminPage() {
   }
 
   async function onCreateGameLevel() {
-    if (!levelFormValid || levelGameId === "") return;
+    if (!levelFormValid || typeof levelGameId !== "number") return;
 
     setError(null);
     setMessage(null);
@@ -396,7 +396,7 @@ export default function AdminPage() {
   }
 
   async function onCreateTask() {
-    if (!taskFormValid || taskGameId === "") return;
+    if (!taskFormValid || typeof taskGameId !== "number") return;
     if (taskPositionTaken) {
       setError(`Для цієї гри вже є завдання з позицією ${taskPosition}.`);
       return;
@@ -449,7 +449,7 @@ export default function AdminPage() {
   }
 
   async function onCreateTaskVersion() {
-    if (!taskVersionFormValid || taskId === "") return;
+    if (!taskVersionFormValid || typeof taskId !== "number") return;
     setError(null);
     setMessage(null);
     try {

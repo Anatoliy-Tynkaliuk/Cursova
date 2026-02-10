@@ -35,15 +35,19 @@ export default function GameLevelsPage() {
     }
 
     const session = getChildSession();
-    if (!session.childProfileId || !session.ageGroupCode) {
+    const childProfileId = session.childProfileId;
+    if (typeof childProfileId !== "number" || !session.ageGroupCode) {
       window.location.href = "/child/join";
       return;
     }
 
+    const resolvedDifficulty: number = difficulty;
+    const resolvedChildProfileId: number = childProfileId;
+
     async function loadData() {
       setError(null);
       try {
-        const data = await getGameLevels(gameId, difficulty, session.childProfileId!);
+        const data = await getGameLevels(gameId, resolvedDifficulty, resolvedChildProfileId);
         setLevelsData(data);
       } catch (e: any) {
         setError(e.message ?? "Сталася помилка");
