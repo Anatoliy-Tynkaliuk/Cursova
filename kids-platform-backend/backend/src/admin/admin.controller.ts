@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { AdminService } from "./admin.service";
 import { JwtGuard } from "../auth/jwt.guard";
 import { AdminGuard } from "../auth/admin.guard";
@@ -17,6 +17,8 @@ import type {
   UpdateModuleDto,
   UpdateTaskDto,
   UpdateTaskVersionDto,
+  CreateGameLevelDto,
+  UpdateGameLevelDto,
 } from "./dto";
 
 @Controller("admin")
@@ -102,6 +104,26 @@ export class AdminController {
   @Delete("games/:id")
   deleteGame(@Param("id") id: string) {
     return this.service.deleteGame(Number(id));
+  }
+
+  @Get("game-levels")
+  listGameLevels(@Query("gameId") gameId?: string) {
+    return this.service.listGameLevels(gameId ? Number(gameId) : undefined);
+  }
+
+  @Post("game-levels")
+  createGameLevel(@Body() body: CreateGameLevelDto) {
+    return this.service.createGameLevel(body);
+  }
+
+  @Patch("game-levels/:id")
+  updateGameLevel(@Param("id") id: string, @Body() body: UpdateGameLevelDto) {
+    return this.service.updateGameLevel(Number(id), body);
+  }
+
+  @Delete("game-levels/:id")
+  deleteGameLevel(@Param("id") id: string) {
+    return this.service.deleteGameLevel(Number(id));
   }
 
   @Get("tasks")

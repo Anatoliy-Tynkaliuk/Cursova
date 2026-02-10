@@ -50,8 +50,9 @@ model ChildProfile {
   ageGroup   AgeGroup     @relation(fields: [ageGroupId], references: [id], onDelete: Restrict)
   parents    ParentChild[]
   invites    LinkInvite[]
-  attempts   Attempt[]
-  badges     ChildBadge[]
+  attempts      Attempt[]
+  levelProgress ChildLevelProgress[]
+  badges        ChildBadge[]
 
   @@map("child_profiles")
 }
@@ -124,25 +125,51 @@ model Game {
   gameType    GameType @relation(fields: [gameTypeId], references: [id], onDelete: Restrict)
   minAgeGroup AgeGroup @relation(fields: [minAgeGroupId], references: [id], onDelete: Restrict)
 
-  tasks    Task[]
-  attempts Attempt[]
+  levels        GameLevel[]
+  tasks         Task[]
+  attempts      Attempt[]
+  levelProgress ChildLevelProgress[]
 
   @@index([minAgeGroupId, isActive])
   @@map("games")
 }
 
+
+model GameLevel {
+  id          BigInt    @id @default(autoincrement())
+  gameId       BigInt
+  difficulty   Int
+  levelNumber  Int
+  title        String
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  game     Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  tasks    Task[]
+  attempts Attempt[]
+
+  @@unique([gameId, difficulty, levelNumber])
+  @@index([gameId, difficulty, isActive])
+  @@map("game_levels")
+}
+
 model Task {
   id        BigInt   @id @default(autoincrement())
   gameId    BigInt
+  levelId   BigInt?
   position  Int
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
   game     Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  level    GameLevel?   @relation(fields: [levelId], references: [id], onDelete: SetNull)
   versions TaskVersion[]
   answers  TaskAnswer[]
 
-  @@unique([gameId, position])
+  @@index([levelId])
+  @@unique([levelId, position])
   @@map("tasks")
 }
 
@@ -170,6 +197,7 @@ model Attempt {
   id             BigInt   @id @default(autoincrement())
   childProfileId BigInt
   gameId         BigInt
+  levelId        BigInt?
 
   score        Int     @default(0)
   correctCount Int     @default(0)
@@ -183,8 +211,10 @@ model Attempt {
 
   child   ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
   game    Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  level   GameLevel?   @relation(fields: [levelId], references: [id], onDelete: SetNull)
   answers TaskAnswer[]
 
+  @@index([levelId])
   @@map("attempts")
 }
 
@@ -203,6 +233,24 @@ model TaskAnswer {
 
   @@unique([attemptId, taskId])
   @@map("task_answers")
+}
+
+
+model ChildLevelProgress {
+  id               BigInt   @id @default(autoincrement())
+  childProfileId   BigInt
+  gameId           BigInt
+  difficulty       Int
+  maxUnlockedLevel Int      @default(1)
+  starsJson        Json     @default("{}")
+  updatedAt        DateTime @updatedAt
+
+  child ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  game  Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([childProfileId, gameId, difficulty])
+  @@index([childProfileId, gameId])
+  @@map("child_level_progress")
 }
 
 model Badge {

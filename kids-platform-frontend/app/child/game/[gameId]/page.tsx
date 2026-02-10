@@ -31,6 +31,8 @@ export default function GamePage() {
   const normalizedDifficulty = normalizeDifficulty(difficultyFromUrl);
   const levelFromUrl = search.get("level");
   const selectedLevel = Number.isInteger(Number(levelFromUrl)) && Number(levelFromUrl) > 0 ? Number(levelFromUrl) : null;
+  const levelIdFromUrl = search.get("levelId");
+  const selectedLevelId = Number.isInteger(Number(levelIdFromUrl)) && Number(levelIdFromUrl) > 0 ? Number(levelIdFromUrl) : null;
 
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
@@ -54,8 +56,13 @@ export default function GamePage() {
       return;
     }
 
+    if (!attemptIdFromUrl && normalizedDifficulty !== null && selectedLevel === null && selectedLevelId === null) {
+      window.location.href = `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`;
+      return;
+    }
+
     setChildProfileId(session.childProfileId);
-  }, [attemptIdFromUrl, gameId, normalizedDifficulty]);
+  }, [attemptIdFromUrl, gameId, normalizedDifficulty, selectedLevel, selectedLevelId]);
 
   useEffect(() => {
     async function boot() {
@@ -65,7 +72,9 @@ export default function GamePage() {
           const res = await startAttempt(
             childProfileId,
             gameId,
-            normalizedDifficulty !== null ? normalizedDifficulty : undefined,
+            normalizedDifficulty!,
+            selectedLevel !== null ? selectedLevel : undefined,
+            selectedLevelId !== null ? selectedLevelId : undefined,
           );
           setAttemptId(res.attemptId);
           setTask(res.task);
@@ -76,7 +85,7 @@ export default function GamePage() {
       }
     }
     boot().catch((e: any) => setMsg(e.message ?? "Error"));
-  }, [attemptId, childProfileId, gameId, normalizedDifficulty]);
+  }, [attemptId, childProfileId, gameId, normalizedDifficulty, selectedLevel, selectedLevelId]);
 
   const current = useMemo(() => {
     if (!task) return null;
@@ -147,6 +156,7 @@ export default function GamePage() {
     <div style={{ padding: 16 }}>
       <h1>Гра #{gameId}</h1>
       {selectedLevel && <div style={{ fontSize: 12, opacity: 0.8 }}>Обраний рівень: {selectedLevel}</div>}
+      {selectedLevelId && <div style={{ fontSize: 12, opacity: 0.8 }}>levelId: {selectedLevelId}</div>}
       {attemptId && <div style={{ fontSize: 12, opacity: 0.8 }}>attemptId: {attemptId}</div>}
       {msg && <p>{msg}</p>}
 

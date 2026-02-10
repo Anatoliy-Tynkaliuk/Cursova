@@ -110,6 +110,9 @@ export type AdminTaskItem = {
   id: number;
   gameId: number;
   gameTitle: string;
+  levelId: number | null;
+  levelNumber: number | null;
+  difficulty: number | null;
   position: number;
   isActive: boolean;
 };
@@ -149,6 +152,50 @@ export async function getAdminAgeGroups() {
 
 export async function getAdminGames() {
   return api<AdminGameItem[]>("/admin/games", "GET");
+}
+
+
+export type AdminGameLevelItem = {
+  id: number;
+  gameId: number;
+  gameTitle: string;
+  difficulty: number;
+  levelNumber: number;
+  title: string;
+  isActive: boolean;
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function getAdminGameLevels(gameId?: number) {
+  const query = gameId ? `?gameId=${encodeURIComponent(String(gameId))}` : "";
+  return api<AdminGameLevelItem[]>(`/admin/game-levels${query}`, "GET");
+}
+
+export async function createAdminGameLevel(payload: {
+  gameId: number;
+  difficulty: number;
+  title: string;
+  levelNumber?: number;
+  isActive?: boolean;
+}) {
+  return api<{ id: number }>("/admin/game-levels", "POST", payload);
+}
+
+export async function updateAdminGameLevel(
+  levelId: number,
+  payload: {
+    title?: string;
+    levelNumber?: number;
+    isActive?: boolean;
+  }
+) {
+  return api<{ id: number }>(`/admin/game-levels/${levelId}`, "PATCH", payload);
+}
+
+export async function deleteAdminGameLevel(levelId: number) {
+  return api<{ ok: true }>(`/admin/game-levels/${levelId}`, "DELETE");
 }
 
 export async function createAdminAgeGroup(payload: {
@@ -233,6 +280,7 @@ export async function createAdminGame(payload: {
 
 export async function createAdminTask(payload: {
   gameId: number;
+  levelId?: number;
   position: number;
   isActive?: boolean;
 }) {
@@ -242,6 +290,7 @@ export async function createAdminTask(payload: {
 export async function updateAdminTask(
   taskId: number,
   payload: {
+    levelId?: number;
     position?: number;
     isActive?: boolean;
   }
@@ -371,6 +420,31 @@ export async function getGames(ageGroupCode: string) {
   return api<GameListItem[]>(`/games?ageGroupCode=${encodeURIComponent(ageGroupCode)}`, "GET");
 }
 
+
+export type GameLevelsResponse = {
+  gameId: number;
+  gameTitle: string;
+  moduleCode: string;
+  difficulty: number;
+  levels: Array<{
+    levelId: number;
+    level: number;
+    title: string;
+    state: "locked" | "unlocked" | "completed";
+    isLocked: boolean;
+    isCompleted: boolean;
+  }>;
+};
+
+export async function getGameLevels(gameId: number, difficulty: number, childProfileId?: number) {
+  const query = new URLSearchParams({ difficulty: String(difficulty) });
+  if (childProfileId !== undefined) {
+    query.set("childProfileId", String(childProfileId));
+  }
+
+  return api<GameLevelsResponse>(`/games/${gameId}/levels?${query.toString()}`, "GET");
+}
+
 export type StartAttemptResponse = {
   attemptId: number;
   game: { id: number; title: string; moduleCode: string };
@@ -381,11 +455,13 @@ export type StartAttemptResponse = {
   };
 };
 
-export async function startAttempt(childProfileId: number, gameId: number, difficulty?: number) {
+export async function startAttempt(childProfileId: number, gameId: number, difficulty: number, level?: number, levelId?: number) {
   return api<StartAttemptResponse>("/attempts/start", "POST", {
     childProfileId,
     gameId,
     ...(difficulty !== undefined ? { difficulty } : {}),
+    ...(level !== undefined ? { level } : {}),
+    ...(levelId !== undefined ? { levelId } : {}),
   });
 }
 
