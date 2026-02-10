@@ -33,7 +33,7 @@ export type UpdateGameTypeDto = Partial<CreateGameTypeDto>;
 
 export type CreateGameDto = {
   moduleId: number;
-  gameTypeId: number;
+  gameTypeId?: number;
   minAgeGroupId: number;
   title: string;
   description?: string;

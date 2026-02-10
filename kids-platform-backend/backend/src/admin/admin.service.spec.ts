@@ -85,3 +85,72 @@ describe("AdminService task-level validation", () => {
     );
   });
 });
+
+
+describe("AdminService createGame without game types", () => {
+  function createService(prisma: any) {
+    return new AdminService(prisma);
+  }
+
+  it("uses existing first game type when gameTypeId is omitted", async () => {
+    const prisma = {
+      gameType: {
+        findFirst: jest.fn().mockResolvedValue({ id: BigInt(3) }),
+        create: jest.fn(),
+      },
+      game: {
+        create: jest.fn().mockResolvedValue({ id: BigInt(17) }),
+      },
+    };
+
+    const service = createService(prisma);
+
+    await expect(
+      service.createGame({
+        moduleId: 1,
+        minAgeGroupId: 2,
+        title: "Logic game",
+      }),
+    ).resolves.toEqual({ id: 17 });
+
+    expect(prisma.gameType.create).not.toHaveBeenCalled();
+    expect(prisma.game.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ gameTypeId: BigInt(3) }),
+      }),
+    );
+  });
+
+  it("creates fallback game type when none exist", async () => {
+    const prisma = {
+      gameType: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: BigInt(9) }),
+      },
+      game: {
+        create: jest.fn().mockResolvedValue({ id: BigInt(21) }),
+      },
+    };
+
+    const service = createService(prisma);
+
+    await expect(
+      service.createGame({
+        moduleId: 1,
+        minAgeGroupId: 2,
+        title: "Memory",
+      }),
+    ).resolves.toEqual({ id: 21 });
+
+    expect(prisma.gameType.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ code: "default", title: "Default", isActive: true }),
+      }),
+    );
+    expect(prisma.game.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ gameTypeId: BigInt(9) }),
+      }),
+    );
+  });
+});

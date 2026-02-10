@@ -23,6 +23,32 @@ import {
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
+  private async resolveGameTypeId(gameTypeId?: number) {
+    if (gameTypeId) {
+      return BigInt(gameTypeId);
+    }
+
+    const existingType = await this.prisma.gameType.findFirst({
+      orderBy: { id: "asc" },
+      select: { id: true },
+    });
+
+    if (existingType) {
+      return existingType.id;
+    }
+
+    const defaultType = await this.prisma.gameType.create({
+      data: {
+        code: "default",
+        title: "Default",
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    return defaultType.id;
+  }
+
   private async ensureTaskLevelBelongsToGame(gameId: bigint, levelId: number) {
     const level = await this.prisma.gameLevel.findFirst({
       where: {
@@ -197,10 +223,12 @@ export class AdminService {
   }
 
   async createGame(dto: CreateGameDto) {
+    const gameTypeId = await this.resolveGameTypeId(dto.gameTypeId);
+
     const game = await this.prisma.game.create({
       data: {
         moduleId: BigInt(dto.moduleId),
-        gameTypeId: BigInt(dto.gameTypeId),
+        gameTypeId,
         minAgeGroupId: BigInt(dto.minAgeGroupId),
         title: dto.title,
         description: dto.description,

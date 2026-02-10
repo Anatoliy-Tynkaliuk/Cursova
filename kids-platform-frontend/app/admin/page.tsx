@@ -18,7 +18,6 @@ import {
   getAdminBadges,
   getAdminGames,
   getAdminGameLevels,
-  getAdminGameTypes,
   getAdminModules,
   getAdminTasks,
   getAdminTaskVersions,
@@ -32,7 +31,6 @@ import {
   type AdminBadgeItem,
   type AdminGameItem,
   type AdminGameLevelItem,
-  type AdminGameTypeItem,
   type AdminModuleItem,
   type AdminTaskItem,
   type AdminTaskVersionItem,
@@ -43,7 +41,6 @@ export default function AdminPage() {
   const parseSelectNumber = (value: string): number | "" => (value === "" ? "" : Number(value));
 
   const [modules, setModules] = useState<AdminModuleItem[]>([]);
-  const [gameTypes, setGameTypes] = useState<AdminGameTypeItem[]>([]);
   const [ageGroups, setAgeGroups] = useState<AdminAgeGroupItem[]>([]);
   const [games, setGames] = useState<AdminGameItem[]>([]);
   const [gameLevels, setGameLevels] = useState<AdminGameLevelItem[]>([]);
@@ -64,7 +61,6 @@ export default function AdminPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [moduleId, setModuleId] = useState<number | "">("");
-  const [gameTypeId, setGameTypeId] = useState<number | "">("");
   const [minAgeGroupId, setMinAgeGroupId] = useState<number | "">("");
   const [difficulty, setDifficulty] = useState(1);
   const [isActive, setIsActive] = useState(true);
@@ -104,7 +100,6 @@ export default function AdminPage() {
   const formValid =
     title.trim().length > 0 &&
     moduleId !== "" &&
-    gameTypeId !== "" &&
     minAgeGroupId !== "";
 
   const levelFormValid = levelGameId !== "" && levelTitle.trim().length > 0 && [1, 2, 3].includes(levelDifficulty);
@@ -143,7 +138,6 @@ export default function AdminPage() {
       try {
         const [
           modulesData,
-          gameTypesData,
           ageGroupsData,
           gamesData,
           gameLevelsData,
@@ -152,7 +146,6 @@ export default function AdminPage() {
           badgesData,
         ] = await Promise.all([
           getAdminModules(),
-          getAdminGameTypes(),
           getAdminAgeGroups(),
           getAdminGames(),
           getAdminGameLevels(),
@@ -161,7 +154,6 @@ export default function AdminPage() {
           getAdminBadges(),
         ]);
         setModules(modulesData);
-        setGameTypes(gameTypesData);
         setAgeGroups(ageGroupsData);
         setGames(gamesData);
         setGameLevels(gameLevelsData);
@@ -177,12 +169,6 @@ export default function AdminPage() {
 
     load().catch((e: any) => setError(e.message ?? "Error"));
   }, []);
-
-  useEffect(() => {
-    if (gameTypeId === "" && gameTypes.length > 0) {
-      setGameTypeId(gameTypes[0].id);
-    }
-  }, [gameTypeId, gameTypes]);
 
   const groupedTasks = useMemo(() => {
     return tasks.reduce<Record<number, AdminTaskItem[]>>((acc, task) => {
@@ -269,13 +255,12 @@ export default function AdminPage() {
   }
 
   async function onCreateGame() {
-    if (!formValid || moduleId === "" || gameTypeId === "" || minAgeGroupId === "") return;
+    if (!formValid || moduleId === "" || minAgeGroupId === "") return;
     setError(null);
     setMessage(null);
     try {
       const createdGame = await createAdminGame({
         moduleId,
-        gameTypeId,
         minAgeGroupId,
         title: title.trim(),
         description: description.trim() || undefined,
@@ -657,14 +642,6 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <select value={gameTypeId} onChange={(e) => setGameTypeId(parseSelectNumber(e.target.value))}>
-            <option value="">Тип гри</option>
-            {gameTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.title}
-              </option>
-            ))}
-          </select>
           <select value={minAgeGroupId} onChange={(e) => setMinAgeGroupId(parseSelectNumber(e.target.value))}>
             <option value="">Вікова група</option>
             {ageGroups.map((g) => (
@@ -695,7 +672,6 @@ export default function AdminPage() {
           <button
             disabled={!formValid}
             onClick={onCreateGame}
-            title={gameTypes.length === 0 ? "Спочатку створіть або активуйте хоча б 1 тип гри" : undefined}
           >
             Створити гру
           </button>

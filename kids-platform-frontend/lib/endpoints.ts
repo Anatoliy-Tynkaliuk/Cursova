@@ -268,7 +268,7 @@ export async function getAdminBadges() {
 
 export async function createAdminGame(payload: {
   moduleId: number;
-  gameTypeId: number;
+  gameTypeId?: number;
   minAgeGroupId: number;
   title: string;
   description?: string;
