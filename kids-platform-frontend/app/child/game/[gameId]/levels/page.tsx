@@ -63,7 +63,7 @@ export default function GameLevelsPage() {
 
     return levelsData.levels.map((item) => ({
       ...item,
-      href: `/child/game/${gameId}?difficulty=${difficulty}&level=${item.level}&levelId=${item.levelId}`,
+      href: `/child/game/${gameId}?difficulty=${difficulty}&levelId=${item.levelId}`,
     }));
   }, [difficulty, gameId, levelsData]);
 
