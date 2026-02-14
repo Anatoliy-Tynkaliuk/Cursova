@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { Prisma } from "@prisma/client";
 import {
   CreateAgeGroupDto,
   CreateGameDto,
@@ -22,6 +23,32 @@ import {
 @Injectable()
 export class AdminService {
   constructor(private prisma: PrismaService) {}
+
+  private async hardDeleteLevelInTx(tx: Prisma.TransactionClient, levelId: bigint) {
+    await tx.attempt.updateMany({
+      where: { levelId },
+      data: { levelId: null },
+    });
+
+    await tx.taskAnswer.deleteMany({
+      where: {
+        task: {
+          levelId,
+        },
+      },
+    });
+
+    await tx.taskVersion.deleteMany({
+      where: {
+        task: {
+          levelId,
+        },
+      },
+    });
+
+    await tx.task.deleteMany({ where: { levelId } });
+    await tx.gameLevel.delete({ where: { id: levelId } });
+  }
 
   private async ensureLevelNumberAvailable(params: {
     gameId: bigint;
@@ -371,15 +398,51 @@ export class AdminService {
         }
       }
 
-      return tx.gameLevel.create({
-        data: {
-          gameId,
-          difficulty: dto.difficulty,
-          levelNumber,
-          title: dto.title,
-          isActive: dto.isActive ?? true,
-        },
-      });
+      try {
+        return await tx.gameLevel.create({
+          data: {
+            gameId,
+            difficulty: dto.difficulty,
+            levelNumber,
+            title: dto.title,
+            isActive: dto.isActive ?? true,
+          },
+        });
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          const conflicting = await tx.gameLevel.findFirst({
+            where: {
+              gameId,
+              difficulty: dto.difficulty,
+              levelNumber,
+            },
+            select: { id: true, deletedAt: true },
+          });
+
+          if (conflicting?.deletedAt) {
+            await this.hardDeleteLevelInTx(tx, conflicting.id);
+
+            return tx.gameLevel.create({
+              data: {
+                gameId,
+                difficulty: dto.difficulty,
+                levelNumber,
+                title: dto.title,
+                isActive: dto.isActive ?? true,
+              },
+            });
+          }
+
+          throw new BadRequestException(
+            `Level number ${levelNumber} already exists for this game and difficulty`,
+          );
+        }
+
+        throw error;
+      }
     });
 
     return { id: Number(level.id) };
@@ -423,29 +486,7 @@ export class AdminService {
     const levelId = BigInt(id);
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.attempt.updateMany({
-        where: { levelId },
-        data: { levelId: null },
-      });
-
-      await tx.taskAnswer.deleteMany({
-        where: {
-          task: {
-            levelId,
-          },
-        },
-      });
-
-      await tx.taskVersion.deleteMany({
-        where: {
-          task: {
-            levelId,
-          },
-        },
-      });
-
-      await tx.task.deleteMany({ where: { levelId } });
-      await tx.gameLevel.delete({ where: { id: levelId } });
+      await this.hardDeleteLevelInTx(tx, levelId);
     });
 
     return { ok: true };
