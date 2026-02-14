@@ -72,6 +72,7 @@ export default function AdminPage() {
 
   const [levelGameId, setLevelGameId] = useState<number | "">("");
   const [levelDifficulty, setLevelDifficulty] = useState(1);
+  const [levelNumberInput, setLevelNumberInput] = useState<string>("");
   const [levelTitle, setLevelTitle] = useState("");
   const [levelIsActive, setLevelIsActive] = useState(true);
 
@@ -222,6 +223,17 @@ export default function AdminPage() {
     return Math.max(...list.map((t) => t.position)) + 1;
   }, [groupedTasks, taskGameId]);
 
+  const nextLevelNumberForSelection = useMemo(() => {
+    if (levelGameId === "") return 1;
+
+    const levels = gameLevels.filter(
+      (level) => level.gameId === levelGameId && level.difficulty === levelDifficulty,
+    );
+
+    if (levels.length === 0) return 1;
+    return Math.max(...levels.map((level) => level.levelNumber)) + 1;
+  }, [gameLevels, levelDifficulty, levelGameId]);
+
   const taskPositionTaken = useMemo(() => {
     if (taskGameId === "") return false;
     const list = groupedTasks[taskGameId] ?? [];
@@ -348,17 +360,46 @@ export default function AdminPage() {
   async function onCreateGameLevel() {
     if (!levelFormValid || typeof levelGameId !== "number") return;
 
+    const parsedLevelNumber = levelNumberInput.trim() === "" ? undefined : Number(levelNumberInput);
+    if (parsedLevelNumber !== undefined && (!Number.isInteger(parsedLevelNumber) || parsedLevelNumber < 1)) {
+      setError("Номер рівня має бути цілим числом більше 0.");
+      return;
+    }
+
+    if (
+      parsedLevelNumber !== undefined &&
+      gameLevels.some(
+        (level) =>
+          level.gameId === levelGameId &&
+          level.difficulty === levelDifficulty &&
+          level.levelNumber === parsedLevelNumber,
+      )
+    ) {
+      setError(`Рівень D${levelDifficulty} • ${parsedLevelNumber} вже існує.`);
+      return;
+    }
+
+    if (parsedLevelNumber !== undefined && parsedLevelNumber < nextLevelNumberForSelection) {
+      const confirmed = window.confirm(
+        `Ви обрали номер ${parsedLevelNumber}, хоча наступний автоматичний — ${nextLevelNumberForSelection}. Продовжити?`,
+      );
+
+      if (!confirmed) return;
+    }
+
     setError(null);
     setMessage(null);
     try {
       await createAdminGameLevel({
         gameId: levelGameId,
         difficulty: levelDifficulty,
+        levelNumber: parsedLevelNumber,
         title: levelTitle.trim(),
         isActive: levelIsActive,
       });
 
       setMessage("Рівень створено.");
+      setLevelNumberInput("");
       setLevelTitle("");
       setLevelDifficulty(1);
       setLevelIsActive(true);
@@ -386,6 +427,9 @@ export default function AdminPage() {
   }
 
   async function onDeleteGameLevel(levelId: number) {
+    const confirmed = window.confirm("Видалити рівень повністю разом із завданнями цього рівня?");
+    if (!confirmed) return;
+
     setError(null);
     setMessage(null);
     try {
@@ -397,6 +441,8 @@ export default function AdminPage() {
       ]);
       setGameLevels(levelsData);
       setTasks(tasksData);
+      const taskVersionsData = await getAdminTaskVersions();
+      setTaskVersions(taskVersionsData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -754,7 +800,13 @@ export default function AdminPage() {
       <section className={styles.sectionCard}>
         <h2>Додати рівень гри</h2>
         <div className={styles.formGrid}>
-          <select value={levelGameId} onChange={(e) => setLevelGameId(Number(e.target.value))}>
+          <select
+            value={levelGameId}
+            onChange={(e) => {
+              const value = e.target.value;
+              setLevelGameId(value ? Number(value) : "");
+            }}
+          >
             <option value="">Гра</option>
             {games.map((g) => (
               <option key={g.id} value={g.id}>
@@ -775,6 +827,17 @@ export default function AdminPage() {
             value={levelTitle}
             onChange={(e) => setLevelTitle(e.target.value)}
           />
+          <label className={styles.inlineLabel}>
+            Номер (опц.)
+            <input
+              type="number"
+              min={1}
+              value={levelNumberInput}
+              onChange={(e) => setLevelNumberInput(e.target.value)}
+              placeholder={String(nextLevelNumberForSelection)}
+              className={styles.smallInput}
+            />
+          </label>
           <label className={styles.inlineLabel}>
             <input
               type="checkbox"

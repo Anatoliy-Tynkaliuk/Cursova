@@ -23,6 +23,29 @@ import {
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
+  private async ensureLevelNumberAvailable(params: {
+    gameId: bigint;
+    difficulty: number;
+    levelNumber: number;
+    excludeLevelId?: bigint;
+  }) {
+    const existing = await this.prisma.gameLevel.findFirst({
+      where: {
+        gameId: params.gameId,
+        difficulty: params.difficulty,
+        levelNumber: params.levelNumber,
+        ...(params.excludeLevelId ? { id: { not: params.excludeLevelId } } : {}),
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      throw new BadRequestException(
+        `Level number ${params.levelNumber} already exists for this game and difficulty`,
+      );
+    }
+  }
+
   private async ensureBaseGameTypes() {
     await this.prisma.gameType.upsert({
       where: { code: "test" },
@@ -301,24 +324,44 @@ export class AdminService {
       throw new BadRequestException("difficulty must be one of 1, 2, 3");
     }
 
+    if (dto.levelNumber !== undefined && (!Number.isInteger(dto.levelNumber) || dto.levelNumber < 1)) {
+      throw new BadRequestException("levelNumber must be a positive integer");
+    }
+
+    const gameId = BigInt(dto.gameId);
+
     const level = await this.prisma.$transaction(async (tx) => {
       let levelNumber = dto.levelNumber;
 
       if (!levelNumber) {
         const maxLevel = await tx.gameLevel.aggregate({
           where: {
-            gameId: BigInt(dto.gameId),
+            gameId,
             difficulty: dto.difficulty,
-            deletedAt: null,
           },
           _max: { levelNumber: true },
         });
         levelNumber = (maxLevel._max.levelNumber ?? 0) + 1;
+      } else {
+        const existing = await tx.gameLevel.findFirst({
+          where: {
+            gameId,
+            difficulty: dto.difficulty,
+            levelNumber,
+          },
+          select: { id: true },
+        });
+
+        if (existing) {
+          throw new BadRequestException(
+            `Level number ${levelNumber} already exists for this game and difficulty`,
+          );
+        }
       }
 
       return tx.gameLevel.create({
         data: {
-          gameId: BigInt(dto.gameId),
+          gameId,
           difficulty: dto.difficulty,
           levelNumber,
           title: dto.title,
@@ -331,6 +374,28 @@ export class AdminService {
   }
 
   async updateGameLevel(id: number, dto: UpdateGameLevelDto) {
+    if (dto.levelNumber !== undefined && (!Number.isInteger(dto.levelNumber) || dto.levelNumber < 1)) {
+      throw new BadRequestException("levelNumber must be a positive integer");
+    }
+
+    const currentLevel = await this.prisma.gameLevel.findUnique({
+      where: { id: BigInt(id) },
+      select: { id: true, gameId: true, difficulty: true, levelNumber: true },
+    });
+
+    if (!currentLevel) {
+      throw new NotFoundException("Level not found");
+    }
+
+    if (dto.levelNumber !== undefined && dto.levelNumber !== currentLevel.levelNumber) {
+      await this.ensureLevelNumberAvailable({
+        gameId: currentLevel.gameId,
+        difficulty: currentLevel.difficulty,
+        levelNumber: dto.levelNumber,
+        excludeLevelId: currentLevel.id,
+      });
+    }
+
     const level = await this.prisma.gameLevel.update({
       where: { id: BigInt(id) },
       data: {
@@ -343,13 +408,11 @@ export class AdminService {
   }
 
   async deleteGameLevel(id: number) {
-    await this.prisma.gameLevel.update({
-      where: { id: BigInt(id) },
-      data: {
-        isActive: false,
-        deletedAt: new Date(),
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.task.deleteMany({ where: { levelId: BigInt(id) } });
+      await tx.gameLevel.delete({ where: { id: BigInt(id) } });
     });
+
     return { ok: true };
   }
 
