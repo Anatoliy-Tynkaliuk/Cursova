@@ -34,6 +34,7 @@ export class AdminService {
         gameId: params.gameId,
         difficulty: params.difficulty,
         levelNumber: params.levelNumber,
+        deletedAt: null,
         ...(params.excludeLevelId ? { id: { not: params.excludeLevelId } } : {}),
       },
       select: { id: true },
@@ -300,6 +301,7 @@ export class AdminService {
     const levels = await this.prisma.gameLevel.findMany({
       where: {
         ...(gameId ? { gameId: BigInt(gameId) } : {}),
+        deletedAt: null,
       },
       include: { game: true },
       orderBy: [{ gameId: "asc" }, { difficulty: "asc" }, { levelNumber: "asc" }],
@@ -331,6 +333,14 @@ export class AdminService {
     const gameId = BigInt(dto.gameId);
 
     const level = await this.prisma.$transaction(async (tx) => {
+      await tx.gameLevel.deleteMany({
+        where: {
+          gameId,
+          difficulty: dto.difficulty,
+          deletedAt: { not: null },
+        },
+      });
+
       let levelNumber = dto.levelNumber;
 
       if (!levelNumber) {
@@ -338,6 +348,7 @@ export class AdminService {
           where: {
             gameId,
             difficulty: dto.difficulty,
+            deletedAt: null,
           },
           _max: { levelNumber: true },
         });
@@ -348,6 +359,7 @@ export class AdminService {
             gameId,
             difficulty: dto.difficulty,
             levelNumber,
+            deletedAt: null,
           },
           select: { id: true },
         });
@@ -380,10 +392,10 @@ export class AdminService {
 
     const currentLevel = await this.prisma.gameLevel.findUnique({
       where: { id: BigInt(id) },
-      select: { id: true, gameId: true, difficulty: true, levelNumber: true },
+      select: { id: true, gameId: true, difficulty: true, levelNumber: true, deletedAt: true },
     });
 
-    if (!currentLevel) {
+    if (!currentLevel || currentLevel.deletedAt) {
       throw new NotFoundException("Level not found");
     }
 
