@@ -366,19 +366,6 @@ export default function AdminPage() {
       return;
     }
 
-    if (
-      parsedLevelNumber !== undefined &&
-      gameLevels.some(
-        (level) =>
-          level.gameId === levelGameId &&
-          level.difficulty === levelDifficulty &&
-          level.levelNumber === parsedLevelNumber,
-      )
-    ) {
-      setError(`Рівень D${levelDifficulty} • ${parsedLevelNumber} вже існує.`);
-      return;
-    }
-
     if (parsedLevelNumber !== undefined && parsedLevelNumber < nextLevelNumberForSelection) {
       const confirmed = window.confirm(
         `Ви обрали номер ${parsedLevelNumber}, хоча наступний автоматичний — ${nextLevelNumberForSelection}. Продовжити?`,
