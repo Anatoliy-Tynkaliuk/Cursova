@@ -420,9 +420,32 @@ export class AdminService {
   }
 
   async deleteGameLevel(id: number) {
+    const levelId = BigInt(id);
+
     await this.prisma.$transaction(async (tx) => {
-      await tx.task.deleteMany({ where: { levelId: BigInt(id) } });
-      await tx.gameLevel.delete({ where: { id: BigInt(id) } });
+      await tx.attempt.updateMany({
+        where: { levelId },
+        data: { levelId: null },
+      });
+
+      await tx.taskAnswer.deleteMany({
+        where: {
+          task: {
+            levelId,
+          },
+        },
+      });
+
+      await tx.taskVersion.deleteMany({
+        where: {
+          task: {
+            levelId,
+          },
+        },
+      });
+
+      await tx.task.deleteMany({ where: { levelId } });
+      await tx.gameLevel.delete({ where: { id: levelId } });
     });
 
     return { ok: true };
@@ -530,7 +553,14 @@ export class AdminService {
   }
 
   async deleteTask(id: number) {
-    await this.prisma.task.delete({ where: { id: BigInt(id) } });
+    const taskId = BigInt(id);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.taskAnswer.deleteMany({ where: { taskId } });
+      await tx.taskVersion.deleteMany({ where: { taskId } });
+      await tx.task.delete({ where: { id: taskId } });
+    });
+
     return { ok: true };
   }
 
