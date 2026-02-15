@@ -1,38 +1,48 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
+import styles from "./game.module.css";
 
 function normalizeDifficulty(value: string | null): number | null {
   if (!value) return null;
 
   const numeric = Number(value);
-  if (Number.isInteger(numeric) && numeric > 0) {
-    return numeric;
-  }
+  if (Number.isInteger(numeric) && numeric > 0) return numeric;
 
-  const map: Record<string, number> = {
-    easy: 1,
-    medium: 2,
-    hard: 3,
-  };
-
+  const map: Record<string, number> = { easy: 1, medium: 2, hard: 3 };
   return map[value.toLowerCase()] ?? null;
 }
+
+type Summary = { score: number; correctCount: number; totalCount: number };
+
+type TaskState = {
+  taskId: number;
+  position?: number | null;
+  taskVersionId: number;
+  prompt: string;
+  data: any;
+};
 
 export default function GamePage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
+
   const gameId = Number(params.gameId);
   const attemptIdFromUrl = search.get("attemptId");
   const difficultyFromUrl = search.get("difficulty");
   const normalizedDifficulty = normalizeDifficulty(difficultyFromUrl);
+
   const levelFromUrl = search.get("level");
-  const selectedLevel = Number.isInteger(Number(levelFromUrl)) && Number(levelFromUrl) > 0 ? Number(levelFromUrl) : null;
+  const selectedLevel =
+    Number.isInteger(Number(levelFromUrl)) && Number(levelFromUrl) > 0 ? Number(levelFromUrl) : null;
+
   const levelIdFromUrl = search.get("levelId");
-  const selectedLevelId = Number.isInteger(Number(levelIdFromUrl)) && Number(levelIdFromUrl) > 0 ? Number(levelIdFromUrl) : null;
+  const selectedLevelId =
+    Number.isInteger(Number(levelIdFromUrl)) && Number(levelIdFromUrl) > 0 ? Number(levelIdFromUrl) : null;
 
   const effectiveLevel = selectedLevelId !== null ? null : selectedLevel;
   const effectiveLevelId = selectedLevelId;
@@ -42,8 +52,9 @@ export default function GamePage() {
 
   const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
   const [msg, setMsg] = useState<string>("");
+  const [msgKind, setMsgKind] = useState<"ok" | "bad" | "info">("info");
   const [loading, setLoading] = useState(false);
-  const [summary, setSummary] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null);
+  const [summary, setSummary] = useState<Summary | null>(null);
 
   const [textAnswer, setTextAnswer] = useState("");
 
@@ -71,6 +82,8 @@ export default function GamePage() {
     async function boot() {
       if (!attemptId && childProfileId) {
         setLoading(true);
+        setMsg("Завантаження завдання...");
+        setMsgKind("info");
         try {
           const res = await startAttempt(
             childProfileId,
@@ -87,13 +100,17 @@ export default function GamePage() {
         }
       }
     }
-    boot().catch((e: any) => setMsg(e.message ?? "Error"));
+    boot().catch((e: any) => {
+      setMsg(e.message ?? "Error");
+      setMsgKind("bad");
+    });
   }, [attemptId, childProfileId, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
 
-  const current = useMemo(() => {
+  const current: TaskState | null = useMemo(() => {
     if (!task) return null;
     return {
       taskId: task.taskId,
+      position: task.position ?? null,
       taskVersionId: task.taskVersion.id,
       prompt: task.taskVersion.prompt,
       data: task.taskVersion.data as any,
@@ -107,6 +124,21 @@ export default function GamePage() {
     if (Array.isArray(d.items)) return d.items;
     return [];
   }, [current]);
+
+  // Прогрес: якщо бекенд дає totalCount у data — використаємо
+  const totalCount: number | null = useMemo(() => {
+    const d = current?.data;
+    if (!d) return null;
+    if (typeof d.totalCount === "number" && d.totalCount > 0) return d.totalCount;
+    if (typeof d.totalTasks === "number" && d.totalTasks > 0) return d.totalTasks;
+    return null;
+  }, [current]);
+
+  const positionIndex = (current?.position ?? 0) + 1;
+  const progressText = totalCount ? `${positionIndex} / ${totalCount}` : `${positionIndex}`;
+  const progressValue = totalCount ? Math.min(100, Math.round((positionIndex / totalCount) * 100)) : 18;
+
+  const levelTitle = effectiveLevel ? `Рівень ${effectiveLevel}` : "Рівень";
 
   async function sendAnswer(userAnswer: any) {
     if (!attemptId || !current) return;
@@ -126,7 +158,8 @@ export default function GamePage() {
           correctCount: res.summary?.correctCount ?? 0,
           totalCount: res.summary?.totalCount ?? 0,
         });
-        setMsg("✅ Гру завершено!");
+        setMsg("Гру завершено!");
+        setMsgKind("ok");
         setTask(null);
         return;
       }
@@ -142,76 +175,140 @@ export default function GamePage() {
         },
       });
 
-      setMsg(res.isCorrect ? "✅ Правильно!" : "❌ Неправильно!");
+      if (res.isCorrect) {
+        setMsg("Правильно!");
+        setMsgKind("ok");
+      } else {
+        setMsg("Неправильно!");
+        setMsgKind("bad");
+      }
+
       setTextAnswer("");
     } catch (e: any) {
       setMsg(e.message ?? "Error");
+      setMsgKind("bad");
     } finally {
       setLoading(false);
     }
   }
 
-  if (loading && !current) {
-    return <div style={{ padding: 16 }}>Завантаження...</div>;
-  }
-
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Гра #{gameId}</h1>
-      {effectiveLevel && <div style={{ fontSize: 12, opacity: 0.8 }}>Обраний рівень: {effectiveLevel}</div>}
-      {selectedLevelId && <div style={{ fontSize: 12, opacity: 0.8 }}>levelId: {selectedLevelId}</div>}
-      {attemptId && <div style={{ fontSize: 12, opacity: 0.8 }}>attemptId: {attemptId}</div>}
-      {msg && <p>{msg}</p>}
+    <main className={styles.page}>
+      <div className={styles.bg} />
+      <div className={styles.overlay} />
 
-      {!current ? (
-        summary ? (
-          <div style={{ border: "1px solid #333", padding: 16, borderRadius: 10, maxWidth: 420 }}>
-            <h2 style={{ marginTop: 0 }}>Результат гри</h2>
-            <p>Бали: {summary.score}</p>
-            <p>
-              Правильні відповіді: {summary.correctCount} / {summary.totalCount}
-            </p>
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <button onClick={() => (window.location.href = "/child/subjects")}>До меню планет</button>
-            </div>
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <Link className={styles.backBtn} href="/child/subjects">
+            <span className={styles.backArrow}>←</span>
+            Назад
+          </Link>
+
+          <div className={styles.headerTitle}>{levelTitle}</div>
+        </header>
+
+        <section className={styles.progressWrap}>
+          <div className={styles.progressBar}>
+            <div className={styles.progressFill} style={{ width: `${progressValue}%` }} />
+            <div className={styles.progressGlow} />
           </div>
-        ) : (
-          <p>Нема активного завдання.</p>
-        )
-      ) : (
-        <div style={{ border: "1px solid #333", padding: 12, borderRadius: 10 }}>
-          <div style={{ fontWeight: 700, marginBottom: 10 }}>{current.prompt}</div>
+          <div className={styles.progressText}>{progressText}</div>
+        </section>
 
-          {options.length > 0 ? (
-            <div style={{ display: "grid", gap: 10, maxWidth: 320 }}>
-              {options.map((opt, idx) => (
-                <button
-                  key={idx}
-                  disabled={loading}
-                  onClick={() => sendAnswer({ answer: opt })}
-                  style={{ padding: 10, borderRadius: 10, cursor: "pointer" }}
-                >
-                  {String(opt)}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input
-                value={textAnswer}
-                onChange={(e) => setTextAnswer(e.target.value)}
-                placeholder="Введи відповідь..."
-              />
-              <button
-                disabled={loading}
-                onClick={() => sendAnswer({ answer: isNaN(Number(textAnswer)) ? textAnswer : Number(textAnswer) })}
-              >
-                Відправити
-              </button>
+        <section className={styles.card}>
+          {!!msg && (
+            <div
+              className={[
+                styles.toast,
+                msgKind === "ok" ? styles.toastOk : msgKind === "bad" ? styles.toastBad : styles.toastInfo,
+              ].join(" ")}
+            >
+              {msgKind === "ok" ? "✅" : msgKind === "bad" ? "❌" : "ℹ️"} {msg}
             </div>
           )}
-        </div>
-      )}
-    </div>
+
+          {!current ? (
+            summary ? (
+              <div className={styles.summary}>
+                <h2 className={styles.summaryTitle}>Результат</h2>
+                <div className={styles.summaryRow}>
+                  <span>Бали</span>
+                  <b>{summary.score}</b>
+                </div>
+                <div className={styles.summaryRow}>
+                  <span>Правильні</span>
+                  <b>
+                    {summary.correctCount} / {summary.totalCount}
+                  </b>
+                </div>
+
+                <div className={styles.actions}>
+                  <Link className={styles.primaryBtn} href="/child/subjects">
+                    До меню
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.loadingBox}>{loading ? "Завантаження..." : "Нема активного завдання."}</div>
+            )
+          ) : (
+            <>
+              <div className={styles.question}>{current.prompt}</div>
+
+              {options.length > 0 ? (
+                <div className={styles.answers}>
+                  {options.map((opt, idx) => (
+                    <button
+                      key={idx}
+                      disabled={loading}
+                      onClick={() => sendAnswer({ answer: opt })}
+                      className={styles.answerBtn}
+                      type="button"
+                    >
+                      <span className={styles.answerText}>{String(opt)}</span>
+                      <span className={styles.answerSheen} />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.textAnswerRow}>
+                  <input
+                    className={styles.input}
+                    value={textAnswer}
+                    onChange={(e) => setTextAnswer(e.target.value)}
+                    placeholder="Введи відповідь..."
+                  />
+                  <button
+                    className={styles.sendBtn}
+                    disabled={loading}
+                    onClick={() =>
+                      sendAnswer({ answer: isNaN(Number(textAnswer)) ? textAnswer : Number(textAnswer) })
+                    }
+                    type="button"
+                  >
+                    Відправити
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+
+        <footer className={styles.hud}>
+          <div className={styles.hudItem}>
+            <span className={styles.hudIcon}>⏳</span>
+            <span className={styles.hudValue}>45</span>
+          </div>
+          <div className={styles.hudItem}>
+            <span className={styles.hudIcon}>⭐</span>
+            <span className={styles.hudValue}>45</span>
+          </div>
+          <div className={styles.hudItem}>
+            <span className={styles.hudIcon}>❤️</span>
+            <span className={styles.hudValue}>3</span>
+          </div>
+        </footer>
+      </div>
+    </main>
   );
 }
