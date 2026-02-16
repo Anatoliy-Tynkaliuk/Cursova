@@ -241,6 +241,14 @@ export class AttemptsService {
       throw new NotFoundException(`No current task version for difficulty ${difficulty}`);
     }
 
+    const totalTasks = await this.prisma.task.count({
+      where: {
+        gameId: BigInt(gameId),
+        levelId: selectedLevel.id,
+        isActive: true,
+      },
+    });
+
     const attempt = await this.prisma.attempt.create({
       data: {
         childProfileId: BigInt(childProfileId),
@@ -265,6 +273,7 @@ export class AttemptsService {
         number: selectedLevel.levelNumber,
         title: selectedLevel.title,
       },
+      totalTasks,
       task: {
         taskId: Number(task.id),
         position: task.position,
@@ -317,7 +326,7 @@ export class AttemptsService {
       data: {
         totalCount: { increment: 1 },
         correctCount: { increment: isCorrect ? 1 : 0 },
-        score: { increment: isCorrect ? 10 : 0 },
+        score: { increment: isCorrect ? 1 : 0 },
       },
     });
 
@@ -350,6 +359,14 @@ export class AttemptsService {
           orderBy: { version: "desc" },
           take: 1,
         },
+      },
+    });
+
+    const totalTasks = await this.prisma.task.count({
+      where: {
+        gameId: currentTask.gameId,
+        levelId: attempt.levelId,
+        isActive: true,
       },
     });
 
@@ -387,6 +404,7 @@ export class AttemptsService {
         score: updated.score,
         correctCount: updated.correctCount,
         totalCount: updated.totalCount,
+        totalTasks,
       },
       nextTask: {
         taskId: Number(nextTask.id),

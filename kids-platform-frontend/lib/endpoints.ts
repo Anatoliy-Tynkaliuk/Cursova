@@ -448,6 +448,7 @@ export async function getGameLevels(gameId: number, difficulty: number, childPro
 export type StartAttemptResponse = {
   attemptId: number;
   game: { id: number; title: string; moduleCode: string };
+  totalTasks: number;
   task: {
     taskId: number;
     position: number;
@@ -467,7 +468,13 @@ export async function startAttempt(childProfileId: number, gameId: number, diffi
 
 export type AnswerResponse =
   | { attemptId: number; isCorrect: boolean; finished: true; summary: any }
-  | { attemptId: number; isCorrect: boolean; finished: false; nextTask: any; progress?: any };
+  | {
+      attemptId: number;
+      isCorrect: boolean;
+      finished: false;
+      nextTask: any;
+      progress?: { score: number; correctCount: number; totalCount: number; totalTasks?: number };
+    };
 
 export async function submitAnswer(
   attemptId: number,

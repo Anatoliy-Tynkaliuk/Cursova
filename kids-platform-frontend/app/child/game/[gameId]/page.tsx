@@ -58,6 +58,8 @@ export default function GamePage() {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [score, setScore] = useState(0);
+  const [totalTasks, setTotalTasks] = useState<number | null>(null);
+  const [completedTasks, setCompletedTasks] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION_SEC);
 
   const [textAnswer, setTextAnswer] = useState("");
@@ -99,6 +101,8 @@ export default function GamePage() {
           setAttemptId(res.attemptId);
           setTask(res.task);
           setScore(0);
+          setTotalTasks(res.totalTasks ?? null);
+          setCompletedTasks(0);
           setTimeLeft(TIMER_DURATION_SEC);
           setMsg("");
         } finally {
@@ -139,6 +143,8 @@ export default function GamePage() {
           totalCount: res.summary.totalCount,
         });
         setTask(null);
+        setScore(res.summary.score);
+        setCompletedTasks(res.summary.totalCount);
         setMsg("Час вийшов. Гру завершено.");
         setMsgKind("bad");
       } catch (e: any) {
@@ -171,17 +177,11 @@ export default function GamePage() {
     return [];
   }, [current]);
 
-  const totalCount: number | null = useMemo(() => {
-    const d = current?.data;
-    if (!d) return null;
-    if (typeof d.totalCount === "number" && d.totalCount > 0) return d.totalCount;
-    if (typeof d.totalTasks === "number" && d.totalTasks > 0) return d.totalTasks;
-    return null;
-  }, [current]);
-
   const positionIndex = (current?.position ?? 0) + 1;
-  const progressText = totalCount ? `${positionIndex} / ${totalCount}` : `${positionIndex}`;
-  const progressValue = totalCount ? Math.min(100, Math.round((positionIndex / totalCount) * 100)) : 18;
+  const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : `${positionIndex}`;
+  const progressValue = totalTasks
+    ? Math.min(100, Math.round((Math.min(completedTasks, totalTasks) / totalTasks) * 100))
+    : 18;
 
   const levelTitle = effectiveLevel ? `Рівень ${effectiveLevel}` : "Рівень";
 
@@ -205,13 +205,14 @@ export default function GamePage() {
           totalCount: res.summary?.totalCount ?? 0,
         });
         setScore(res.summary?.score ?? 0);
+        setCompletedTasks(res.summary?.totalCount ?? 0);
         setMsg("Гру завершено!");
         setMsgKind("ok");
         setTask(null);
         return;
       }
 
-      const next = (res as any).nextTask;
+      const next = res.nextTask;
       setTask({
         taskId: next.taskId,
         position: next.position,
@@ -222,7 +223,9 @@ export default function GamePage() {
         },
       });
 
-      setScore((prev) => (res as any).progress?.score ?? prev);
+      setScore((prev) => res.progress?.score ?? prev);
+      setCompletedTasks((prev) => res.progress?.totalCount ?? prev);
+      setTotalTasks((prev) => res.progress?.totalTasks ?? prev);
 
       if (res.isCorrect) {
         setMsg("Правильно!");
