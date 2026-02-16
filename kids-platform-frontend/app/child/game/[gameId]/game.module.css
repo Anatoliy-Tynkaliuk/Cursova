@@ -322,6 +322,14 @@
   margin-top: 6px;
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inlineActions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
 }
 
 .primaryBtn {
@@ -336,6 +344,20 @@
   color: #2a1500;
   background: linear-gradient(180deg, #ffd87a 0%, #f5b13d 70%, #e7951e 100%);
   border: 1px solid rgba(255, 210, 120, 0.55);
+}
+
+.secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 6, 20, 0.24);
 }
 
 .loadingBox {
@@ -353,9 +375,9 @@
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(18, 10, 34, 0.26);
   backdrop-filter: blur(16px);
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0 14px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
