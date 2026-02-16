@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import styles from "./ChildSubjectsPage.module.css";
 import { getChildBadgesPublic, getGames, type ChildBadgeItem, type GameListItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
+import styles from "./ChildSubjectsPage.module.css";
 
 type Subject = {
   key: "logic" | "math" | "english";
@@ -18,19 +18,19 @@ const subjects: Subject[] = [
   {
     key: "logic",
     title: "Планета Логіки",
-    image: "/Child_menu/planet_of_logic.png",
+    image: "/Child_menu/planet_of_logics.png",
     href: "/child/logic",
   },
   {
     key: "math",
     title: "Планета Математика",
-    image: "/Child_menu/planet_mathematics.png",
+    image: "/Child_menu/planet_mathematic.png",
     href: "/child/math",
   },
   {
     key: "english",
     title: "Планета Англійська",
-    image: "/Child_menu/planet_english_language.png",
+    image: "/Child_menu/planet_english_languages.png",
     href: "/child/english",
   },
 ];
@@ -39,6 +39,7 @@ export default function ChildSubjectsPage() {
   const [games, setGames] = useState<GameListItem[]>([]);
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [totalStars, setTotalStars] = useState(0);
   const [childName, setChildName] = useState<string>("Друже");
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +61,7 @@ export default function ChildSubjectsPage() {
         setGames(gamesData);
         setBadges(badgeData.badges);
         setFinishedAttempts(badgeData.finishedAttempts);
+        setTotalStars(badgeData.totalStars ?? badgeData.finishedAttempts);
       } catch (e: any) {
         setError(e.message ?? "Error");
       }
@@ -80,7 +82,7 @@ export default function ChildSubjectsPage() {
 
   const stats = [
     { label: "Рівень", value: String(level), icon: "⭐" },
-    { label: "Зірочки", value: String(finishedAttempts), icon: "✨" },
+    { label: "Зірочки", value: String(totalStars), icon: "✨" },
     { label: "Досягнення", value: String(earnedBadges), icon: "🏆" },
   ];
 
