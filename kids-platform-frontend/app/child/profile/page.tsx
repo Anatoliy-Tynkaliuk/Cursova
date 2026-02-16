@@ -8,6 +8,7 @@ import { getChildSession } from "@/lib/auth";
 export default function ChildProfilePage() {
   const [games, setGames] = useState<GameListItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [totalStars, setTotalStars] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [childName, setChildName] = useState("Друже");
   const [ageGroupCode, setAgeGroupCode] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export default function ChildProfilePage() {
         ]);
         setGames(gamesData);
         setFinishedAttempts(badgeData.finishedAttempts);
+        setTotalStars(badgeData.totalStars ?? badgeData.finishedAttempts);
       } catch (e: any) {
         setError(e.message ?? "Error");
       }
@@ -60,7 +62,8 @@ export default function ChildProfilePage() {
       </div>
 
       <section style={{ marginTop: 16, border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-        <div>Завершено ігор: {finishedAttempts}</div>
+        <div>Завершено ігор: {finishedAttempts}
+        | Зірочок: {totalStars}</div>
         <div>Усього доступних ігор: {games.length}</div>
         <div>Логіка: {gamesByModule.logic ?? 0}</div>
         <div>Математика: {gamesByModule.math ?? 0}</div>
