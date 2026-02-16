@@ -214,6 +214,13 @@ export class ChildrenService {
       where: { childProfileId: child.id, isFinished: true },
     });
 
+    const scoreAgg = await this.prisma.attempt.aggregate({
+      where: { childProfileId: child.id, isFinished: true },
+      _sum: { score: true },
+    });
+
+    const totalStars = scoreAgg._sum.score ?? 0;
+
     const badges = await this.prisma.badge.findMany({
       orderBy: { id: "asc" },
     });
@@ -227,6 +234,7 @@ export class ChildrenService {
 
     return {
       finishedAttempts,
+      totalStars,
       badges: badges.map((badge) => ({
         id: Number(badge.id),
         code: badge.code,
