@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildAchievementsPage.module.css";
@@ -37,7 +37,12 @@ export default function ChildAchievementsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const session = useMemo(() => getChildSession(), []);
-  const childName = session.childName || "RocketMax";
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  const childName = isHydrated ? (session.childName || "RocketMax") : "RocketMax";
 
   useEffect(() => {
     if (!session?.childProfileId) {
