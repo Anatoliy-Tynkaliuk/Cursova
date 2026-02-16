@@ -28,10 +28,7 @@ export class AttemptsService {
   private calculateStars(correctCount: number, totalCount: number) {
     if (totalCount <= 0 || correctCount <= 0) return 0;
 
-    const ratio = correctCount / totalCount;
-    if (ratio >= 0.9) return 3;
-    if (ratio >= 0.6) return 2;
-    return 1;
+    return Math.min(3, Math.max(1, Math.ceil((correctCount / totalCount) * 3)));
   }
 
   private parseFinishedAttemptsThreshold(code: string) {

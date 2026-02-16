@@ -179,7 +179,7 @@ describe("AttemptsService saveLevelStarsIfNeeded", () => {
         },
       },
       data: {
-        starsJson: { "2": 3 },
+        starsJson: { "2": 4 },
       },
     });
   });
@@ -228,5 +228,20 @@ describe("AttemptsService saveLevelStarsIfNeeded", () => {
         starsJson: { "3": 4 },
       },
     });
+  });
+});
+
+
+describe("AttemptsService calculateStars", () => {
+  it("calculates stars by proportional scale with rounding up", () => {
+    const service = new AttemptsService({} as any);
+
+    expect((service as any).calculateStars(3, 3)).toBe(3);
+    expect((service as any).calculateStars(2, 3)).toBe(2);
+    expect((service as any).calculateStars(1, 3)).toBe(1);
+
+    expect((service as any).calculateStars(2, 2)).toBe(3);
+    expect((service as any).calculateStars(1, 2)).toBe(2);
+    expect((service as any).calculateStars(0, 2)).toBe(0);
   });
 });
