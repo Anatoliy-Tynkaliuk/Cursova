@@ -475,3 +475,11 @@ export async function submitAnswer(
 ) {
   return api<AnswerResponse>(`/attempts/${attemptId}/answer`, "POST", payload);
 }
+
+export async function finishAttempt(attemptId: number, durationSec?: number) {
+  return api<{ attemptId: number; finished: true; summary: { score: number; correctCount: number; totalCount: number } }>(
+    `/attempts/${attemptId}/finish`,
+    "POST",
+    durationSec !== undefined ? { durationSec } : undefined
+  );
+}

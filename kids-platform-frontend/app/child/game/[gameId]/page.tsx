@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
+import { finishAttempt, startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./game.module.css";
 
@@ -18,6 +18,8 @@ function normalizeDifficulty(value: string | null): number | null {
 }
 
 type Summary = { score: number; correctCount: number; totalCount: number };
+
+const TIMER_DURATION_SEC = 45;
 
 type TaskState = {
   taskId: number;
@@ -55,6 +57,8 @@ export default function GamePage() {
   const [msgKind, setMsgKind] = useState<"ok" | "bad" | "info">("info");
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(TIMER_DURATION_SEC);
 
   const [textAnswer, setTextAnswer] = useState("");
 
@@ -94,17 +98,59 @@ export default function GamePage() {
           );
           setAttemptId(res.attemptId);
           setTask(res.task);
+          setScore(0);
+          setTimeLeft(TIMER_DURATION_SEC);
           setMsg("");
         } finally {
           setLoading(false);
         }
       }
     }
+
     boot().catch((e: any) => {
       setMsg(e.message ?? "Error");
       setMsgKind("bad");
     });
   }, [attemptId, childProfileId, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
+
+  useEffect(() => {
+    if (!attemptId || !!summary) return;
+
+    const intervalId = window.setInterval(() => {
+      setTimeLeft((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [attemptId, summary]);
+
+  useEffect(() => {
+    async function completeByTimeout() {
+      if (!attemptId || !!summary || timeLeft > 0) return;
+
+      setLoading(true);
+      setMsg("Час вийшов. Завершуємо гру...");
+      setMsgKind("info");
+
+      try {
+        const res = await finishAttempt(attemptId, TIMER_DURATION_SEC);
+        setSummary({
+          score: res.summary.score,
+          correctCount: res.summary.correctCount,
+          totalCount: res.summary.totalCount,
+        });
+        setTask(null);
+        setMsg("Час вийшов. Гру завершено.");
+        setMsgKind("bad");
+      } catch (e: any) {
+        setMsg(e.message ?? "Не вдалося завершити гру по таймеру");
+        setMsgKind("bad");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    completeByTimeout();
+  }, [attemptId, summary, timeLeft]);
 
   const current: TaskState | null = useMemo(() => {
     if (!task) return null;
@@ -125,7 +171,6 @@ export default function GamePage() {
     return [];
   }, [current]);
 
-  // Прогрес: якщо бекенд дає totalCount у data — використаємо
   const totalCount: number | null = useMemo(() => {
     const d = current?.data;
     if (!d) return null;
@@ -145,6 +190,7 @@ export default function GamePage() {
 
     setLoading(true);
     setMsg("");
+
     try {
       const res = await submitAnswer(attemptId, {
         taskId: current.taskId,
@@ -158,6 +204,7 @@ export default function GamePage() {
           correctCount: res.summary?.correctCount ?? 0,
           totalCount: res.summary?.totalCount ?? 0,
         });
+        setScore(res.summary?.score ?? 0);
         setMsg("Гру завершено!");
         setMsgKind("ok");
         setTask(null);
@@ -175,6 +222,8 @@ export default function GamePage() {
         },
       });
 
+      setScore((prev) => (res as any).progress?.score ?? prev);
+
       if (res.isCorrect) {
         setMsg("Правильно!");
         setMsgKind("ok");
@@ -191,6 +240,11 @@ export default function GamePage() {
       setLoading(false);
     }
   }
+
+  const minutes = Math.floor(timeLeft / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = (timeLeft % 60).toString().padStart(2, "0");
 
   return (
     <main className={styles.page}>
@@ -297,15 +351,13 @@ export default function GamePage() {
         <footer className={styles.hud}>
           <div className={styles.hudItem}>
             <span className={styles.hudIcon}>⏳</span>
-            <span className={styles.hudValue}>45</span>
+            <span className={styles.hudValue}>
+              {minutes}:{seconds}
+            </span>
           </div>
           <div className={styles.hudItem}>
             <span className={styles.hudIcon}>⭐</span>
-            <span className={styles.hudValue}>45</span>
-          </div>
-          <div className={styles.hudItem}>
-            <span className={styles.hudIcon}>❤️</span>
-            <span className={styles.hudValue}>3</span>
+            <span className={styles.hudValue}>{score}</span>
           </div>
         </footer>
       </div>

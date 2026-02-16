@@ -354,7 +354,7 @@
   background: rgba(18, 10, 34, 0.26);
   backdrop-filter: blur(16px);
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   padding: 0 14px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
