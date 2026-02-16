@@ -393,6 +393,7 @@ export type ChildBadgeItem = {
 
 export type ChildBadgesResponse = {
   finishedAttempts: number;
+  totalStars: number;
   badges: ChildBadgeItem[];
 };
 

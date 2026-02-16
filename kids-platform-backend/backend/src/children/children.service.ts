@@ -218,6 +218,25 @@ export class ChildrenService {
       orderBy: { id: "asc" },
     });
 
+    const levelProgress = await this.prisma.childLevelProgress.findMany({
+      where: { childProfileId: child.id },
+      select: { starsJson: true },
+    });
+
+    const totalStars = levelProgress.reduce((sum, progress) => {
+      if (!progress.starsJson || typeof progress.starsJson !== "object" || Array.isArray(progress.starsJson)) {
+        return sum;
+      }
+
+      const starsForProgress = Object.values(progress.starsJson as Record<string, unknown>).reduce((acc, value) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return acc;
+        return acc + Math.max(0, Math.floor(numeric));
+      }, 0);
+
+      return sum + starsForProgress;
+    }, 0);
+
     const earned = await this.prisma.childBadge.findMany({
       where: { childProfileId: child.id },
       include: { badge: true },
@@ -227,6 +246,7 @@ export class ChildrenService {
 
     return {
       finishedAttempts,
+      totalStars,
       badges: badges.map((badge) => ({
         id: Number(badge.id),
         code: badge.code,

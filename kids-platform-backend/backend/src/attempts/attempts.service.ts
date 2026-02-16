@@ -25,6 +25,12 @@ function deepEqual(a: any, b: any): boolean {
 export class AttemptsService {
   constructor(private prisma: PrismaService) {}
 
+  private calculateStars(correctCount: number, totalCount: number) {
+    if (totalCount <= 0 || correctCount <= 0) return 0;
+
+    return Math.min(3, Math.max(1, Math.ceil((correctCount / totalCount) * 3)));
+  }
+
   private parseFinishedAttemptsThreshold(code: string) {
     const match = code.match(/^FINISHED_(\d+)$/i);
     if (!match) return null;
@@ -123,6 +129,68 @@ export class AttemptsService {
       },
       data: {
         maxUnlockedLevel: targetUnlockedLevel,
+      },
+    });
+  }
+
+  private parseStarsJson(raw: unknown): Record<string, number> {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return {};
+    }
+
+    const result: Record<string, number> = {};
+    for (const [key, value] of Object.entries(raw)) {
+      if (!/^\d+$/.test(key)) continue;
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) continue;
+      result[key] = Math.max(0, Math.floor(numeric));
+    }
+
+    return result;
+  }
+
+  private async saveLevelStarsIfNeeded(attemptId: bigint) {
+    const attempt = await this.prisma.attempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        level: {
+          select: {
+            gameId: true,
+            difficulty: true,
+            levelNumber: true,
+          },
+        },
+      },
+    });
+
+    if (!attempt || !attempt.level || !attempt.isFinished) return;
+
+    const earnedStars = this.calculateStars(attempt.correctCount, attempt.totalCount);
+    if (earnedStars <= 0) return;
+
+    const progress = await this.getOrCreateLevelProgress(
+      attempt.childProfileId,
+      attempt.level.gameId,
+      attempt.level.difficulty,
+    );
+
+    const starsByLevel = this.parseStarsJson(progress.starsJson);
+    const levelKey = String(attempt.level.levelNumber);
+    const currentStars = starsByLevel[levelKey] ?? 0;
+    if (earnedStars <= currentStars) return;
+
+    starsByLevel[levelKey] = earnedStars;
+
+    await this.prisma.childLevelProgress.update({
+      where: {
+        childProfileId_gameId_difficulty: {
+          childProfileId: attempt.childProfileId,
+          gameId: attempt.level.gameId,
+          difficulty: attempt.level.difficulty,
+        },
+      },
+      data: {
+        starsJson: starsByLevel,
       },
     });
   }
@@ -363,6 +431,7 @@ export class AttemptsService {
       });
       await this.awardBadges(attempt.childProfileId);
       await this.unlockNextLevelIfNeeded(BigInt(attemptId));
+      await this.saveLevelStarsIfNeeded(BigInt(attemptId));
 
       return {
         attemptId,
@@ -412,6 +481,7 @@ export class AttemptsService {
     });
     await this.awardBadges(finished.childProfileId);
     await this.unlockNextLevelIfNeeded(BigInt(attemptId));
+    await this.saveLevelStarsIfNeeded(BigInt(attemptId));
 
     return {
       attemptId,
