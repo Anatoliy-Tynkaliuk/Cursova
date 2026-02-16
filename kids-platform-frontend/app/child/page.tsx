@@ -13,6 +13,7 @@ export default function ChildHomePage() {
   const [loading, setLoading] = useState(false);
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [totalStars, setTotalStars] = useState(0);
 
   function parseThreshold(code: string) {
     const match = code.match(/^FINISHED_(\d+)$/i);
@@ -37,6 +38,7 @@ export default function ChildHomePage() {
         const data = await getChildBadgesPublic(id);
         setBadges(data.badges);
         setFinishedAttempts(data.finishedAttempts);
+        setTotalStars(data.totalStars ?? data.finishedAttempts);
       } catch (e: any) {
         setError(e.message ?? "Error");
       }
@@ -93,6 +95,7 @@ export default function ChildHomePage() {
         <h2 style={{ marginTop: 0 }}>Досягнення</h2>
         <p style={{ fontSize: 12, opacity: 0.8, marginTop: 0 }}>
           Завершено ігор: {finishedAttempts}
+        | Зірочок: {totalStars}
         </p>
         {badges.length === 0 ? (
           <p>Поки що немає досягнень.</p>

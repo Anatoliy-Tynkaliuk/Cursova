@@ -8,6 +8,7 @@ import { getChildBadgesPublic } from "@/lib/endpoints";
 export default function ChildSettingsPage() {
   const [childName, setChildName] = useState("Друже");
   const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [totalStars, setTotalStars] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,6 +24,7 @@ export default function ChildSettingsPage() {
       try {
         const data = await getChildBadgesPublic(session.childProfileId!);
         setFinishedAttempts(data.finishedAttempts);
+        setTotalStars(data.totalStars ?? data.finishedAttempts);
       } catch (e: any) {
         setError(e.message ?? "Error");
       }
@@ -44,7 +46,8 @@ export default function ChildSettingsPage() {
       </header>
 
       <p>Привіт, {childName}! Тут можна завершити сесію дитини.</p>
-      <p style={{ fontSize: 12, opacity: 0.8 }}>Завершено ігор: {finishedAttempts}</p>
+      <p style={{ fontSize: 12, opacity: 0.8 }}>Завершено ігор: {finishedAttempts}
+        | Зірочок: {totalStars}</p>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
