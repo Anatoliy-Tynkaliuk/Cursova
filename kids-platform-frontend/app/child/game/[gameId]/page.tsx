@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
+import { finishAttempt, startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 
 function normalizeDifficulty(value: string | null): number | null {
@@ -44,8 +44,17 @@ export default function GamePage() {
   const [msg, setMsg] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
 
   const [textAnswer, setTextAnswer] = useState("");
+  const attemptStartedAtRef = useRef<number | null>(null);
+
+  const formatDuration = (seconds: number) => {
+    const safe = Math.max(0, seconds);
+    const mm = String(Math.floor(safe / 60)).padStart(2, "0");
+    const ss = String(safe % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
+  };
 
   useEffect(() => {
     const session = getChildSession();
@@ -81,6 +90,8 @@ export default function GamePage() {
           );
           setAttemptId(res.attemptId);
           setTask(res.task);
+          attemptStartedAtRef.current = Date.now();
+          setElapsedSec(0);
           setMsg("");
         } finally {
           setLoading(false);
@@ -89,6 +100,22 @@ export default function GamePage() {
     }
     boot().catch((e: any) => setMsg(e.message ?? "Error"));
   }, [attemptId, childProfileId, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
+
+  useEffect(() => {
+    if (!attemptId || summary) return;
+
+    if (attemptStartedAtRef.current === null) {
+      attemptStartedAtRef.current = Date.now();
+    }
+
+    const timer = setInterval(() => {
+      if (attemptStartedAtRef.current === null) return;
+      const elapsed = Math.floor((Date.now() - attemptStartedAtRef.current) / 1000);
+      setElapsedSec(elapsed);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [attemptId, summary]);
 
   const current = useMemo(() => {
     if (!task) return null;
@@ -126,6 +153,10 @@ export default function GamePage() {
           correctCount: res.summary?.correctCount ?? 0,
           totalCount: res.summary?.totalCount ?? 0,
         });
+        if (attemptStartedAtRef.current !== null) {
+          const elapsed = Math.floor((Date.now() - attemptStartedAtRef.current) / 1000);
+          setElapsedSec(elapsed);
+        }
         setMsg("✅ Гру завершено!");
         setTask(null);
         return;
@@ -151,6 +182,27 @@ export default function GamePage() {
     }
   }
 
+  async function finishCurrentAttempt() {
+    if (!attemptId || summary) return;
+
+    setLoading(true);
+    setMsg("");
+    try {
+      const res = await finishAttempt(attemptId, elapsedSec);
+      setSummary({
+        score: res.summary?.score ?? 0,
+        correctCount: res.summary?.correctCount ?? 0,
+        totalCount: res.summary?.totalCount ?? 0,
+      });
+      setTask(null);
+      setMsg("⏹ Гру завершено достроково.");
+    } catch (e: any) {
+      setMsg(e.message ?? "Не вдалося завершити гру");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (loading && !current) {
     return <div style={{ padding: 16 }}>Завантаження...</div>;
   }
@@ -161,6 +213,7 @@ export default function GamePage() {
       {effectiveLevel && <div style={{ fontSize: 12, opacity: 0.8 }}>Обраний рівень: {effectiveLevel}</div>}
       {selectedLevelId && <div style={{ fontSize: 12, opacity: 0.8 }}>levelId: {selectedLevelId}</div>}
       {attemptId && <div style={{ fontSize: 12, opacity: 0.8 }}>attemptId: {attemptId}</div>}
+      {attemptId && <div style={{ fontSize: 12, opacity: 0.8 }}>Таймер: {formatDuration(elapsedSec)}</div>}
       {msg && <p>{msg}</p>}
 
       {!current ? (
@@ -171,6 +224,7 @@ export default function GamePage() {
             <p>
               Правильні відповіді: {summary.correctCount} / {summary.totalCount}
             </p>
+            <p>Час: {formatDuration(elapsedSec)}</p>
             <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
               <button onClick={() => (window.location.href = "/child/subjects")}>До меню планет</button>
             </div>
@@ -181,6 +235,10 @@ export default function GamePage() {
       ) : (
         <div style={{ border: "1px solid #333", padding: 12, borderRadius: 10 }}>
           <div style={{ fontWeight: 700, marginBottom: 10 }}>{current.prompt}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>Час проходження: {formatDuration(elapsedSec)}</div>
+            <button disabled={loading} onClick={finishCurrentAttempt}>Завершити гру</button>
+          </div>
 
           {options.length > 0 ? (
             <div style={{ display: "grid", gap: 10, maxWidth: 320 }}>

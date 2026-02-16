@@ -469,9 +469,25 @@ export type AnswerResponse =
   | { attemptId: number; isCorrect: boolean; finished: true; summary: any }
   | { attemptId: number; isCorrect: boolean; finished: false; nextTask: any; progress?: any };
 
+export type FinishAttemptResponse = {
+  attemptId: number;
+  finished: true;
+  summary: {
+    score: number;
+    correctCount: number;
+    totalCount: number;
+  };
+};
+
 export async function submitAnswer(
   attemptId: number,
   payload: { taskId: number; taskVersionId: number; userAnswer: any }
 ) {
   return api<AnswerResponse>(`/attempts/${attemptId}/answer`, "POST", payload);
+}
+
+export async function finishAttempt(attemptId: number, durationSec?: number) {
+  return api<FinishAttemptResponse>(`/attempts/${attemptId}/finish`, "POST", {
+    ...(durationSec !== undefined ? { durationSec } : {}),
+  });
 }

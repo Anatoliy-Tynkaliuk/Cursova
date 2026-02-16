@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { startAttempt, submitAnswer } from "@/lib/api";
-import { AttemptStartResponse, TaskDTO } from "@/lib/types";
+import { getChildSession } from "@/lib/auth";
+import {
+  startAttempt,
+  submitAnswer,
+  type StartAttemptResponse,
+} from "@/lib/endpoints";
 import ChooseAnswer from "./task-types/ChooseAnswer";
 
 export default function GameEngine({ gameId }: { gameId: number }) {
   const [loading, setLoading] = useState(true);
-  const [attempt, setAttempt] = useState<AttemptStartResponse | null>(null);
-  const [task, setTask] = useState<TaskDTO | null>(null);
+  const [attempt, setAttempt] = useState<StartAttemptResponse | null>(null);
+  const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
   const [message, setMessage] = useState("");
   const [finished, setFinished] = useState(false);
   const [score, setScore] = useState<number | null>(null);
@@ -16,8 +20,17 @@ export default function GameEngine({ gameId }: { gameId: number }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      const session = getChildSession();
+      if (typeof session.childProfileId !== "number") {
+        if (mounted) {
+          setLoading(false);
+          setMessage("Потрібно приєднати профіль дитини.");
+        }
+        return;
+      }
+
       setLoading(true);
-      const res = await startAttempt(gameId);
+      const res = await startAttempt(session.childProfileId, gameId, 1);
       if (!mounted) return;
       setAttempt(res);
       setTask(res.task);
@@ -30,22 +43,21 @@ export default function GameEngine({ gameId }: { gameId: number }) {
 
   const title = useMemo(() => attempt?.game.title ?? "Гра", [attempt]);
 
-  async function handleAnswer(answer: any) {
+  async function handleAnswer(answer: unknown) {
     if (!attempt || !task) return;
 
     setMessage("Перевіряю...");
-    const res = await submitAnswer({
-      attemptId: attempt.attemptId,
+    const res = await submitAnswer(attempt.attemptId, {
       taskId: task.taskId,
       taskVersionId: task.taskVersion.id,
-      answer,
+      userAnswer: answer,
     });
 
     setMessage(res.isCorrect ? "✅ Правильно!" : "❌ Спробуй ще!");
 
     if (res.finished) {
       setFinished(true);
-      setScore(res.score ?? 0);
+      setScore((res.summary as { score?: number } | undefined)?.score ?? 0);
       return;
     }
 
@@ -89,11 +101,7 @@ export default function GameEngine({ gameId }: { gameId: number }) {
       <div className="rounded-2xl shadow p-6 bg-white">
         <div className="text-xl font-semibold mb-4">{task.taskVersion.prompt}</div>
 
-        {task.type === "choose_answer" ? (
-          <ChooseAnswer data={task.taskVersion.data} onSubmit={handleAnswer} />
-        ) : (
-          <div>Цей тип гри ще не підключений: {task.type}</div>
-        )}
+        <ChooseAnswer data={task.taskVersion.data} onSubmit={handleAnswer} />
 
         {message && <div className="mt-4 text-lg font-semibold">{message}</div>}
       </div>

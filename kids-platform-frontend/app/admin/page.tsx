@@ -72,6 +72,7 @@ export default function AdminPage() {
 
   const [levelGameId, setLevelGameId] = useState<number | "">("");
   const [levelDifficulty, setLevelDifficulty] = useState(1);
+  const [levelNumberInput, setLevelNumberInput] = useState<string>("");
   const [levelTitle, setLevelTitle] = useState("");
   const [levelIsActive, setLevelIsActive] = useState(true);
 
@@ -138,6 +139,7 @@ export default function AdminPage() {
     () => (selectedTask ? games.find((item) => item.id === selectedTask.gameId) ?? null : null),
     [games, selectedTask],
   );
+  const linkedTaskDifficulty = selectedTask?.difficulty ?? null;
 
   const selectedTaskTypeCode = (selectedTaskGame?.gameTypeCode ?? "").toLowerCase();
   const isTestTaskType = selectedTaskTypeCode === "test";
@@ -221,11 +223,28 @@ export default function AdminPage() {
     return Math.max(...list.map((t) => t.position)) + 1;
   }, [groupedTasks, taskGameId]);
 
+  const nextLevelNumberForSelection = useMemo(() => {
+    if (levelGameId === "") return 1;
+
+    const levels = gameLevels.filter(
+      (level) => level.gameId === levelGameId && level.difficulty === levelDifficulty,
+    );
+
+    if (levels.length === 0) return 1;
+    return Math.max(...levels.map((level) => level.levelNumber)) + 1;
+  }, [gameLevels, levelDifficulty, levelGameId]);
+
   const taskPositionTaken = useMemo(() => {
     if (taskGameId === "") return false;
     const list = groupedTasks[taskGameId] ?? [];
     return list.some((t) => t.position === taskPosition);
   }, [groupedTasks, taskGameId, taskPosition]);
+
+  useEffect(() => {
+    if (linkedTaskDifficulty !== null) {
+      setTaskDifficulty(linkedTaskDifficulty);
+    }
+  }, [linkedTaskDifficulty]);
 
   async function onCreateAgeGroup() {
     if (!ageGroupFormValid) return;
@@ -285,7 +304,7 @@ export default function AdminPage() {
   }
 
   async function onCreateGame() {
-    if (!formValid || moduleId === "" || gameTypeId === "" || minAgeGroupId === "") return;
+    if (!formValid || typeof moduleId !== "number" || typeof gameTypeId !== "number" || typeof minAgeGroupId !== "number") return;
     setError(null);
     setMessage(null);
     try {
@@ -339,7 +358,21 @@ export default function AdminPage() {
   }
 
   async function onCreateGameLevel() {
-    if (!levelFormValid || levelGameId === "") return;
+    if (!levelFormValid || typeof levelGameId !== "number") return;
+
+    const parsedLevelNumber = levelNumberInput.trim() === "" ? undefined : Number(levelNumberInput);
+    if (parsedLevelNumber !== undefined && (!Number.isInteger(parsedLevelNumber) || parsedLevelNumber < 1)) {
+      setError("Номер рівня має бути цілим числом більше 0.");
+      return;
+    }
+
+    if (parsedLevelNumber !== undefined && parsedLevelNumber < nextLevelNumberForSelection) {
+      const confirmed = window.confirm(
+        `Ви обрали номер ${parsedLevelNumber}, хоча наступний автоматичний — ${nextLevelNumberForSelection}. Продовжити?`,
+      );
+
+      if (!confirmed) return;
+    }
 
     setError(null);
     setMessage(null);
@@ -347,11 +380,13 @@ export default function AdminPage() {
       await createAdminGameLevel({
         gameId: levelGameId,
         difficulty: levelDifficulty,
+        levelNumber: parsedLevelNumber,
         title: levelTitle.trim(),
         isActive: levelIsActive,
       });
 
       setMessage("Рівень створено.");
+      setLevelNumberInput("");
       setLevelTitle("");
       setLevelDifficulty(1);
       setLevelIsActive(true);
@@ -379,6 +414,9 @@ export default function AdminPage() {
   }
 
   async function onDeleteGameLevel(levelId: number) {
+    const confirmed = window.confirm("Видалити рівень повністю разом із завданнями цього рівня?");
+    if (!confirmed) return;
+
     setError(null);
     setMessage(null);
     try {
@@ -390,13 +428,15 @@ export default function AdminPage() {
       ]);
       setGameLevels(levelsData);
       setTasks(tasksData);
+      const taskVersionsData = await getAdminTaskVersions();
+      setTaskVersions(taskVersionsData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
   }
 
   async function onCreateTask() {
-    if (!taskFormValid || taskGameId === "") return;
+    if (!taskFormValid || typeof taskGameId !== "number") return;
     if (taskPositionTaken) {
       setError(`Для цієї гри вже є завдання з позицією ${taskPosition}.`);
       return;
@@ -449,7 +489,7 @@ export default function AdminPage() {
   }
 
   async function onCreateTaskVersion() {
-    if (!taskVersionFormValid || taskId === "") return;
+    if (!taskVersionFormValid || typeof taskId !== "number") return;
     setError(null);
     setMessage(null);
     try {
@@ -747,7 +787,13 @@ export default function AdminPage() {
       <section className={styles.sectionCard}>
         <h2>Додати рівень гри</h2>
         <div className={styles.formGrid}>
-          <select value={levelGameId} onChange={(e) => setLevelGameId(Number(e.target.value))}>
+          <select
+            value={levelGameId}
+            onChange={(e) => {
+              const value = e.target.value;
+              setLevelGameId(value ? Number(value) : "");
+            }}
+          >
             <option value="">Гра</option>
             {games.map((g) => (
               <option key={g.id} value={g.id}>
@@ -768,6 +814,17 @@ export default function AdminPage() {
             value={levelTitle}
             onChange={(e) => setLevelTitle(e.target.value)}
           />
+          <label className={styles.inlineLabel}>
+            Номер (опц.)
+            <input
+              type="number"
+              min={1}
+              value={levelNumberInput}
+              onChange={(e) => setLevelNumberInput(e.target.value)}
+              placeholder={String(nextLevelNumberForSelection)}
+              className={styles.smallInput}
+            />
+          </label>
           <label className={styles.inlineLabel}>
             <input
               type="checkbox"
@@ -921,7 +978,13 @@ export default function AdminPage() {
       <section className={styles.sectionCard}>
         <h2>Додати версію завдання</h2>
         <div style={{ display: "grid", gap: 12, maxWidth: 560 }}>
-          <select value={taskId} onChange={(e) => setTaskId(Number(e.target.value))}>
+          <select
+            value={taskId}
+            onChange={(e) => {
+              const value = e.target.value;
+              setTaskId(value ? Number(value) : "");
+            }}
+          >
             <option value="">Завдання</option>
             {tasks.map((t) => {
               const game = games.find((item) => item.id === t.gameId);
@@ -1028,8 +1091,14 @@ export default function AdminPage() {
               value={taskDifficulty}
               onChange={(e) => setTaskDifficulty(Number(e.target.value))}
               className={styles.smallInput}
+              disabled={linkedTaskDifficulty !== null}
             />
           </label>
+          {linkedTaskDifficulty !== null && (
+            <div style={{ fontSize: 12, color: "#6b7280" }}>
+              Для завдання з рівнем складність визначається автоматично: D{linkedTaskDifficulty}.
+            </div>
+          )}
           <label className={styles.inlineLabel}>
             <input
               type="checkbox"
