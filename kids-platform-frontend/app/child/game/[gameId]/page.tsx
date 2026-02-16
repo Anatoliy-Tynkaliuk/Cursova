@@ -290,7 +290,7 @@ export default function GamePage() {
               <div className={styles.summary}>
                 <h2 className={styles.summaryTitle}>Результат</h2>
                 <div className={styles.summaryRow}>
-                  <span>Бали</span>
+                  <span>Зірки</span>
                   <b>{summary.score}</b>
                 </div>
                 <div className={styles.summaryRow}>

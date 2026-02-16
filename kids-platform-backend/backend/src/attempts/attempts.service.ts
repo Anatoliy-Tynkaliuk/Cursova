@@ -55,6 +55,14 @@ export class AttemptsService {
     });
   }
 
+
+  private calculateStars(correctCount: number, totalTasks: number) {
+    if (correctCount <= 0) return 0;
+    if (totalTasks <= 0) return Math.min(3, correctCount);
+
+    return Math.min(3, Math.max(1, Math.ceil((correctCount / totalTasks) * 3)));
+  }
+
   private async getOrCreateLevelProgress(childProfileId: bigint, gameId: bigint, difficulty: number) {
     let progress = await this.prisma.childLevelProgress.findUnique({
       where: {
@@ -376,6 +384,7 @@ export class AttemptsService {
         data: {
           isFinished: true,
           finishedAt: new Date(),
+          score: this.calculateStars(updated.correctCount, totalTasks),
         },
       });
       await this.awardBadges(attempt.childProfileId);
@@ -420,7 +429,7 @@ export class AttemptsService {
 
   // ---------- FINISH ----------
   async finish(attemptId: number, dto: { durationSec?: number }) {
-    const finished = await this.prisma.attempt.update({
+    const updatedAttempt = await this.prisma.attempt.update({
       where: { id: BigInt(attemptId) },
       data: {
         isFinished: true,
@@ -428,6 +437,22 @@ export class AttemptsService {
         durationSec: dto?.durationSec ?? undefined,
       },
     });
+
+    const totalTasks = await this.prisma.task.count({
+      where: {
+        gameId: updatedAttempt.gameId,
+        levelId: updatedAttempt.levelId,
+        isActive: true,
+      },
+    });
+
+    const finished = await this.prisma.attempt.update({
+      where: { id: BigInt(attemptId) },
+      data: {
+        score: this.calculateStars(updatedAttempt.correctCount, totalTasks),
+      },
+    });
+
     await this.awardBadges(finished.childProfileId);
     await this.unlockNextLevelIfNeeded(BigInt(attemptId));
 
