@@ -7,6 +7,11 @@ import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./AllAchievementsPage.module.css";
 
+type AchievementBadgeView = ChildBadgeItem & {
+  rating?: number;
+  imageUrl?: string | null;
+};
+
 function parseThreshold(code: string) {
   const match = code.match(/^FINISHED_(\d+)$/i);
   if (!match) return null;
@@ -33,7 +38,7 @@ export default function AllAchievementsPage() {
     async function load() {
       setError(null);
       try {
-        const data = await getChildBadgesPublic(session.childProfileId!);
+        const data = await getChildBadgesPublic(session.childProfileId);
         setBadges(data.badges ?? []);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");
@@ -41,7 +46,7 @@ export default function AllAchievementsPage() {
     }
 
     load().catch((e: unknown) => setError(e instanceof Error ? e.message : "Error"));
-  }, [session?.childProfileId, session]);
+  }, [session?.childProfileId]);
 
   return (
     <div className={styles.page}>
@@ -62,7 +67,7 @@ export default function AllAchievementsPage() {
           <section className={styles.grid}>
             {badges.map((b) => {
               const locked = !b.isEarned;
-              const rating = clamp((b as any).rating ?? (b.isEarned ? 3 : 0), 0, 3);
+              const rating = clamp((b as AchievementBadgeView).rating ?? (b.isEarned ? 3 : 0), 0, 3);
               const threshold = parseThreshold(b.code);
 
               return (
@@ -75,7 +80,7 @@ export default function AllAchievementsPage() {
                       <div className={styles.lock} aria-hidden />
                     ) : (
                       <Image
-                        src={(b as any).imageUrl || "/achievements/badge-default.png"}
+                        src={(b as AchievementBadgeView).imageUrl || "/achievements/badge-default.png"}
                         alt=""
                         width={88}
                         height={88}

@@ -9,6 +9,11 @@ import styles from "./ChildAchievementsPage.module.css";
 
 const MAX_ON_PAGE = 6;
 
+type AchievementBadgeView = ChildBadgeItem & {
+  rating?: number;
+  imageUrl?: string | null;
+};
+
 function parseThreshold(code: string) {
   const match = code.match(/^FINISHED_(\d+)$/i);
   if (!match) return null;
@@ -27,7 +32,7 @@ export default function ChildAchievementsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const session = useMemo(() => getChildSession(), []);
-  const childName = (session as any)?.childName || (session as any)?.name || "RocketMax";
+  const childName = session.childName || "RocketMax";
 
   useEffect(() => {
     if (!session?.childProfileId) {
@@ -38,7 +43,7 @@ export default function ChildAchievementsPage() {
     async function load() {
       setError(null);
       try {
-        const data = await getChildBadgesPublic(session.childProfileId!);
+        const data = await getChildBadgesPublic(session.childProfileId);
         setBadges(data.badges ?? []);
         setFinishedAttempts(data.finishedAttempts ?? 0);
         setTotalStars(data.totalStars ?? 0);
@@ -48,7 +53,7 @@ export default function ChildAchievementsPage() {
     }
 
     load().catch((e: unknown) => setError(e instanceof Error ? e.message : "Error"));
-  }, [session?.childProfileId, session]);
+  }, [session?.childProfileId]);
 
   const earnedCount = useMemo(() => badges.filter((b) => b.isEarned).length, [badges]);
   const totalCount = badges.length;
@@ -120,7 +125,7 @@ export default function ChildAchievementsPage() {
                 const locked = !b.isEarned;
 
                 // якщо на бекенді немає rating — робимо: earned=3, locked=0
-                const rating = clamp((b as any).rating ?? (b.isEarned ? 3 : 0), 0, 3);
+                const rating = clamp((b as AchievementBadgeView).rating ?? (b.isEarned ? 3 : 0), 0, 3);
                 const threshold = parseThreshold(b.code);
 
                 return (
@@ -135,7 +140,7 @@ export default function ChildAchievementsPage() {
                           <div className={styles.lockShield} aria-hidden />
                         ) : (
                           <Image
-                            src={(b as any).imageUrl || "/achievements/badge-default.png"}
+                            src={(b as AchievementBadgeView).imageUrl || "/achievements/badge-default.png"}
                             alt=""
                             width={92}
                             height={92}
