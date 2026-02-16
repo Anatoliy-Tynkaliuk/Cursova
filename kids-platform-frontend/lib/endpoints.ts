@@ -290,7 +290,7 @@ export async function createAdminTask(payload: {
 export async function updateAdminTask(
   taskId: number,
   payload: {
-    levelId?: number;
+    levelId?: number | null;
     position?: number;
     isActive?: boolean;
   }
@@ -393,6 +393,7 @@ export type ChildBadgeItem = {
 
 export type ChildBadgesResponse = {
   finishedAttempts: number;
+  totalStars: number;
   badges: ChildBadgeItem[];
 };
 
@@ -448,6 +449,8 @@ export async function getGameLevels(gameId: number, difficulty: number, childPro
 export type StartAttemptResponse = {
   attemptId: number;
   game: { id: number; title: string; moduleCode: string };
+  level: { id: number; number: number; title: string };
+  totalTasks: number;
   task: {
     taskId: number;
     position: number;
@@ -467,11 +470,25 @@ export async function startAttempt(childProfileId: number, gameId: number, diffi
 
 export type AnswerResponse =
   | { attemptId: number; isCorrect: boolean; finished: true; summary: any }
-  | { attemptId: number; isCorrect: boolean; finished: false; nextTask: any; progress?: any };
+  | {
+      attemptId: number;
+      isCorrect: boolean;
+      finished: false;
+      nextTask: any;
+      progress?: { score: number; correctCount: number; totalCount: number; totalTasks?: number };
+    };
 
 export async function submitAnswer(
   attemptId: number,
   payload: { taskId: number; taskVersionId: number; userAnswer: any }
 ) {
   return api<AnswerResponse>(`/attempts/${attemptId}/answer`, "POST", payload);
+}
+
+export async function finishAttempt(attemptId: number, durationSec?: number) {
+  return api<{ attemptId: number; finished: true; summary: { score: number; correctCount: number; totalCount: number } }>(
+    `/attempts/${attemptId}/finish`,
+    "POST",
+    durationSec !== undefined ? { durationSec } : undefined
+  );
 }
