@@ -138,7 +138,7 @@ describe("AttemptsService saveLevelStarsIfNeeded", () => {
     return new AttemptsService(prisma);
   }
 
-  it("saves better stars for completed level", async () => {
+  it("adds earned stars from completed level to total stars", async () => {
     const prisma = {
       attempt: {
         findUnique: jest.fn().mockResolvedValue({
@@ -179,12 +179,12 @@ describe("AttemptsService saveLevelStarsIfNeeded", () => {
         },
       },
       data: {
-        starsJson: { "2": 2 },
+        starsJson: { "2": 3 },
       },
     });
   });
 
-  it("does not overwrite stars with lower value", async () => {
+  it("adds stars even for lower-result retries", async () => {
     const prisma = {
       attempt: {
         findUnique: jest.fn().mockResolvedValue({
@@ -216,6 +216,17 @@ describe("AttemptsService saveLevelStarsIfNeeded", () => {
 
     await (service as any).saveLevelStarsIfNeeded(BigInt(22));
 
-    expect(prisma.childLevelProgress.update).not.toHaveBeenCalled();
+    expect(prisma.childLevelProgress.update).toHaveBeenCalledWith({
+      where: {
+        childProfileId_gameId_difficulty: {
+          childProfileId: BigInt(4),
+          gameId: BigInt(8),
+          difficulty: 2,
+        },
+      },
+      data: {
+        starsJson: { "3": 4 },
+      },
+    });
   });
 });
