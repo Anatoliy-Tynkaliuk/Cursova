@@ -57,10 +57,10 @@ export default function GamePage() {
   const [msgKind, setMsgKind] = useState<"ok" | "bad" | "info">("info");
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
-  const [score, setScore] = useState(0);
   const [totalTasks, setTotalTasks] = useState<number | null>(null);
   const [completedTasks, setCompletedTasks] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION_SEC);
+  const [currentLevelNumber, setCurrentLevelNumber] = useState<number | null>(effectiveLevel);
 
   const [textAnswer, setTextAnswer] = useState("");
 
@@ -100,7 +100,7 @@ export default function GamePage() {
           );
           setAttemptId(res.attemptId);
           setTask(res.task);
-          setScore(0);
+          setCurrentLevelNumber(res.level?.number ?? effectiveLevel ?? null);
           setTotalTasks(res.totalTasks ?? null);
           setCompletedTasks(0);
           setTimeLeft(TIMER_DURATION_SEC);
@@ -143,7 +143,6 @@ export default function GamePage() {
           totalCount: res.summary.totalCount,
         });
         setTask(null);
-        setScore(res.summary.score);
         setCompletedTasks(res.summary.totalCount);
         setMsg("Час вийшов. Гру завершено.");
         setMsgKind("bad");
@@ -183,7 +182,11 @@ export default function GamePage() {
     ? Math.min(100, Math.round((Math.min(completedTasks, totalTasks) / totalTasks) * 100))
     : 18;
 
-  const levelTitle = effectiveLevel ? `Рівень ${effectiveLevel}` : "Рівень";
+  const levelTitle = currentLevelNumber ? `Проходження рівня ${currentLevelNumber}` : "Проходження рівня";
+  const levelsHref =
+    normalizedDifficulty !== null
+      ? `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`
+      : `/child/game/${gameId}/difficulty`;
 
   async function sendAnswer(userAnswer: any) {
     if (!attemptId || !current) return;
@@ -204,7 +207,6 @@ export default function GamePage() {
           correctCount: res.summary?.correctCount ?? 0,
           totalCount: res.summary?.totalCount ?? 0,
         });
-        setScore(res.summary?.score ?? 0);
         setCompletedTasks(res.summary?.totalCount ?? 0);
         setMsg("Гру завершено!");
         setMsgKind("ok");
@@ -223,7 +225,6 @@ export default function GamePage() {
         },
       });
 
-      setScore((prev) => res.progress?.score ?? prev);
       setCompletedTasks((prev) => res.progress?.totalCount ?? prev);
       setTotalTasks((prev) => res.progress?.totalTasks ?? prev);
 
@@ -303,6 +304,9 @@ export default function GamePage() {
                   <Link className={styles.primaryBtn} href="/child/subjects">
                     До меню
                   </Link>
+                  <Link className={styles.secondaryBtn} href={levelsHref}>
+                    До списку рівнів
+                  </Link>
                 </div>
               </div>
             ) : (
@@ -347,6 +351,12 @@ export default function GamePage() {
                   </button>
                 </div>
               )}
+
+              <div className={styles.inlineActions}>
+                <Link className={styles.secondaryBtn} href={levelsHref}>
+                  До списку рівнів
+                </Link>
+              </div>
             </>
           )}
         </section>
@@ -357,10 +367,6 @@ export default function GamePage() {
             <span className={styles.hudValue}>
               {minutes}:{seconds}
             </span>
-          </div>
-          <div className={styles.hudItem}>
-            <span className={styles.hudIcon}>⭐</span>
-            <span className={styles.hudValue}>{score}</span>
           </div>
         </footer>
       </div>

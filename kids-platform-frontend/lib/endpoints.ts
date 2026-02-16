@@ -448,6 +448,7 @@ export async function getGameLevels(gameId: number, difficulty: number, childPro
 export type StartAttemptResponse = {
   attemptId: number;
   game: { id: number; title: string; moduleCode: string };
+  level: { id: number; number: number; title: string };
   totalTasks: number;
   task: {
     taskId: number;
