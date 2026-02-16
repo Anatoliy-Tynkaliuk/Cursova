@@ -49,7 +49,7 @@ export default function LogicPlanetPage() {
 
         setStats({
           level: Math.max(1, Math.floor(finishedAttempts / 5) + 1),
-          stars: finishedAttempts,
+          stars: badgeData.totalStars ?? finishedAttempts,
           achievements: earnedBadges,
         });
 

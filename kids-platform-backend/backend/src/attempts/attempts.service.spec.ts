@@ -132,3 +132,90 @@ describe("AttemptsService unlockNextLevelIfNeeded", () => {
     });
   });
 });
+
+describe("AttemptsService saveLevelStarsIfNeeded", () => {
+  function createService(prisma: any) {
+    return new AttemptsService(prisma);
+  }
+
+  it("saves better stars for completed level", async () => {
+    const prisma = {
+      attempt: {
+        findUnique: jest.fn().mockResolvedValue({
+          childProfileId: BigInt(3),
+          isFinished: true,
+          correctCount: 4,
+          totalCount: 5,
+          level: {
+            gameId: BigInt(7),
+            difficulty: 1,
+            levelNumber: 2,
+          },
+        }),
+      },
+      childLevelProgress: {
+        findUnique: jest.fn().mockResolvedValue({
+          childProfileId: BigInt(3),
+          gameId: BigInt(7),
+          difficulty: 1,
+          maxUnlockedLevel: 2,
+          starsJson: { "2": 1 },
+        }),
+        create: jest.fn(),
+        update: jest.fn().mockResolvedValue({}),
+      },
+    };
+
+    const service = createService(prisma);
+
+    await (service as any).saveLevelStarsIfNeeded(BigInt(21));
+
+    expect(prisma.childLevelProgress.update).toHaveBeenCalledWith({
+      where: {
+        childProfileId_gameId_difficulty: {
+          childProfileId: BigInt(3),
+          gameId: BigInt(7),
+          difficulty: 1,
+        },
+      },
+      data: {
+        starsJson: { "2": 2 },
+      },
+    });
+  });
+
+  it("does not overwrite stars with lower value", async () => {
+    const prisma = {
+      attempt: {
+        findUnique: jest.fn().mockResolvedValue({
+          childProfileId: BigInt(4),
+          isFinished: true,
+          correctCount: 1,
+          totalCount: 5,
+          level: {
+            gameId: BigInt(8),
+            difficulty: 2,
+            levelNumber: 3,
+          },
+        }),
+      },
+      childLevelProgress: {
+        findUnique: jest.fn().mockResolvedValue({
+          childProfileId: BigInt(4),
+          gameId: BigInt(8),
+          difficulty: 2,
+          maxUnlockedLevel: 3,
+          starsJson: { "3": 3 },
+        }),
+        create: jest.fn(),
+        update: jest.fn(),
+      },
+    };
+
+    const service = createService(prisma);
+
+    await (service as any).saveLevelStarsIfNeeded(BigInt(22));
+
+    expect(prisma.childLevelProgress.update).not.toHaveBeenCalled();
+  });
+});
