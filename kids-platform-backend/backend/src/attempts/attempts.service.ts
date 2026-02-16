@@ -177,7 +177,9 @@ export class AttemptsService {
     const starsByLevel = this.parseStarsJson(progress.starsJson);
     const levelKey = String(attempt.level.levelNumber);
     const currentStars = starsByLevel[levelKey] ?? 0;
-    starsByLevel[levelKey] = currentStars + earnedStars;
+    if (earnedStars <= currentStars) return;
+
+    starsByLevel[levelKey] = earnedStars;
 
     await this.prisma.childLevelProgress.update({
       where: {
