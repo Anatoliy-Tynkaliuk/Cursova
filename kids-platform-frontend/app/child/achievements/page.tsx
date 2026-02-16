@@ -14,6 +14,11 @@ type AchievementBadgeView = ChildBadgeItem & {
   imageUrl?: string | null;
 };
 
+function isImageIcon(icon?: string | null) {
+  if (!icon) return false;
+  return icon.startsWith("/") || icon.startsWith("http://") || icon.startsWith("https://");
+}
+
 function parseThreshold(code: string) {
   const match = code.match(/^FINISHED_(\d+)$/i);
   if (!match) return null;
@@ -127,6 +132,7 @@ export default function ChildAchievementsPage() {
                 // якщо на бекенді немає rating — робимо: earned=3, locked=0
                 const rating = clamp((b as AchievementBadgeView).rating ?? (b.isEarned ? 3 : 0), 0, 3);
                 const threshold = parseThreshold(b.code);
+                const iconValue = b.icon?.trim() || null;
 
                 return (
                   <article
@@ -138,10 +144,22 @@ export default function ChildAchievementsPage() {
                       <div className={styles.cardIcon}>
                         {locked ? (
                           <div className={styles.lockShield} aria-hidden />
+                        ) : isImageIcon(iconValue) ? (
+                          <Image
+                            src={iconValue || (b as AchievementBadgeView).imageUrl || "/achievements/badge-default.png"}
+                            alt={b.title}
+                            width={92}
+                            height={92}
+                            className={styles.badgeImg}
+                          />
+                        ) : iconValue ? (
+                          <span className={styles.badgeEmoji} aria-label={b.title}>
+                            {iconValue}
+                          </span>
                         ) : (
                           <Image
                             src={(b as AchievementBadgeView).imageUrl || "/achievements/badge-default.png"}
-                            alt=""
+                            alt={b.title}
                             width={92}
                             height={92}
                             className={styles.badgeImg}

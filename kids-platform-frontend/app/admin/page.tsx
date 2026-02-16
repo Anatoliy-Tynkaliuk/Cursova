@@ -1133,10 +1133,13 @@ export default function AdminPage() {
             rows={3}
           />
           <input
-            placeholder="Icon (emoji або URL)"
+            placeholder="Icon (emoji, /achievements/name.png або https://...)"
             value={badgeIcon}
             onChange={(e) => setBadgeIcon(e.target.value)}
           />
+          <div className={styles.helperTextMuted}>
+            Підтримується: emoji (наприклад 🚀), локальний шлях з <code>public</code> (наприклад <code>/achievements/my-badge.png</code>) або повний URL <code>https://...</code>.
+          </div>
           <button disabled={!badgeFormValid} onClick={onCreateBadge}>
             Створити бейдж
           </button>
