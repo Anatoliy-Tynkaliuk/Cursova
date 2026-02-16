@@ -1,0 +1,102 @@
+.page {
+  padding: 16px;
+  max-width: 1000px;
+}
+
+.errorText {
+  color: red;
+}
+
+.successText {
+  color: green;
+}
+
+.sectionCard {
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.sectionSpacing {
+  margin-bottom: 20px;
+}
+
+.formGrid {
+  display: grid;
+  gap: 12px;
+  max-width: 480px;
+}
+
+.formGridWide {
+  display: grid;
+  gap: 12px;
+  max-width: 520px;
+}
+
+.inlineLabel {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.smallInput {
+  width: 80px;
+}
+
+.smallInputWide {
+  width: 90px;
+}
+
+.smallInputLevel {
+  width: 100px;
+}
+
+.helperText {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 10px;
+}
+
+.helperTextMuted {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.metaText {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+
+.codeInline {
+  margin-left: 6px;
+}
+
+.listGrid {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.listItem {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.editGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.actionsRow {
+  display: flex;
+  gap: 8px;
+}
+
+.emptyState {
+  font-size: 12px;
+  opacity: 0.7;
+}
