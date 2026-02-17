@@ -3,40 +3,12 @@
   position: relative;
   overflow: hidden;
   padding: 24px 16px 34px;
-
-  background:
-    radial-gradient(900px 700px at 50% -10%, rgba(255,255,255,0.18), rgba(255,255,255,0) 55%),
-    radial-gradient(900px 900px at 50% 110%, rgba(255,160,90,0.28), rgba(255,160,90,0) 55%),
-    radial-gradient(700px 600px at 20% 35%, rgba(190,120,255,0.22), rgba(190,120,255,0) 60%),
-    linear-gradient(180deg, #2a0a44 0%, #1a0a3a 40%, #12072c 100%);
-}
-
-.page::before{
-  content:"";
-  position:absolute;
-  inset:-40px;
-  background-image:
-    radial-gradient(rgba(255,255,255,0.75) 1px, transparent 2px),
-    radial-gradient(rgba(255,255,255,0.55) 1px, transparent 2px),
-    radial-gradient(rgba(255,255,255,0.35) 1px, transparent 2px);
-  background-size: 56px 56px, 82px 82px, 120px 120px;
-  background-position: 0 0, 18px 22px, 40px 10px;
-  opacity: 0.35;
-  pointer-events:none;
-}
-
-.moon{
-  position:absolute;
-  top: 28px;
-  right: 26px;
-  width: 86px;
-  height: 86px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), rgba(255,255,255,0) 55%),
-    radial-gradient(circle at 35% 35%, #ffe9a1, #ffce5e 60%, #ffb02d 100%);
-  box-shadow: 0 0 40px rgba(255,200,90,0.35);
-  opacity: 0.95;
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  background-image: url("/background.png");
+  background-size: cover;
+  background-position: center;
 }
 
 .rocket{
@@ -244,6 +216,12 @@
   height: 92px;
   object-fit: contain;
   filter: drop-shadow(0 16px 18px rgba(0,0,0,0.25));
+}
+
+.badgeEmoji{
+  font-size: 64px;
+  line-height: 1;
+  filter: drop-shadow(0 12px 16px rgba(0,0,0,0.35));
 }
 
 .cardTitle{
