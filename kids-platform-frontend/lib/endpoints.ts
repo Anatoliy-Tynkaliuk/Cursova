@@ -389,11 +389,20 @@ export type ChildBadgeItem = {
   description?: string | null;
   icon?: string | null;
   isEarned: boolean;
+  metricKey?: string | null;
+  metricLabel?: string | null;
+  currentValue?: number | null;
+  targetValue?: number | null;
+  progressPercent?: number | null;
 };
 
 export type ChildBadgesResponse = {
   finishedAttempts: number;
   totalStars: number;
+  loginDays?: number;
+  totalAttempts?: number;
+  correctAnswers?: number;
+  perfectGames?: number;
   badges: ChildBadgeItem[];
 };
 

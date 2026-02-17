@@ -1,6 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateChildDto } from "./dto";
+import { buildAchievementRule, type AchievementMetrics } from "./achievement-rules";
 
 function randomCode(len = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -210,39 +211,70 @@ export class ChildrenService {
       if (!link) throw new ForbiddenException("Not your child");
     }
 
-    const finishedAttempts = await this.prisma.attempt.count({
-      where: { childProfileId: child.id, isFinished: true },
-    });
-
-    const scoreAgg = await this.prisma.attempt.aggregate({
-      where: { childProfileId: child.id, isFinished: true },
-      _sum: { score: true },
-    });
+    const [allAttempts, finishedAttempts, scoreAgg, correctAgg, badges, earned] = await Promise.all([
+      this.prisma.attempt.findMany({
+        where: { childProfileId: child.id },
+        select: {
+          createdAt: true,
+          isFinished: true,
+          correctCount: true,
+          totalCount: true,
+        },
+      }),
+      this.prisma.attempt.count({ where: { childProfileId: child.id, isFinished: true } }),
+      this.prisma.attempt.aggregate({
+        where: { childProfileId: child.id, isFinished: true },
+        _sum: { score: true },
+      }),
+      this.prisma.attempt.aggregate({
+        where: { childProfileId: child.id, isFinished: true },
+        _sum: { correctCount: true },
+      }),
+      this.prisma.badge.findMany({ orderBy: { id: "asc" } }),
+      this.prisma.childBadge.findMany({ where: { childProfileId: child.id } }),
+    ]);
 
     const totalStars = scoreAgg._sum.score ?? 0;
+    const loginDays = new Set(allAttempts.map((attempt) => attempt.createdAt.toISOString().slice(0, 10))).size;
+    const totalAttempts = allAttempts.length;
+    const perfectGames = allAttempts.filter(
+      (attempt) => attempt.isFinished && attempt.totalCount > 0 && attempt.correctCount === attempt.totalCount,
+    ).length;
 
-    const badges = await this.prisma.badge.findMany({
-      orderBy: { id: "asc" },
-    });
-
-    const earned = await this.prisma.childBadge.findMany({
-      where: { childProfileId: child.id },
-      include: { badge: true },
-    });
+    const metrics: AchievementMetrics = {
+      finishedAttempts,
+      totalStars,
+      loginDays,
+      correctAnswers: correctAgg._sum.correctCount ?? 0,
+      totalAttempts,
+      perfectGames,
+    };
 
     const earnedSet = new Set(earned.map((b) => Number(b.badgeId)));
 
     return {
       finishedAttempts,
       totalStars,
-      badges: badges.map((badge) => ({
-        id: Number(badge.id),
-        code: badge.code,
-        title: badge.title,
-        description: badge.description,
-        icon: badge.icon,
-        isEarned: earnedSet.has(Number(badge.id)),
-      })),
+      loginDays,
+      totalAttempts,
+      correctAnswers: metrics.correctAnswers,
+      perfectGames,
+      badges: badges.map((badge) => {
+        const rule = buildAchievementRule(badge.code, metrics);
+        return {
+          id: Number(badge.id),
+          code: badge.code,
+          title: badge.title,
+          description: badge.description,
+          icon: badge.icon,
+          isEarned: earnedSet.has(Number(badge.id)),
+          metricKey: rule?.metricKey ?? null,
+          metricLabel: rule?.metricLabel ?? null,
+          currentValue: rule?.currentValue ?? null,
+          targetValue: rule?.targetValue ?? null,
+          progressPercent: rule?.progressPercent ?? null,
+        };
+      }),
     };
   }
 

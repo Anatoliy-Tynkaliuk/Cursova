@@ -1,42 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildAchievementsPage.module.css";
 
-const MAX_ON_PAGE = 6;
-
-type AchievementBadgeView = ChildBadgeItem & {
-  rating?: number;
-  imageUrl?: string | null;
+type Summary = {
+  finishedAttempts: number;
+  totalStars: number;
+  loginDays: number;
+  correctAnswers: number;
+  perfectGames: number;
 };
 
-function isImageIcon(icon?: string | null) {
-  if (!icon) return false;
-  return icon.startsWith("/") || icon.startsWith("http://") || icon.startsWith("https://");
-}
-
-function parseThreshold(code: string) {
-  const match = code.match(/^FINISHED_(\d+)$/i);
-  if (!match) return null;
-  const value = Number(match[1]);
-  return Number.isFinite(value) ? value : null;
-}
-
-function clamp(n: number, a: number, b: number) {
-  return Math.max(a, Math.min(b, n));
+function getBadgeProgress(badge: ChildBadgeItem) {
+  if (badge.progressPercent != null) return badge.progressPercent;
+  if (badge.isEarned) return 100;
+  return 0;
 }
 
 export default function ChildAchievementsPage() {
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
-  const [finishedAttempts, setFinishedAttempts] = useState(0);
-  const [totalStars, setTotalStars] = useState(0);
+  const [summary, setSummary] = useState<Summary>({
+    finishedAttempts: 0,
+    totalStars: 0,
+    loginDays: 0,
+    correctAnswers: 0,
+    perfectGames: 0,
+  });
   const [error, setError] = useState<string | null>(null);
 
-  const session = useMemo(() => getChildSession(), []);
+  const session = useMemo(() => (
+    typeof window === "undefined"
+      ? { childProfileId: null, ageGroupCode: null, childName: null }
+      : getChildSession()
+  ), []);
   const isHydrated = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -55,8 +54,13 @@ export default function ChildAchievementsPage() {
       try {
         const data = await getChildBadgesPublic(session.childProfileId);
         setBadges(data.badges ?? []);
-        setFinishedAttempts(data.finishedAttempts ?? 0);
-        setTotalStars(data.totalStars ?? 0);
+        setSummary({
+          finishedAttempts: data.finishedAttempts ?? 0,
+          totalStars: data.totalStars ?? 0,
+          loginDays: data.loginDays ?? 0,
+          correctAnswers: data.correctAnswers ?? 0,
+          perfectGames: data.perfectGames ?? 0,
+        });
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");
       }
@@ -65,151 +69,100 @@ export default function ChildAchievementsPage() {
     load().catch((e: unknown) => setError(e instanceof Error ? e.message : "Error"));
   }, [session?.childProfileId]);
 
-  const earnedCount = useMemo(() => badges.filter((b) => b.isEarned).length, [badges]);
-  const totalCount = badges.length;
+  const earned = useMemo(() => badges.filter((badge) => badge.isEarned), [badges]);
+  const inProgress = useMemo(() => badges.filter((badge) => !badge.isEarned && getBadgeProgress(badge) > 0), [badges]);
+  const locked = useMemo(() => badges.filter((badge) => !badge.isEarned && getBadgeProgress(badge) === 0), [badges]);
 
-  const showBadges = useMemo(() => badges.slice(0, MAX_ON_PAGE), [badges]);
-  const hasMore = badges.length > MAX_ON_PAGE;
-
-  const progressPct = totalCount > 0 ? Math.round((earnedCount / totalCount) * 100) : 0;
+  const completionRate = badges.length === 0 ? 0 : Math.round((earned.length / badges.length) * 100);
 
   return (
     <div className={styles.page}>
-      <div className={styles.moon} aria-hidden />
-      <div className={styles.rocket} aria-hidden />
-
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Мої досягнення</h1>
+          <h1 className={styles.title}>Досягнення</h1>
           <Link className={styles.back} href="/child/subjects">
             ← Назад
           </Link>
         </header>
 
-        <section className={styles.profile}>
-          <div className={styles.avatarWrap}>
-            <Image
-              src="/avatars/child-astronaut.png"
-              alt="avatar"
-              width={92}
-              height={92}
-              className={styles.avatar}
-              priority
-            />
-            <div className={styles.avatarGlow} aria-hidden />
+        <section className={styles.hero}>
+          <div>
+            <p className={styles.heroLabel}>Профіль</p>
+            <h2 className={styles.name}>{childName}</h2>
+            <p className={styles.heroText}>Твій прогрес у професійному форматі: виконані, у процесі та заплановані досягнення.</p>
           </div>
 
-          <div className={styles.profileInfo}>
-            <div className={styles.name}>{childName}</div>
-
-            <div className={styles.progressRow}>
-              <div className={styles.progressText}>
-                {earnedCount}/{totalCount || 0} <span>досягнень</span>
-              </div>
-
-              <div
-                className={styles.progressBar}
-                role="progressbar"
-                aria-valuenow={progressPct}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
-              </div>
-
-              <div className={styles.subNote}>
-                Завершено ігор: {finishedAttempts} &nbsp;|&nbsp; Зірочок: {totalStars}
-              </div>
+          <div className={styles.progressWrap}>
+            <div className={styles.progressMeta}>{earned.length}/{badges.length || 0} отримано</div>
+            <div className={styles.progressBar}>
+              <div className={styles.progressFill} style={{ width: `${completionRate}%` }} />
             </div>
+            <div className={styles.progressPercent}>{completionRate}%</div>
           </div>
+        </section>
+
+        <section className={styles.kpiGrid}>
+          <article className={styles.kpiCard}><span>⭐ Зірки</span><strong>{summary.totalStars}</strong></article>
+          <article className={styles.kpiCard}><span>🎮 Пройдені ігри</span><strong>{summary.finishedAttempts}</strong></article>
+          <article className={styles.kpiCard}><span>📅 Дні активності</span><strong>{summary.loginDays}</strong></article>
+          <article className={styles.kpiCard}><span>✅ Правильні відповіді</span><strong>{summary.correctAnswers}</strong></article>
+          <article className={styles.kpiCard}><span>🏆 Ідеальні ігри</span><strong>{summary.perfectGames}</strong></article>
         </section>
 
         {error && <div className={styles.error}>{error}</div>}
 
-        {badges.length === 0 ? (
-          <div className={styles.empty}>Поки що немає досягнень.</div>
-        ) : (
-          <>
-            <section className={styles.grid}>
-              {showBadges.map((b) => {
-                const locked = !b.isEarned;
+        <section className={styles.section}>
+          <div className={styles.sectionHead}><h3>Отримані</h3><span>{earned.length}</span></div>
+          <div className={styles.list}>{earned.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}</div>
+        </section>
 
-                // якщо на бекенді немає rating — робимо: earned=3, locked=0
-                const rating = clamp((b as AchievementBadgeView).rating ?? (b.isEarned ? 3 : 0), 0, 3);
-                const threshold = parseThreshold(b.code);
-                const iconValue = b.icon?.trim() || null;
+        <section className={styles.section}>
+          <div className={styles.sectionHead}><h3>У процесі</h3><span>{inProgress.length}</span></div>
+          <div className={styles.list}>{inProgress.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}</div>
+        </section>
 
-                return (
-                  <article
-                    key={b.id}
-                    className={`${styles.card} ${locked ? styles.cardLocked : ""}`}
-                    title={b.description || ""}
-                  >
-                    <div className={styles.cardInner}>
-                      <div className={styles.cardIcon}>
-                        {locked ? (
-                          <div className={styles.lockShield} aria-hidden />
-                        ) : isImageIcon(iconValue) ? (
-                          <Image
-                            src={iconValue || (b as AchievementBadgeView).imageUrl || "/achievements/badge-default.png"}
-                            alt={b.title}
-                            width={92}
-                            height={92}
-                            className={styles.badgeImg}
-                          />
-                        ) : iconValue ? (
-                          <span className={styles.badgeEmoji} aria-label={b.title}>
-                            {iconValue}
-                          </span>
-                        ) : (
-                          <Image
-                            src={(b as AchievementBadgeView).imageUrl || "/achievements/badge-default.png"}
-                            alt={b.title}
-                            width={92}
-                            height={92}
-                            className={styles.badgeImg}
-                          />
-                        )}
-                      </div>
+        <section className={styles.section}>
+          <div className={styles.sectionHead}><h3>Ще закриті</h3><span>{locked.length}</span></div>
+          <div className={styles.list}>{locked.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}</div>
+        </section>
 
-                      <div className={styles.cardTitle}>{locked ? "Не досягнуто" : b.title}</div>
-
-                      {threshold != null && (
-                        <div className={styles.cardHint}>Потрібно ігор: {threshold}</div>
-                      )}
-
-                      <div className={styles.stars} aria-label={`rating ${rating} of 3`}>
-                        {[0, 1, 2].map((i) => (
-                          <span
-                            key={i}
-                            className={`${styles.star} ${i < rating ? styles.starOn : styles.starOff}`}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className={styles.cardShine} aria-hidden />
-                  </article>
-                );
-              })}
-            </section>
-
-            <div className={styles.bottom}>
-              <Link className={styles.allBtn} href="/child/achievements/all">
-                Усі досягнення
-              </Link>
-
-              {hasMore && (
-                <div className={styles.moreNote}>
-                  Ще {badges.length - MAX_ON_PAGE} у списку
-                </div>
-              )}
-            </div>
-          </>
-        )}
+        <div className={styles.bottom}>
+          <Link className={styles.allBtn} href="/child/achievements/all">Усі досягнення</Link>
+        </div>
       </div>
     </div>
+  );
+}
+
+function BadgeCard({ badge }: { badge: ChildBadgeItem }) {
+  const progress = getBadgeProgress(badge);
+  const progressText =
+    badge.currentValue != null && badge.targetValue != null
+      ? `${badge.currentValue}/${badge.targetValue}`
+      : badge.isEarned
+        ? "Виконано"
+        : "Немає прогресу";
+
+  return (
+    <article className={`${styles.card} ${badge.isEarned ? styles.cardEarned : ""}`}>
+      <div className={styles.cardTop}>
+        <div>
+          <h4>{badge.title}</h4>
+          <p>{badge.description || "Досягнення буде відкрито після виконання умов."}</p>
+        </div>
+        <span className={styles.status}>{badge.isEarned ? "Отримано" : "Активне"}</span>
+      </div>
+
+      {badge.metricLabel && (
+        <div className={styles.metricRow}>
+          <span>{badge.metricLabel}</span>
+          <strong>{progressText}</strong>
+        </div>
+      )}
+
+      <div className={styles.line}>
+        <div className={styles.lineFill} style={{ width: `${progress}%` }} />
+      </div>
+    </article>
   );
 }
