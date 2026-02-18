@@ -46,7 +46,7 @@ export default function EnglishPlanetPage() {
         const earnedBadges = badgeData.badges.filter((badge) => badge.isEarned).length;
         setStats({
           level: Math.max(1, Math.floor(badgeData.finishedAttempts / 5) + 1),
-          stars: badgeData.finishedAttempts,
+          stars: badgeData.totalStars ?? badgeData.finishedAttempts,
           achievements: earnedBadges,
         });
       } catch (e: any) {

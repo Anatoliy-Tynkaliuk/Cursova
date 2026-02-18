@@ -39,6 +39,7 @@ export default function ChildSubjectsPage() {
   const [games, setGames] = useState<GameListItem[]>([]);
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [totalStars, setTotalStars] = useState(0);
   const [childName, setChildName] = useState<string>("Друже");
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +61,7 @@ export default function ChildSubjectsPage() {
         setGames(gamesData);
         setBadges(badgeData.badges);
         setFinishedAttempts(badgeData.finishedAttempts);
+        setTotalStars(badgeData.totalStars ?? badgeData.finishedAttempts);
       } catch (e: any) {
         setError(e.message ?? "Error");
       }
@@ -80,7 +82,7 @@ export default function ChildSubjectsPage() {
 
   const stats = [
     { label: "Рівень", value: String(level), icon: "⭐" },
-    { label: "Зірочки", value: String(finishedAttempts), icon: "✨" },
+    { label: "Зірочки", value: String(totalStars), icon: "✨" },
     { label: "Досягнення", value: String(earnedBadges), icon: "🏆" },
   ];
 
