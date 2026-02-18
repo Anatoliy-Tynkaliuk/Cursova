@@ -6,41 +6,56 @@ import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildAchievementsPage.module.css";
 
-type Summary = {
-  finishedAttempts: number;
-  totalStars: number;
-  loginDays: number;
-  correctAnswers: number;
-  perfectGames: number;
-};
-
 function getBadgeProgress(badge: ChildBadgeItem) {
   if (badge.progressPercent != null) return badge.progressPercent;
   if (badge.isEarned) return 100;
   return 0;
 }
 
+function getProgressText(badge: ChildBadgeItem) {
+  if (badge.currentValue != null && badge.targetValue != null) {
+    return `${badge.currentValue}/${badge.targetValue}`;
+  }
+
+  return badge.isEarned ? "Виконано" : "0%";
+}
+
+function badgeIconValue(badge: ChildBadgeItem) {
+  if (!badge.icon) return "🏅";
+
+  const trimmed = badge.icon.trim();
+  if (!trimmed) return "🏅";
+
+  const isImagePath =
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://");
+
+  if (isImagePath) return "🏅";
+
+  return trimmed;
+}
+
 export default function ChildAchievementsPage() {
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
-  const [summary, setSummary] = useState<Summary>({
-    finishedAttempts: 0,
-    totalStars: 0,
-    loginDays: 0,
-    correctAnswers: 0,
-    perfectGames: 0,
-  });
+  const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [totalStars, setTotalStars] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const session = useMemo(() => (
-    typeof window === "undefined"
-      ? { childProfileId: null, ageGroupCode: null, childName: null }
-      : getChildSession()
-  ), []);
+  const session = useMemo(
+    () =>
+      typeof window === "undefined"
+        ? { childProfileId: null, ageGroupCode: null, childName: null }
+        : getChildSession(),
+    [],
+  );
+
   const isHydrated = useSyncExternalStore(
     () => () => {},
     () => true,
     () => false,
   );
+
   const childName = isHydrated ? (session.childName || "RocketMax") : "RocketMax";
 
   useEffect(() => {
@@ -54,13 +69,8 @@ export default function ChildAchievementsPage() {
       try {
         const data = await getChildBadgesPublic(session.childProfileId);
         setBadges(data.badges ?? []);
-        setSummary({
-          finishedAttempts: data.finishedAttempts ?? 0,
-          totalStars: data.totalStars ?? 0,
-          loginDays: data.loginDays ?? 0,
-          correctAnswers: data.correctAnswers ?? 0,
-          perfectGames: data.perfectGames ?? 0,
-        });
+        setFinishedAttempts(data.finishedAttempts ?? 0);
+        setTotalStars(data.totalStars ?? 0);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");
       }
@@ -69,11 +79,9 @@ export default function ChildAchievementsPage() {
     load().catch((e: unknown) => setError(e instanceof Error ? e.message : "Error"));
   }, [session?.childProfileId]);
 
-  const earned = useMemo(() => badges.filter((badge) => badge.isEarned), [badges]);
-  const inProgress = useMemo(() => badges.filter((badge) => !badge.isEarned && getBadgeProgress(badge) > 0), [badges]);
-  const locked = useMemo(() => badges.filter((badge) => !badge.isEarned && getBadgeProgress(badge) === 0), [badges]);
-
-  const completionRate = badges.length === 0 ? 0 : Math.round((earned.length / badges.length) * 100);
+  const earnedCount = useMemo(() => badges.filter((badge) => badge.isEarned).length, [badges]);
+  const totalCount = badges.length;
+  const progressPct = totalCount > 0 ? Math.round((earnedCount / totalCount) * 100) : 0;
 
   return (
     <div className={styles.page}>
@@ -85,84 +93,69 @@ export default function ChildAchievementsPage() {
           </Link>
         </header>
 
-        <section className={styles.hero}>
+        <section className={styles.profile}>
           <div>
-            <p className={styles.heroLabel}>Профіль</p>
+            <p className={styles.profileLabel}>Профіль гравця</p>
             <h2 className={styles.name}>{childName}</h2>
-            <p className={styles.heroText}>Твій прогрес у професійному форматі: виконані, у процесі та заплановані досягнення.</p>
+            <p className={styles.profileMeta}>
+              Пройдено ігор: {finishedAttempts} · Зірочок: {totalStars}
+            </p>
           </div>
 
-          <div className={styles.progressWrap}>
-            <div className={styles.progressMeta}>{earned.length}/{badges.length || 0} отримано</div>
+          <div className={styles.progressBlock}>
+            <div className={styles.progressText}>{earnedCount}/{totalCount || 0} отримано</div>
             <div className={styles.progressBar}>
-              <div className={styles.progressFill} style={{ width: `${completionRate}%` }} />
+              <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
             </div>
-            <div className={styles.progressPercent}>{completionRate}%</div>
+            <div className={styles.progressPercent}>{progressPct}%</div>
           </div>
-        </section>
-
-        <section className={styles.kpiGrid}>
-          <article className={styles.kpiCard}><span>⭐ Зірки</span><strong>{summary.totalStars}</strong></article>
-          <article className={styles.kpiCard}><span>🎮 Пройдені ігри</span><strong>{summary.finishedAttempts}</strong></article>
-          <article className={styles.kpiCard}><span>📅 Дні активності</span><strong>{summary.loginDays}</strong></article>
-          <article className={styles.kpiCard}><span>✅ Правильні відповіді</span><strong>{summary.correctAnswers}</strong></article>
-          <article className={styles.kpiCard}><span>🏆 Ідеальні ігри</span><strong>{summary.perfectGames}</strong></article>
         </section>
 
         {error && <div className={styles.error}>{error}</div>}
 
-        <section className={styles.section}>
-          <div className={styles.sectionHead}><h3>Отримані</h3><span>{earned.length}</span></div>
-          <div className={styles.list}>{earned.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}</div>
-        </section>
+        {badges.length === 0 ? (
+          <div className={styles.empty}>Поки що немає досягнень.</div>
+        ) : (
+          <section className={styles.grid}>
+            {badges.map((badge) => {
+              const progress = getBadgeProgress(badge);
 
-        <section className={styles.section}>
-          <div className={styles.sectionHead}><h3>У процесі</h3><span>{inProgress.length}</span></div>
-          <div className={styles.list}>{inProgress.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}</div>
-        </section>
+              return (
+                <article
+                  key={badge.id}
+                  className={`${styles.card} ${badge.isEarned ? styles.cardEarned : styles.cardLocked}`}
+                  title={badge.description || ""}
+                >
+                  <div className={styles.cardHead}>
+                    <div className={styles.iconWrap}>{badgeIconValue(badge)}</div>
+                    <span className={styles.badgeStatus}>{badge.isEarned ? "Отримано" : "Виконується"}</span>
+                  </div>
 
-        <section className={styles.section}>
-          <div className={styles.sectionHead}><h3>Ще закриті</h3><span>{locked.length}</span></div>
-          <div className={styles.list}>{locked.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}</div>
-        </section>
+                  <h3 className={styles.cardTitle}>{badge.title}</h3>
+                  <p className={styles.cardDesc}>{badge.description || "Досягнення відкриється після виконання цілі."}</p>
+
+                  {badge.metricLabel && (
+                    <div className={styles.metricRow}>
+                      <span>{badge.metricLabel}</span>
+                      <strong>{getProgressText(badge)}</strong>
+                    </div>
+                  )}
+
+                  <div className={styles.progressLine}>
+                    <div className={styles.progressLineFill} style={{ width: `${progress}%` }} />
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        )}
 
         <div className={styles.bottom}>
-          <Link className={styles.allBtn} href="/child/achievements/all">Усі досягнення</Link>
+          <Link className={styles.allBtn} href="/child/achievements/all">
+            Усі досягнення
+          </Link>
         </div>
       </div>
     </div>
-  );
-}
-
-function BadgeCard({ badge }: { badge: ChildBadgeItem }) {
-  const progress = getBadgeProgress(badge);
-  const progressText =
-    badge.currentValue != null && badge.targetValue != null
-      ? `${badge.currentValue}/${badge.targetValue}`
-      : badge.isEarned
-        ? "Виконано"
-        : "Немає прогресу";
-
-  return (
-    <article className={`${styles.card} ${badge.isEarned ? styles.cardEarned : ""}`}>
-      <div className={styles.cardTop}>
-        <div>
-          <h4>{badge.title}</h4>
-          <p>{badge.description || "Досягнення буде відкрито після виконання умов."}</p>
-        </div>
-        <span className={styles.status}>{badge.isEarned ? "Отримано" : "Активне"}</span>
-      </div>
-
-      {badge.metricLabel && (
-        <div className={styles.metricRow}>
-          <span>{badge.metricLabel}</span>
-          <strong>{progressText}</strong>
-        </div>
-      )}
-
-      <div className={styles.line}>
-        <div className={styles.lineFill} style={{ width: `${progress}%` }} />
-      </div>
-    </article>
   );
 }
