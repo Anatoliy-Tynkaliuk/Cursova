@@ -266,7 +266,6 @@ export class ChildrenService {
           code: badge.code,
           title: badge.title,
           description: badge.description,
-          icon: badge.icon,
           isEarned: earnedSet.has(Number(badge.id)),
           metricKey: rule?.metricKey ?? null,
           metricLabel: rule?.metricLabel ?? null,

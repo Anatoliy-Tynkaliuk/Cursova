@@ -69,7 +69,6 @@ export type CreateBadgeDto = {
   code: string;
   title: string;
   description?: string;
-  icon?: string;
 };
 
 export type UpdateBadgeDto = Partial<CreateBadgeDto>;

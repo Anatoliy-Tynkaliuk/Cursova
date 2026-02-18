@@ -88,7 +88,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive ?? true,
       },
     });
@@ -102,7 +101,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive,
       },
     });
@@ -132,7 +130,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive ?? true,
       },
     });
@@ -146,7 +143,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive,
       },
     });
@@ -431,7 +427,6 @@ export class AdminService {
       code: b.code,
       title: b.title,
       description: b.description,
-      icon: b.icon,
     }));
   }
 
@@ -441,7 +436,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
       },
     });
     return { id: Number(badge.id) };
@@ -454,7 +448,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
       },
     });
     return { id: Number(badge.id) };

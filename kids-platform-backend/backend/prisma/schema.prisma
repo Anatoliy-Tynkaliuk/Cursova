@@ -258,7 +258,6 @@ model Badge {
   code        String   @unique
   title       String
   description String?
-  icon        String?
 
   childBadges ChildBadge[]
 
