@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
@@ -20,21 +21,6 @@ function getProgressText(badge: ChildBadgeItem) {
   return badge.isEarned ? "Виконано" : "0%";
 }
 
-function badgeIconValue(badge: ChildBadgeItem) {
-  if (!badge.icon) return "🏅";
-
-  const trimmed = badge.icon.trim();
-  if (!trimmed) return "🏅";
-
-  const isImagePath =
-    trimmed.startsWith("/") ||
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("https://");
-
-  if (isImagePath) return "🏅";
-
-  return trimmed;
-}
 
 export default function ChildAchievementsPage() {
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
@@ -127,8 +113,17 @@ export default function ChildAchievementsPage() {
                   title={badge.description || ""}
                 >
                   <div className={styles.cardHead}>
-                    <div className={styles.iconWrap}>{badgeIconValue(badge)}</div>
-                    <span className={styles.badgeStatus}>{badge.isEarned ? "Отримано" : "Виконується"}</span>
+                    <div className={styles.badgeImageWrap}>
+                      <Image
+                        src={badge.isEarned ? "/landing/trophy.png" : "/landing/shield.png"}
+                        alt={badge.isEarned ? "Отримане досягнення" : "Закрите досягнення"}
+                        width={52}
+                        height={52}
+                        className={styles.badgeImage}
+                      />
+                      {!badge.isEarned && <span className={styles.chain}>⛓️</span>}
+                    </div>
+                    <span className={styles.badgeStatus}>{badge.isEarned ? "Отримано" : "Закрито"}</span>
                   </div>
 
                   <h3 className={styles.cardTitle}>{badge.title}</h3>

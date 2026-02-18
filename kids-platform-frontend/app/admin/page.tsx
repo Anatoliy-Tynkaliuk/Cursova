@@ -98,7 +98,6 @@ export default function AdminPage() {
   const [badgeCode, setBadgeCode] = useState("");
   const [badgeTitle, setBadgeTitle] = useState("");
   const [badgeDescription, setBadgeDescription] = useState("");
-  const [badgeIcon, setBadgeIcon] = useState("");
 
   const ageGroupFormValid =
     ageGroupCode.trim().length > 0 &&
@@ -612,13 +611,11 @@ export default function AdminPage() {
         code: badgeCode.trim(),
         title: badgeTitle.trim(),
         description: badgeDescription.trim() || undefined,
-        icon: badgeIcon.trim() || undefined,
       });
       setMessage("Бейдж створено.");
       setBadgeCode("");
       setBadgeTitle("");
       setBadgeDescription("");
-      setBadgeIcon("");
       const badgesData = await getAdminBadges();
       setBadges(badgesData);
     } catch (e: any) {
@@ -634,7 +631,6 @@ export default function AdminPage() {
         code: badge.code,
         title: badge.title,
         description: badge.description ?? undefined,
-        icon: badge.icon ?? undefined,
       });
       setMessage("Бейдж оновлено.");
     } catch (e: any) {
@@ -1132,11 +1128,6 @@ export default function AdminPage() {
             onChange={(e) => setBadgeDescription(e.target.value)}
             rows={3}
           />
-          <input
-            placeholder="Icon (emoji або URL)"
-            value={badgeIcon}
-            onChange={(e) => setBadgeIcon(e.target.value)}
-          />
           <button disabled={!badgeFormValid} onClick={onCreateBadge}>
             Створити бейдж
           </button>
@@ -1179,17 +1170,6 @@ export default function AdminPage() {
                     )
                   }
                   rows={2}
-                />
-                <input
-                  placeholder="Icon"
-                  value={badge.icon ?? ""}
-                  onChange={(e) =>
-                    setBadges((prev) =>
-                      prev.map((item) =>
-                        item.id === badge.id ? { ...item, icon: e.target.value } : item
-                      )
-                    )
-                  }
                 />
                 <div className={styles.actionsRow}>
                   <button onClick={() => onUpdateBadge(badge)}>Зберегти</button>
