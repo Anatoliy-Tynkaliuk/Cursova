@@ -388,6 +388,25 @@
   font-weight: 900;
 }
 
+.dropTargetValuesWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dropTargetValueBadge {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(10, 6, 20, 0.32);
+  padding: 6px 10px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.dropTargetValueBadge:hover {
+  border-color: rgba(255, 90, 110, 0.55);
+}
+
 /* ===== SUMMARY ===== */
 
 .summary {

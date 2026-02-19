@@ -110,7 +110,7 @@ export default function GamePage() {
   const [pickedState, setPickedState] = useState<"ok" | "bad" | null>(null);
   const [timeoutOpen, setTimeoutOpen] = useState(false);
   const [timeoutReason, setTimeoutReason] = useState<string>("Час вийшов!");
-  const [dragAssignments, setDragAssignments] = useState<Record<string, string>>({});
+  const [dragAssignments, setDragAssignments] = useState<Record<string, string[]>>({});
   const [dragHoverTarget, setDragHoverTarget] = useState<string | null>(null);
   const [selectedDragItem, setSelectedDragItem] = useState<string | null>(null);
 
@@ -253,7 +253,7 @@ export default function GamePage() {
   const isDragTask = dragItems.length > 0 && dragTargets.length > 0;
 
   const availableDragItems = useMemo(() => {
-    const usedItems = new Set(Object.values(dragAssignments));
+    const usedItems = new Set(Object.values(dragAssignments).flat());
     return dragItems.filter((item) => !usedItems.has(item));
   }, [dragAssignments, dragItems]);
 
@@ -266,15 +266,16 @@ export default function GamePage() {
 
   function assignDragItem(target: string, item: string) {
     setDragAssignments((prev) => {
-      const next: Record<string, string> = { ...prev };
+      const next: Record<string, string[]> = {};
 
-      for (const key of Object.keys(next)) {
-        if (next[key] === item) {
-          delete next[key];
+      for (const key of Object.keys(prev)) {
+        const filtered = prev[key].filter((assignedItem) => assignedItem !== item);
+        if (filtered.length > 0) {
+          next[key] = filtered;
         }
       }
 
-      next[target] = item;
+      next[target] = [...(next[target] ?? []), item];
       return next;
     });
     setSelectedDragItem(null);
@@ -283,9 +284,27 @@ export default function GamePage() {
 
   function clearDragTarget(target: string) {
     setDragAssignments((prev) => {
-      if (!prev[target]) return prev;
+      if (!prev[target] || prev[target].length === 0) return prev;
       const next = { ...prev };
       delete next[target];
+      return next;
+    });
+  }
+
+  function removeItemFromTarget(target: string, item: string) {
+    setDragAssignments((prev) => {
+      const list = prev[target] ?? [];
+      if (!list.includes(item)) return prev;
+
+      const next = { ...prev };
+      const filtered = list.filter((assignedItem) => assignedItem !== item);
+
+      if (filtered.length === 0) {
+        delete next[target];
+      } else {
+        next[target] = filtered;
+      }
+
       return next;
     });
   }
@@ -306,13 +325,9 @@ export default function GamePage() {
   function submitDragAnswer() {
     if (!isDragTask) return;
 
-    const pairs = dragItems
-      .map((item) => {
-        const target = Object.entries(dragAssignments).find(([, assignedItem]) => assignedItem === item)?.[0];
-        if (!target) return null;
-        return { item, target };
-      })
-      .filter((pair): pair is { item: string; target: string } => pair !== null);
+    const pairs = Object.entries(dragAssignments).flatMap(([target, items]) =>
+      items.map((item) => ({ item, target }))
+    );
 
     sendAnswer({ pairs });
   }
@@ -463,33 +478,11 @@ export default function GamePage() {
                 <>
                   <div className={styles.dragLayout}>
                     <div>
-                      <div className={styles.dragColumnTitle}>Перетягни картки</div>
-                      <div className={styles.dragItemsList}>
-                        {availableDragItems.map((item) => (
-                          <button
-                            key={item}
-                            type="button"
-                            className={`${styles.dragItemCard} ${selectedDragItem === item ? styles.dragItemSelected : ""}`}
-                            draggable={!loading}
-                            disabled={loading || pickedIdx !== null}
-                            onDragStart={(event) => handleItemDragStart(event, item)}
-                            onClick={() => setSelectedDragItem((prev) => (prev === item ? null : item))}
-                          >
-                            {item}
-                          </button>
-                        ))}
-
-                        {availableDragItems.length === 0 && (
-                          <div className={styles.dragHint}>Всі картки розкладені. Перевір відповідність праворуч.</div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
                       <div className={styles.dragColumnTitle}>Куди відноситься</div>
-                      <div className={styles.dropTargetsList}>
+                      <div className={styles.dragItemsList}>
                         {dragTargets.map((target) => {
-                          const assignedItem = dragAssignments[target];
+                          const assignedItems = dragAssignments[target] ?? [];
+
                           return (
                             <button
                               key={target}
@@ -507,16 +500,60 @@ export default function GamePage() {
                                   assignDragItem(target, selectedDragItem);
                                   return;
                                 }
-                                if (assignedItem) {
+                                if (assignedItems.length > 0) {
                                   clearDragTarget(target);
                                 }
                               }}
                             >
                               <span className={styles.dropTargetLabel}>{target}</span>
-                              <span className={styles.dropTargetValue}>{assignedItem ?? "Перетягни сюди"}</span>
+                              {assignedItems.length > 0 ? (
+                                <span className={styles.dropTargetValuesWrap}>
+                                  {assignedItems.map((item) => (
+                                    <span
+                                      key={`${target}-${item}`}
+                                      className={styles.dropTargetValueBadge}
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        removeItemFromTarget(target, item);
+                                      }}
+                                    >
+                                      {item} ×
+                                    </span>
+                                  ))}
+                                </span>
+                              ) : (
+                                <span className={styles.dropTargetValue}>Перетягни сюди 1+ карток</span>
+                              )}
                             </button>
                           );
                         })}
+
+                        {dragTargets.length === 0 && (
+                          <div className={styles.dragHint}>Немає цілей для перетягування.</div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className={styles.dragColumnTitle}>Картки справа</div>
+                      <div className={styles.dropTargetsList}>
+                        {availableDragItems.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            className={`${styles.dragItemCard} ${selectedDragItem === item ? styles.dragItemSelected : ""}`}
+                            draggable={!loading}
+                            disabled={loading || pickedIdx !== null}
+                            onDragStart={(event) => handleItemDragStart(event, item)}
+                            onClick={() => setSelectedDragItem((prev) => (prev === item ? null : item))}
+                          >
+                            {item}
+                          </button>
+                        ))}
+
+                        {availableDragItems.length === 0 && (
+                          <div className={styles.dragHint}>Всі картки вже розкладені по лівих відповідях.</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -524,7 +561,7 @@ export default function GamePage() {
                   <button
                     type="button"
                     className={styles.sendBtn}
-                    disabled={loading || pickedIdx !== null || Object.keys(dragAssignments).length !== dragTargets.length}
+                    disabled={loading || pickedIdx !== null || availableDragItems.length > 0}
                     onClick={submitDragAnswer}
                   >
                     Перевірити відповідність
