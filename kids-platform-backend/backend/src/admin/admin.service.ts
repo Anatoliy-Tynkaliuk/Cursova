@@ -66,7 +66,10 @@ export class AdminService {
   }
 
   async deleteAgeGroup(id: number) {
-    await this.prisma.ageGroup.delete({ where: { id: BigInt(id) } });
+    await this.prisma.ageGroup.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -88,7 +91,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive ?? true,
       },
     });
@@ -102,7 +104,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive,
       },
     });
@@ -110,7 +111,10 @@ export class AdminService {
   }
 
   async deleteModule(id: number) {
-    await this.prisma.module.delete({ where: { id: BigInt(id) } });
+    await this.prisma.module.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -132,7 +136,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive ?? true,
       },
     });
@@ -146,7 +149,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
         isActive: dto.isActive,
       },
     });
@@ -154,7 +156,10 @@ export class AdminService {
   }
 
   async deleteGameType(id: number) {
-    await this.prisma.gameType.delete({ where: { id: BigInt(id) } });
+    await this.prisma.gameType.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -210,7 +215,10 @@ export class AdminService {
   }
 
   async deleteGame(id: number) {
-    await this.prisma.game.delete({ where: { id: BigInt(id) } });
+    await this.prisma.game.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -278,6 +286,7 @@ export class AdminService {
         title: dto.title,
         levelNumber: dto.levelNumber,
         isActive: dto.isActive,
+        deletedAt: dto.isActive === true ? null : dto.isActive === false ? new Date() : undefined,
       },
     });
     return { id: Number(level.id) };
@@ -363,7 +372,10 @@ export class AdminService {
   }
 
   async deleteTask(id: number) {
-    await this.prisma.task.delete({ where: { id: BigInt(id) } });
+    await this.prisma.task.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -420,7 +432,9 @@ export class AdminService {
   }
 
   async deleteTaskVersion(id: number) {
-    await this.prisma.taskVersion.delete({ where: { id: BigInt(id) } });
+    await this.prisma.taskVersion.delete({
+      where: { id: BigInt(id) },
+    });
     return { ok: true };
   }
 
@@ -431,7 +445,6 @@ export class AdminService {
       code: b.code,
       title: b.title,
       description: b.description,
-      icon: b.icon,
     }));
   }
 
@@ -441,7 +454,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
       },
     });
     return { id: Number(badge.id) };
@@ -454,7 +466,6 @@ export class AdminService {
         code: dto.code,
         title: dto.title,
         description: dto.description,
-        icon: dto.icon,
       },
     });
     return { id: Number(badge.id) };

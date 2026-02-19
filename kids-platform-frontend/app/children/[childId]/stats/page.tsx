@@ -94,7 +94,7 @@ export default function ChildStatsPage() {
                     }}
                   >
                     <div style={{ fontWeight: 600 }}>
-                      {badge.icon ? `${badge.icon} ` : ""}{badge.title}
+                      {badge.title}
                     </div>
                     {badge.description && <div style={{ fontSize: 12 }}>{badge.description}</div>}
                     {parseThreshold(badge.code) != null && (

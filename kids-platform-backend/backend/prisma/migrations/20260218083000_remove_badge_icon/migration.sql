@@ -1,0 +1,2 @@
+ALTER TABLE "badges"
+DROP COLUMN IF EXISTS "icon";
