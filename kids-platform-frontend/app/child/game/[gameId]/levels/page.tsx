@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
 import { getGameLevels, type GameLevelsResponse } from "@/lib/endpoints";
+import styles from "./GameLevelsPage.module.css";
 
 const difficultyLabels: Record<number, string> = {
   1: "Легко",
@@ -21,6 +23,7 @@ function normalizeDifficulty(value: string | null): number | null {
 export default function GameLevelsPage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
+
   const gameId = Number(params.gameId);
   const difficulty = normalizeDifficulty(search.get("difficulty"));
 
@@ -29,127 +32,150 @@ export default function GameLevelsPage() {
   const [levelsData, setLevelsData] = useState<GameLevelsResponse | null>(null);
 
   useEffect(() => {
+    if (!Number.isFinite(gameId) || gameId <= 0) {
+      window.location.href = "/child/subjects";
+      return;
+    }
+
     if (!difficulty) {
       window.location.href = `/child/game/${gameId}/difficulty`;
       return;
     }
 
     const session = getChildSession();
-    if (!session.childProfileId || !session.ageGroupCode) {
+    const childProfileId = session.childProfileId;
+
+    if (typeof childProfileId !== "number" || !session.ageGroupCode) {
       window.location.href = "/child/join";
       return;
     }
 
+    const resolvedDifficulty = difficulty;
+    const resolvedChildProfileId = childProfileId;
+
+    let cancelled = false;
+
     async function loadData() {
+      setLoading(true);
       setError(null);
+
       try {
-        const data = await getGameLevels(gameId, difficulty, session.childProfileId!);
-        setLevelsData(data);
+        const data = await getGameLevels(gameId, resolvedDifficulty, resolvedChildProfileId);
+        if (!cancelled) setLevelsData(data);
       } catch (e: any) {
-        setError(e.message ?? "Сталася помилка");
+        if (!cancelled) setError(e?.message ?? "Сталася помилка");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
-    loadData().catch((e: any) => {
-      setError(e.message ?? "Сталася помилка");
-      setLoading(false);
-    });
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [difficulty, gameId]);
 
   const levelLinks = useMemo(() => {
     if (!difficulty || !levelsData) return [];
-
     return levelsData.levels.map((item) => ({
       ...item,
-      href: `/child/game/${gameId}?difficulty=${difficulty}&level=${item.level}&levelId=${item.levelId}`,
+      href: `/child/game/${gameId}?difficulty=${difficulty}&levelId=${item.levelId}`,
     }));
   }, [difficulty, gameId, levelsData]);
 
   return (
-    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 16 }}>
-      <section style={{ width: "100%", maxWidth: 560, border: "1px solid #ddd", borderRadius: 16, padding: 20 }}>
-        <h1 style={{ marginTop: 0, marginBottom: 8 }}>Рівні гри</h1>
+    <main className={styles.levelsPage}>
+      <section className={styles.levelsCard}>
+        <div className={styles.overlay} />
 
-        {loading ? (
-          <p>Завантаження...</p>
-        ) : error ? (
-          <>
-            <p>{error}</p>
-            <Link href="/child/subjects">Повернутися до планет</Link>
-          </>
-        ) : (
-          <>
-            <p style={{ marginTop: 0 }}>
-              Гра: <b>{levelsData?.gameTitle ?? `#${gameId}`}</b>
-            </p>
-            <p>
-              Складність: <b>{difficulty ? (difficultyLabels[difficulty] ?? `Рівень ${difficulty}`) : "—"}</b>
-            </p>
+        <div className={styles.topActions}>
+          <Link className={`${styles.btn} ${styles.btnPurple}`} href={`/child/game/${gameId}/difficulty`}>
+            Інша складність
+          </Link>
 
-            {levelLinks.length > 0 ? (
-              <>
-                <p>Оберіть рівень цієї складності:</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
-                  {levelLinks.map((item) => {
-                    const bg = item.state === "completed" ? "#d1fae5" : item.state === "locked" ? "#f3f4f6" : "#fff";
-                    const color = item.state === "locked" ? "#9ca3af" : "#111";
-                    const label = item.state === "completed" ? "✓" : item.state === "locked" ? "🔒" : "▶";
+          <Link className={`${styles.btn} ${styles.btnBlue}`} href="/child/subjects">
+            До планет
+          </Link>
+        </div>
 
-                    if (item.isLocked) {
-                      return (
-                        <div
-                          key={item.level}
-                          style={{
-                            border: "1px solid #d1d5db",
-                            borderRadius: 10,
-                            padding: "10px 8px",
-                            textAlign: "center",
-                            background: bg,
-                            color,
-                          }}
-                        >
-                          {label} Рівень {item.level}
-                          <div style={{ fontSize: 11 }}>{item.title}</div>
-                        </div>
-                      );
-                    }
+        <header className={styles.levelsHeader}>
+          <h1 className={styles.levelsTitle}>Рівні гри</h1>
 
+          {loading ? (
+            <p className={styles.levelsMuted}>Завантаження...</p>
+          ) : error ? (
+            <p className={styles.levelsMuted}>{error}</p>
+          ) : (
+            <>
+              <p className={styles.levelsMeta}>
+                Гра: <b>{levelsData?.gameTitle ?? `#${gameId}`}</b>
+              </p>
+
+              <p className={styles.levelsMeta}>
+                Складність:{" "}
+                <b>{difficulty ? difficultyLabels[difficulty] ?? `Рівень ${difficulty}` : "—"}</b>
+              </p>
+
+              <p className={styles.levelsHint}>Оберіть рівень цієї складності:</p>
+
+              <div className={styles.levelList}>
+                {levelLinks.map((item) => {
+                  const iconSrc =
+                    item.state === "completed"
+                      ? "/completed.png"
+                      : item.state === "locked"
+                      ? "/locked.png"
+                      : "/paused.png";
+
+                  const iconAlt =
+                    item.state === "completed"
+                      ? "completed"
+                      : item.state === "locked"
+                      ? "locked"
+                      : "play";
+
+                  const nodeClass =
+                    item.state === "completed"
+                      ? `${styles.levelBtn} ${styles.completed}`
+                      : item.state === "locked"
+                      ? `${styles.levelBtn} ${styles.locked}`
+                      : `${styles.levelBtn} ${styles.active}`;
+
+                  const content = (
+                    <span className={styles.levelContent}>
+                      <span className={styles.levelBgIcon}>
+                        <Image
+                          src={iconSrc}
+                          alt={iconAlt}
+                          width={90}
+                          height={126}
+                          className={styles.levelBgIconImg}
+                        />
+                      </span>
+
+                      <span className={styles.levelLabel}>Рівень {item.level}</span>
+                    </span>
+                  );
+
+                  if (item.isLocked) {
                     return (
-                      <Link
-                        key={item.level}
-                        href={item.href}
-                        style={{
-                          border: "1px solid #333",
-                          borderRadius: 10,
-                          padding: "10px 8px",
-                          textAlign: "center",
-                          background: bg,
-                          color,
-                        }}
-                      >
-                        {label} Рівень {item.level}
-                          <div style={{ fontSize: 11 }}>{item.title}</div>
-                      </Link>
+                      <div key={item.level} className={nodeClass}>
+                        {content}
+                      </div>
                     );
-                  })}
-                </div>
-              </>
-            ) : (
-              <p>Для цієї складності поки немає рівнів. Обери іншу складність.</p>
-            )}
+                  }
 
-            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-              <Link href={`/child/game/${gameId}/difficulty`} style={{ padding: "10px 14px", border: "1px solid #333", borderRadius: 8 }}>
-                Інша складність
-              </Link>
-              <Link href="/child/subjects" style={{ padding: "10px 14px" }}>
-                До планет
-              </Link>
-            </div>
-          </>
-        )}
+                  return (
+                    <Link key={item.level} href={item.href} className={nodeClass}>
+                      {content}
+                    </Link>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </header>
       </section>
     </main>
   );
