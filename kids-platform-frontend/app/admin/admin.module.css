@@ -231,3 +231,33 @@
 .mt8 {
   margin-top: 8px;
 }
+
+.collapsible {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 10px;
+}
+
+.collapsibleSummary {
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.collapsibleSummary::before {
+  content: "▸";
+  font-size: 12px;
+  color: #64748b;
+  transition: transform 0.15s ease;
+}
+
+.collapsible[open] .collapsibleSummary::before {
+  transform: rotate(90deg);
+}
+
+.collapsibleSummary::-webkit-details-marker { display: none; }

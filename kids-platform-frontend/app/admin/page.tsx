@@ -844,8 +844,9 @@ export default function AdminPage() {
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Рівні ігор</h2>
-        {gameLevels.length === 0 ? (
+        <details className={styles.collapsible} open>
+          <summary className={styles.collapsibleSummary}>Рівні ігор</summary>
+          {gameLevels.length === 0 ? (
           <p>Немає рівнів.</p>
         ) : (
           <ul className={styles.listGrid}>
@@ -905,7 +906,8 @@ export default function AdminPage() {
               </li>
             ))}
           </ul>
-        )}
+          )}
+        </details>
       </section>
 
       <section className={styles.sectionCard}>
@@ -1133,8 +1135,9 @@ export default function AdminPage() {
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Бейджі</h2>
-        <ul className={styles.listGrid}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Бейджі</summary>
+          <ul className={styles.listGrid}>
           {badges.map((badge) => (
             <li key={badge.id} className={styles.listItem}>
               <div className={styles.editGrid}>
@@ -1177,12 +1180,14 @@ export default function AdminPage() {
             </li>
           ))}
           {badges.length === 0 && <li className={styles.emptyState}>Немає бейджів</li>}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Вікові групи</h2>
-        <ul className={styles.listGrid}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Вікові групи</summary>
+          <ul className={styles.listGrid}>
           {ageGroups.map((group) => (
             <li key={group.id} className={styles.listItem}>
               <div className={styles.editGrid}>
@@ -1282,24 +1287,28 @@ export default function AdminPage() {
             </li>
           ))}
           {ageGroups.length === 0 && <li className={styles.emptyState}>Немає груп</li>}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Модулі</h2>
-        <ul className={styles.listGrid}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Модулі</summary>
+          <ul className={styles.listGrid}>
           {modules.map((m) => (
             <li key={m.id} className={styles.listItem}>
               <div className={styles.itemTitle}>{m.title}</div>
               <div className={styles.itemCode}>{m.code}</div>
             </li>
           ))}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Ігри</h2>
-        <ul className={styles.listGridLarge}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Ігри</summary>
+          <ul className={styles.listGridLarge}>
           {games.map((g) => (
             <li key={g.id} className={styles.listItem}>
               <input
@@ -1364,12 +1373,14 @@ export default function AdminPage() {
               </div>
             </li>
           ))}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section>
-        <h2>Завдання</h2>
-        {games.length === 0 ? (
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Завдання</summary>
+          {games.length === 0 ? (
           <p>Ще немає ігор.</p>
         ) : (
           games.map((g) => (
@@ -1517,7 +1528,8 @@ export default function AdminPage() {
               </ul>
             </div>
           ))
-        )}
+          )}
+        </details>
       </section>
     </div>
   );
