@@ -1,4 +1,44 @@
-import { AttemptsService } from "./attempts.service";
+import { answersAreEquivalent, AttemptsService } from "./attempts.service";
+
+describe("answersAreEquivalent", () => {
+  it("treats drag pairs as equal regardless of array order", () => {
+    const userAnswer = {
+      pairs: [
+        { item: "Лев", target: "Тварини" },
+        { item: "Яблуко", target: "Фрукти" },
+        { item: "Груша", target: "Фрукти" },
+      ],
+    };
+
+    const correctAnswer = {
+      pairs: [
+        { item: "Яблуко", target: "Фрукти" },
+        { item: "Груша", target: "Фрукти" },
+        { item: "Лев", target: "Тварини" },
+      ],
+    };
+
+    expect(answersAreEquivalent(userAnswer, correctAnswer)).toBe(true);
+  });
+
+  it("detects wrong drag mapping", () => {
+    const userAnswer = {
+      pairs: [
+        { item: "Лев", target: "Фрукти" },
+        { item: "Яблуко", target: "Фрукти" },
+      ],
+    };
+
+    const correctAnswer = {
+      pairs: [
+        { item: "Лев", target: "Тварини" },
+        { item: "Яблуко", target: "Фрукти" },
+      ],
+    };
+
+    expect(answersAreEquivalent(userAnswer, correctAnswer)).toBe(false);
+  });
+});
 
 describe("AttemptsService unlockNextLevelIfNeeded", () => {
   function createService(prisma: any) {
