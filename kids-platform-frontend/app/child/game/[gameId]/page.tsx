@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { DragEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { finishAttempt, startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
@@ -110,6 +110,9 @@ export default function GamePage() {
   const [pickedState, setPickedState] = useState<"ok" | "bad" | null>(null);
   const [timeoutOpen, setTimeoutOpen] = useState(false);
   const [timeoutReason, setTimeoutReason] = useState<string>("Час вийшов!");
+  const [dragAssignments, setDragAssignments] = useState<Record<string, string>>({});
+  const [dragHoverTarget, setDragHoverTarget] = useState<string | null>(null);
+  const [selectedDragItem, setSelectedDragItem] = useState<string | null>(null);
 
   const levelsHref =
     normalizedDifficulty !== null
@@ -235,12 +238,84 @@ export default function GamePage() {
     return [];
   }, [current]);
 
+  const dragItems: string[] = useMemo(() => {
+    const items = current?.data?.items;
+    if (!Array.isArray(items)) return [];
+    return items.map((item) => String(item));
+  }, [current]);
+
+  const dragTargets: string[] = useMemo(() => {
+    const targets = current?.data?.targets;
+    if (!Array.isArray(targets)) return [];
+    return targets.map((target) => String(target));
+  }, [current]);
+
+  const isDragTask = dragItems.length > 0 && dragTargets.length > 0;
+
+  const availableDragItems = useMemo(() => {
+    const usedItems = new Set(Object.values(dragAssignments));
+    return dragItems.filter((item) => !usedItems.has(item));
+  }, [dragAssignments, dragItems]);
+
   const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : "0";
   const progressValue = totalTasks
     ? Math.min(100, Math.round((Math.min(completedTasks, totalTasks) / totalTasks) * 100))
     : 18;
 
   const levelTitle = currentLevelNumber ? `Рівень ${currentLevelNumber}` : "Рівень";
+
+  function assignDragItem(target: string, item: string) {
+    setDragAssignments((prev) => {
+      const next: Record<string, string> = { ...prev };
+
+      for (const key of Object.keys(next)) {
+        if (next[key] === item) {
+          delete next[key];
+        }
+      }
+
+      next[target] = item;
+      return next;
+    });
+    setSelectedDragItem(null);
+    setDragHoverTarget(null);
+  }
+
+  function clearDragTarget(target: string) {
+    setDragAssignments((prev) => {
+      if (!prev[target]) return prev;
+      const next = { ...prev };
+      delete next[target];
+      return next;
+    });
+  }
+
+  function handleItemDragStart(event: DragEvent<HTMLButtonElement>, item: string) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", item);
+    setSelectedDragItem(item);
+  }
+
+  function handleDropOnTarget(event: DragEvent<HTMLButtonElement>, target: string) {
+    event.preventDefault();
+    const droppedItem = event.dataTransfer.getData("text/plain");
+    if (!droppedItem) return;
+    assignDragItem(target, droppedItem);
+  }
+
+  function submitDragAnswer() {
+    if (!isDragTask) return;
+
+    const pairs = dragItems
+      .map((item) => {
+        const target = Object.entries(dragAssignments).find(([, assignedItem]) => assignedItem === item)?.[0];
+        if (!target) return null;
+        return { item, target };
+      })
+      .filter((pair): pair is { item: string; target: string } => pair !== null);
+
+    sendAnswer({ pairs });
+  }
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
     if (pickedIdx !== null) return; 
@@ -299,6 +374,9 @@ export default function GamePage() {
           setCompletedTasks(nextCompleted);
           setTotalTasks(nextTotal ?? null);
           setTextAnswer("");
+          setDragAssignments({});
+          setSelectedDragItem(null);
+          setDragHoverTarget(null);
           setMsg("");
         }
 
@@ -381,7 +459,78 @@ export default function GamePage() {
             <>
               <div className={styles.question}>{current.prompt}</div>
 
-              {options.length > 0 ? (
+              {isDragTask ? (
+                <>
+                  <div className={styles.dragLayout}>
+                    <div>
+                      <div className={styles.dragColumnTitle}>Перетягни картки</div>
+                      <div className={styles.dragItemsList}>
+                        {availableDragItems.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            className={`${styles.dragItemCard} ${selectedDragItem === item ? styles.dragItemSelected : ""}`}
+                            draggable={!loading}
+                            disabled={loading || pickedIdx !== null}
+                            onDragStart={(event) => handleItemDragStart(event, item)}
+                            onClick={() => setSelectedDragItem((prev) => (prev === item ? null : item))}
+                          >
+                            {item}
+                          </button>
+                        ))}
+
+                        {availableDragItems.length === 0 && (
+                          <div className={styles.dragHint}>Всі картки розкладені. Перевір відповідність праворуч.</div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className={styles.dragColumnTitle}>Куди відноситься</div>
+                      <div className={styles.dropTargetsList}>
+                        {dragTargets.map((target) => {
+                          const assignedItem = dragAssignments[target];
+                          return (
+                            <button
+                              key={target}
+                              type="button"
+                              className={`${styles.dropTarget} ${dragHoverTarget === target ? styles.dropTargetHover : ""}`}
+                              disabled={loading || pickedIdx !== null}
+                              onDragOver={(event) => {
+                                event.preventDefault();
+                                setDragHoverTarget(target);
+                              }}
+                              onDragLeave={() => setDragHoverTarget((prev) => (prev === target ? null : prev))}
+                              onDrop={(event) => handleDropOnTarget(event, target)}
+                              onClick={() => {
+                                if (selectedDragItem) {
+                                  assignDragItem(target, selectedDragItem);
+                                  return;
+                                }
+                                if (assignedItem) {
+                                  clearDragTarget(target);
+                                }
+                              }}
+                            >
+                              <span className={styles.dropTargetLabel}>{target}</span>
+                              <span className={styles.dropTargetValue}>{assignedItem ?? "Перетягни сюди"}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.sendBtn}
+                    disabled={loading || pickedIdx !== null || Object.keys(dragAssignments).length !== dragTargets.length}
+                    onClick={submitDragAnswer}
+                  >
+                    Перевірити відповідність
+                  </button>
+                </>
+              ) : options.length > 0 ? (
                 <div className={styles.answers}>
                   {options.map((opt, idx) => {
                     const isPicked = pickedIdx === idx;

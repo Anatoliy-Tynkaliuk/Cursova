@@ -311,6 +311,83 @@
 
 .sendBtn:disabled { opacity: 0.75; cursor: not-allowed; }
 
+/* ===== DRAG TASK ===== */
+
+.dragLayout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dragColumnTitle {
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.dragItemsList,
+.dropTargetsList {
+  display: grid;
+  gap: 10px;
+}
+
+.dragItemCard {
+  min-height: 56px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(10, 6, 20, 0.24);
+  color: rgba(255, 255, 255, 0.94);
+  font-size: 24px;
+  font-weight: 900;
+  cursor: grab;
+}
+
+.dragItemSelected {
+  border-color: rgba(60, 255, 190, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(60, 255, 190, 0.18);
+}
+
+.dragHint {
+  border-radius: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  background: rgba(10, 6, 20, 0.2);
+  padding: 12px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.dropTarget {
+  min-height: 70px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  background: rgba(10, 6, 20, 0.2);
+  color: rgba(255, 255, 255, 0.94);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.dropTargetHover {
+  border-color: rgba(60, 255, 190, 0.65);
+  background: rgba(18, 35, 32, 0.38);
+}
+
+.dropTargetLabel {
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.dropTargetValue {
+  font-size: 22px;
+  font-weight: 900;
+}
+
 /* ===== SUMMARY ===== */
 
 .summary {
@@ -571,6 +648,7 @@
   .headerTitle { font-size: 22px; }
   .question { font-size: 36px; }
   .answerBtn { height: 68px; }
+  .dragLayout { grid-template-columns: 1fr; }
 }
 
 
