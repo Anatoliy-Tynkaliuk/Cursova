@@ -78,7 +78,6 @@ export default function AdminPage() {
 
   const [taskGameId, setTaskGameId] = useState<number | "">("");
   const [taskLevelId, setTaskLevelId] = useState<number | "">("");
-  const [taskPosition, setTaskPosition] = useState(1);
   const [taskIsActive, setTaskIsActive] = useState(true);
 
   const [taskId, setTaskId] = useState<number | "">("");
@@ -98,7 +97,6 @@ export default function AdminPage() {
   const [badgeCode, setBadgeCode] = useState("");
   const [badgeTitle, setBadgeTitle] = useState("");
   const [badgeDescription, setBadgeDescription] = useState("");
-  const [badgeIcon, setBadgeIcon] = useState("");
 
   const ageGroupFormValid =
     ageGroupCode.trim().length > 0 &&
@@ -128,7 +126,7 @@ export default function AdminPage() {
   );
 
   const taskRequiresLevel = selectedTaskGameLevels.length > 0;
-  const taskFormValid = taskGameId !== "" && taskPosition > 0 && (!taskRequiresLevel || taskLevelId !== "");
+  const taskFormValid = taskGameId !== "" && (!taskRequiresLevel || taskLevelId !== "");
 
   const selectedTask = useMemo(
     () => (taskId === "" ? null : tasks.find((item) => item.id === taskId) ?? null),
@@ -216,12 +214,21 @@ export default function AdminPage() {
     }, {});
   }, [taskVersions]);
 
-  const nextPositionForGame = useMemo(() => {
-    if (taskGameId === "") return 1;
+  const taskPositionScopeList = useMemo(() => {
+    if (taskGameId === "") return [] as AdminTaskItem[];
+
     const list = groupedTasks[taskGameId] ?? [];
-    if (list.length === 0) return 1;
-    return Math.max(...list.map((t) => t.position)) + 1;
-  }, [groupedTasks, taskGameId]);
+    if (taskLevelId === "") {
+      return list.filter((task) => task.levelId === null);
+    }
+
+    return list.filter((task) => task.levelId === taskLevelId);
+  }, [groupedTasks, taskGameId, taskLevelId]);
+
+  const nextTaskPosition = useMemo(() => {
+    if (taskPositionScopeList.length === 0) return 1;
+    return Math.max(...taskPositionScopeList.map((task) => task.position)) + 1;
+  }, [taskPositionScopeList]);
 
   const nextLevelNumberForSelection = useMemo(() => {
     if (levelGameId === "") return 1;
@@ -234,11 +241,6 @@ export default function AdminPage() {
     return Math.max(...levels.map((level) => level.levelNumber)) + 1;
   }, [gameLevels, levelDifficulty, levelGameId]);
 
-  const taskPositionTaken = useMemo(() => {
-    if (taskGameId === "") return false;
-    const list = groupedTasks[taskGameId] ?? [];
-    return list.some((t) => t.position === taskPosition);
-  }, [groupedTasks, taskGameId, taskPosition]);
 
   useEffect(() => {
     if (linkedTaskDifficulty !== null) {
@@ -296,8 +298,9 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminAgeGroup(groupId);
-      setMessage("Вікову групу видалено.");
-      setAgeGroups((prev) => prev.filter((group) => group.id !== groupId));
+      setMessage("Вікову групу архівовано.");
+      const ageGroupsData = await getAdminAgeGroups();
+      setAgeGroups(ageGroupsData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -350,8 +353,9 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminGame(gameId);
-      setMessage("Гру видалено.");
-      setGames((prev) => prev.filter((g) => g.id !== gameId));
+      setMessage("Гру архівовано.");
+      const gamesData = await getAdminGames();
+      setGames(gamesData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -414,14 +418,14 @@ export default function AdminPage() {
   }
 
   async function onDeleteGameLevel(levelId: number) {
-    const confirmed = window.confirm("Видалити рівень повністю разом із завданнями цього рівня?");
+    const confirmed = window.confirm("Архівувати рівень? Його можна буде відновити.");
     if (!confirmed) return;
 
     setError(null);
     setMessage(null);
     try {
       await deleteAdminGameLevel(levelId);
-      setMessage("Рівень видалено.");
+      setMessage("Рівень архівовано.");
       const [levelsData, tasksData] = await Promise.all([
         getAdminGameLevels(),
         getAdminTasks(),
@@ -437,21 +441,17 @@ export default function AdminPage() {
 
   async function onCreateTask() {
     if (!taskFormValid || typeof taskGameId !== "number") return;
-    if (taskPositionTaken) {
-      setError(`Для цієї гри вже є завдання з позицією ${taskPosition}.`);
-      return;
-    }
+
     setError(null);
     setMessage(null);
     try {
       await createAdminTask({
         gameId: taskGameId,
         levelId: taskLevelId === "" ? undefined : taskLevelId,
-        position: taskPosition,
+        position: nextTaskPosition,
         isActive: taskIsActive,
       });
       setMessage("Завдання створено.");
-      setTaskPosition(1);
       setTaskLevelId("");
       const tasksData = await getAdminTasks();
       setTasks(tasksData);
@@ -480,7 +480,7 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminTask(taskIdToDelete);
-      setMessage("Завдання видалено.");
+      setMessage("Завдання архівовано.");
       setTasks((prev) => prev.filter((t) => t.id !== taskIdToDelete));
       setTaskVersions((prev) => prev.filter((v) => v.taskId !== taskIdToDelete));
     } catch (e: any) {
@@ -596,7 +596,7 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminTaskVersion(taskVersionId);
-      setMessage("Версію завдання видалено.");
+      setMessage("Версію завдання архівовано.");
       setTaskVersions((prev) => prev.filter((v) => v.id !== taskVersionId));
     } catch (e: any) {
       setError(e.message ?? "Error");
@@ -612,13 +612,11 @@ export default function AdminPage() {
         code: badgeCode.trim(),
         title: badgeTitle.trim(),
         description: badgeDescription.trim() || undefined,
-        icon: badgeIcon.trim() || undefined,
       });
       setMessage("Бейдж створено.");
       setBadgeCode("");
       setBadgeTitle("");
       setBadgeDescription("");
-      setBadgeIcon("");
       const badgesData = await getAdminBadges();
       setBadges(badgesData);
     } catch (e: any) {
@@ -634,7 +632,6 @@ export default function AdminPage() {
         code: badge.code,
         title: badge.title,
         description: badge.description ?? undefined,
-        icon: badge.icon ?? undefined,
       });
       setMessage("Бейдж оновлено.");
     } catch (e: any) {
@@ -657,6 +654,13 @@ export default function AdminPage() {
   return (
     <div className={styles.page}>
       <h1>Адмінка контенту</h1>
+      <p className={styles.pageLead}>Керуйте іграми, рівнями, завданнями та бейджами в одному місці. Спочатку створіть структуру (вікові групи → ігри → рівні), потім додавайте завдання та версії.</p>
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard}><span>Модулі</span><strong>{modules.length}</strong></div>
+        <div className={styles.kpiCard}><span>Ігри</span><strong>{games.length}</strong></div>
+        <div className={styles.kpiCard}><span>Рівні</span><strong>{gameLevels.length}</strong></div>
+        <div className={styles.kpiCard}><span>Завдання</span><strong>{tasks.length}</strong></div>
+      </div>
       {loading && <p>Завантаження...</p>}
       {error && <p className={styles.errorText}>{error}</p>}
       {message && <p className={styles.successText}>{message}</p>}
@@ -840,8 +844,9 @@ export default function AdminPage() {
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Рівні ігор</h2>
-        {gameLevels.length === 0 ? (
+        <details className={styles.collapsible} open>
+          <summary className={styles.collapsibleSummary}>Рівні ігор</summary>
+          {gameLevels.length === 0 ? (
           <p>Немає рівнів.</p>
         ) : (
           <ul className={styles.listGrid}>
@@ -895,13 +900,14 @@ export default function AdminPage() {
                   </label>
                   <div className={styles.actionsRow}>
                     <button onClick={() => onUpdateGameLevel(level)}>Зберегти</button>
-                    <button onClick={() => onDeleteGameLevel(level.id)}>Видалити</button>
+                    <button onClick={() => onDeleteGameLevel(level.id)}>Архівувати</button>
                   </div>
                 </div>
               </li>
             ))}
           </ul>
-        )}
+          )}
+        </details>
       </section>
 
       <section className={styles.sectionCard}>
@@ -915,7 +921,6 @@ export default function AdminPage() {
             onChange={(e) => {
               const value = Number(e.target.value);
               setTaskGameId(value);
-              setTaskPosition(value ? nextPositionForGame : 1);
               setTaskLevelId("");
             }}
           >
@@ -941,16 +946,12 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <label className={styles.inlineLabel}>
+          <div className={styles.inlineLabel}>
             Позиція
-            <input
-              type="number"
-              min={1}
-              value={taskPosition}
-              onChange={(e) => setTaskPosition(Number(e.target.value))}
-              className={styles.smallInput}
-            />
-          </label>
+            <div className={styles.positionBadge}>
+              {nextTaskPosition}
+            </div>
+          </div>
           <label className={styles.inlineLabel}>
             <input
               type="checkbox"
@@ -962,13 +963,8 @@ export default function AdminPage() {
           <button disabled={!taskFormValid} onClick={onCreateTask}>
             Створити завдання
           </button>
-          {taskPositionTaken && (
-            <div style={{ fontSize: 12, color: "#b45309" }}>
-              Для цієї гри вже є завдання з позицією {taskPosition}. Вибери іншу позицію.
-            </div>
-          )}
           {taskRequiresLevel && taskLevelId === "" && (
-            <div style={{ fontSize: 12, color: "#b45309" }}>
+            <div className={styles.warningText}>
               Для цієї гри вже налаштовані рівні — обери конкретний рівень.
             </div>
           )}
@@ -977,7 +973,7 @@ export default function AdminPage() {
 
       <section className={styles.sectionCard}>
         <h2>Додати версію завдання</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 560 }}>
+        <div className={styles.formGridVersion}>
           <select
             value={taskId}
             onChange={(e) => {
@@ -997,7 +993,7 @@ export default function AdminPage() {
           </select>
 
           {selectedTaskGame && (
-            <div style={{ fontSize: 12, background: "#f5f5f5", borderRadius: 8, padding: 10 }}>
+            <div className={styles.infoPanel}>
               Тип гри для цього завдання: <b>{selectedTaskGame.gameTypeCode}</b>.
               {isTestTaskType && " Заповни запитання, варіанти відповідей і правильну відповідь."}
               {isDragTaskType && " Заповни запитання, елементи для перетягування, цілі та відповідності."}
@@ -1095,7 +1091,7 @@ export default function AdminPage() {
             />
           </label>
           {linkedTaskDifficulty !== null && (
-            <div style={{ fontSize: 12, color: "#6b7280" }}>
+            <div className={styles.helperMuted}>
               Для завдання з рівнем складність визначається автоматично: D{linkedTaskDifficulty}.
             </div>
           )}
@@ -1132,11 +1128,6 @@ export default function AdminPage() {
             onChange={(e) => setBadgeDescription(e.target.value)}
             rows={3}
           />
-          <input
-            placeholder="Icon (emoji або URL)"
-            value={badgeIcon}
-            onChange={(e) => setBadgeIcon(e.target.value)}
-          />
           <button disabled={!badgeFormValid} onClick={onCreateBadge}>
             Створити бейдж
           </button>
@@ -1144,8 +1135,9 @@ export default function AdminPage() {
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Бейджі</h2>
-        <ul className={styles.listGrid}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Бейджі</summary>
+          <ul className={styles.listGrid}>
           {badges.map((badge) => (
             <li key={badge.id} className={styles.listItem}>
               <div className={styles.editGrid}>
@@ -1180,17 +1172,6 @@ export default function AdminPage() {
                   }
                   rows={2}
                 />
-                <input
-                  placeholder="Icon"
-                  value={badge.icon ?? ""}
-                  onChange={(e) =>
-                    setBadges((prev) =>
-                      prev.map((item) =>
-                        item.id === badge.id ? { ...item, icon: e.target.value } : item
-                      )
-                    )
-                  }
-                />
                 <div className={styles.actionsRow}>
                   <button onClick={() => onUpdateBadge(badge)}>Зберегти</button>
                   <button onClick={() => onDeleteBadge(badge.id)}>Видалити</button>
@@ -1199,12 +1180,14 @@ export default function AdminPage() {
             </li>
           ))}
           {badges.length === 0 && <li className={styles.emptyState}>Немає бейджів</li>}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Вікові групи</h2>
-        <ul className={styles.listGrid}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Вікові групи</summary>
+          <ul className={styles.listGrid}>
           {ageGroups.map((group) => (
             <li key={group.id} className={styles.listItem}>
               <div className={styles.editGrid}>
@@ -1298,30 +1281,34 @@ export default function AdminPage() {
                 </label>
                 <div className={styles.actionsRow}>
                   <button onClick={() => onUpdateAgeGroup(group)}>Зберегти</button>
-                  <button onClick={() => onDeleteAgeGroup(group.id)}>Видалити</button>
+                  <button onClick={() => onDeleteAgeGroup(group.id)}>Архівувати</button>
                 </div>
               </div>
             </li>
           ))}
           {ageGroups.length === 0 && <li className={styles.emptyState}>Немає груп</li>}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Модулі</h2>
-        <ul className={styles.listGrid}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Модулі</summary>
+          <ul className={styles.listGrid}>
           {modules.map((m) => (
             <li key={m.id} className={styles.listItem}>
-              <div style={{ fontWeight: 600 }}>{m.title}</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>{m.code}</div>
+              <div className={styles.itemTitle}>{m.title}</div>
+              <div className={styles.itemCode}>{m.code}</div>
             </li>
           ))}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section className={styles.sectionSpacing}>
-        <h2>Ігри</h2>
-        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 10 }}>
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Ігри</summary>
+          <ul className={styles.listGridLarge}>
           {games.map((g) => (
             <li key={g.id} className={styles.listItem}>
               <input
@@ -1343,10 +1330,10 @@ export default function AdminPage() {
                 }
                 rows={2}
               />
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
+              <div className={styles.metaMuted}>
                 module: {g.moduleCode} | age: {g.minAgeGroupCode}
               </div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
+              <div className={styles.metaMuted}>
                 Рівні: D1={levelsByGameDifficulty[`${g.id}:1`] ?? 0}, D2={levelsByGameDifficulty[`${g.id}:2`] ?? 0}, D3={levelsByGameDifficulty[`${g.id}:3`] ?? 0}
               </div>
               <label className={styles.inlineLabel}>
@@ -1382,25 +1369,27 @@ export default function AdminPage() {
               </label>
               <div className={styles.actionsRow}>
                 <button onClick={() => onUpdateGame(g)}>Зберегти</button>
-                <button onClick={() => onDeleteGame(g.id)}>Видалити</button>
+                <button onClick={() => onDeleteGame(g.id)}>Архівувати</button>
               </div>
             </li>
           ))}
-        </ul>
+          </ul>
+        </details>
       </section>
 
       <section>
-        <h2>Завдання</h2>
-        {games.length === 0 ? (
+        <details className={styles.collapsible}>
+          <summary className={styles.collapsibleSummary}>Завдання</summary>
+          {games.length === 0 ? (
           <p>Ще немає ігор.</p>
         ) : (
           games.map((g) => (
-            <div key={g.id} style={{ marginBottom: 12 }}>
-              <div style={{ fontWeight: 600 }}>{g.title}</div>
-              <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 6 }}>
+            <div key={g.id} className={styles.groupCard}>
+              <div className={styles.itemTitle}>{g.title}</div>
+              <ul className={styles.listGridCompact}>
                 {(groupedTasks[g.id] ?? []).map((t) => (
-                  <li key={t.id} style={{ border: "1px solid #eee", borderRadius: 6, padding: 8 }}>
-                    <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>
+                  <li key={t.id} className={styles.taskCard}>
+                    <div className={styles.metaMutedSpaced}>
                       Рівень: {t.levelNumber ? `D${t.difficulty} • ${t.levelNumber}` : "без рівня"}
                     </div>
                     <div className={styles.inlineLabel}>
@@ -1424,7 +1413,7 @@ export default function AdminPage() {
                             </option>
                           ))) || null}
                       </select>
-                      <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <label className={styles.inlineLabelCompact}>
                         Позиція
                         <input
                           type="number"
@@ -1440,7 +1429,7 @@ export default function AdminPage() {
                           className={styles.smallInput}
                         />
                       </label>
-                      <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <label className={styles.inlineLabelCompact}>
                         <input
                           type="checkbox"
                           checked={t.isActive}
@@ -1455,15 +1444,15 @@ export default function AdminPage() {
                         Активне
                       </label>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <div className={styles.actionsRowTop}>
                       <button onClick={() => onUpdateTask(t)}>Зберегти</button>
-                      <button onClick={() => onDeleteTask(t.id)}>Видалити</button>
+                      <button onClick={() => onDeleteTask(t.id)}>Архівувати</button>
                     </div>
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>Версії:</div>
-                      <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 6 }}>
+                    <div className={styles.mt8}>
+                      <div className={styles.metaMuted}>Версії:</div>
+                      <ul className={styles.listGridCompact}>
                         {(groupedTaskVersions[t.id] ?? []).map((v) => (
-                          <li key={v.id} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 8 }}>
+                          <li key={v.id} className={styles.versionCard}>
                             <input
                               value={v.prompt}
                               onChange={(e) =>
@@ -1506,7 +1495,7 @@ export default function AdminPage() {
                               }
                               rows={2}
                             />
-                            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                            <label className={styles.inlineLabelCompact}>
                               <input
                                 type="checkbox"
                                 checked={v.isCurrent}
@@ -1522,7 +1511,7 @@ export default function AdminPage() {
                             </label>
                             <div className={styles.actionsRow}>
                               <button onClick={() => onUpdateTaskVersion(v)}>Зберегти</button>
-                              <button onClick={() => onDeleteTaskVersion(v.id)}>Видалити</button>
+                              <button onClick={() => onDeleteTaskVersion(v.id)}>Архівувати</button>
                             </div>
                           </li>
                         ))}
@@ -1539,7 +1528,8 @@ export default function AdminPage() {
               </ul>
             </div>
           ))
-        )}
+          )}
+        </details>
       </section>
     </div>
   );
