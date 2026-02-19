@@ -5,11 +5,17 @@
   min-height: 100vh;
   color: #ffffff;
   padding: 28px 16px 80px;
+  overflow-x: hidden;
   background:
     radial-gradient(1200px 800px at 20% 10%, rgba(123, 97, 255, 0.18), transparent 55%),
     radial-gradient(900px 700px at 85% 20%, rgba(0, 229, 255, 0.12), transparent 55%),
     radial-gradient(900px 700px at 45% 95%, rgba(255, 0, 199, 0.10), transparent 60%),
     linear-gradient(180deg, #0b0614 0%, #110824 35%, #0a0613 100%);
+}
+
+.page,
+.page * {
+  box-sizing: border-box;
 }
 
 .page h1 {
@@ -135,6 +141,7 @@
   border: 1px solid rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(14px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
 .sectionSpacing {
@@ -223,10 +230,16 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 15px;
   align-items: end;
+  min-width: 0;
 }
 
 .formGrid textarea {
   grid-column: 1 / -1;
+}
+
+.formGrid > *,
+.formGridVersion > * {
+  min-width: 0;
 }
 
 .formGridVersion {
@@ -234,6 +247,7 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   align-items: start;
+  min-width: 0;
 }
 .collapsible {
   border: 1px solid #e5e7eb;
@@ -277,13 +291,14 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
   padding: 8px 10px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.10);
   background: rgba(255, 255, 255, 0.05);
   color: rgba(255, 255, 255, 0.78);
   font-size: 13px;
-  height: 44px;
+  min-height: 44px;
 }
 
 .inlineLabel input[type="checkbox"] {
@@ -296,6 +311,7 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
   color: rgba(255, 255, 255, 0.75);
   font-size: 12px;
 }
@@ -345,6 +361,8 @@
   border: 1px solid rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(14px);
   box-shadow: 0 18px 55px rgba(0, 0, 0, 0.32);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .metaText {
@@ -386,6 +404,7 @@
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .actionsRowTop {
@@ -394,7 +413,10 @@
 
 .actionsRow button,
 .actionsRowTop button {
-  flex: 1 1 auto;
+  flex: 1 1 180px;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
 }
 
 .actionsRow button:nth-child(2),
@@ -413,6 +435,7 @@
   border: 1px solid rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(14px);
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
 /* ---------- Task / version cards ---------- */
@@ -488,6 +511,21 @@
   .warningText,
   .helperMuted {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 780px) {
+  .page h1 {
+    font-size: 24px;
+  }
+  .sectionCard,
+  .groupCard {
+    padding: 14px;
+    border-radius: 18px;
+  }
+  .actionsRow button,
+  .actionsRowTop button {
+    flex-basis: 100%;
   }
 }
 
