@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { finishAttempt, startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
@@ -29,6 +30,46 @@ type TaskState = {
   data: any;
 };
 
+const MAX_STARS = 3;
+function scoreToStars(score: number, totalCount?: number): number {
+  if (!Number.isFinite(score)) return 0;
+
+  if (score >= 0 && score <= MAX_STARS) return Math.round(score);
+
+  if (totalCount && totalCount > 0) {
+    const ratio = Math.max(0, Math.min(1, score / totalCount));
+    if (ratio === 0) return 0;
+    if (ratio <= 0.34) return 1;
+    if (ratio <= 0.67) return 2;
+    return 3;
+  }
+
+  return MAX_STARS;
+}
+
+function StarsRow({ filled }: { filled: number }) {
+  return (
+    <div className={styles.starsRow}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          key={i}
+          className={`${styles.starWrapper} ${
+            i < filled ? styles.starOn : styles.starOff
+          }`}
+        >
+          <Image
+            src="/star.png"
+            alt="star"
+            width={100}
+            height={100}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
 export default function GamePage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
@@ -54,15 +95,26 @@ export default function GamePage() {
 
   const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
   const [msg, setMsg] = useState<string>("");
-  const [msgKind, setMsgKind] = useState<"ok" | "bad" | "info">("info");
+
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
+
   const [totalTasks, setTotalTasks] = useState<number | null>(null);
   const [completedTasks, setCompletedTasks] = useState(0);
+
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION_SEC);
   const [currentLevelNumber, setCurrentLevelNumber] = useState<number | null>(effectiveLevel);
 
   const [textAnswer, setTextAnswer] = useState("");
+  const [pickedIdx, setPickedIdx] = useState<number | null>(null);
+  const [pickedState, setPickedState] = useState<"ok" | "bad" | null>(null);
+  const [timeoutOpen, setTimeoutOpen] = useState(false);
+  const [timeoutReason, setTimeoutReason] = useState<string>("Час вийшов!");
+
+  const levelsHref =
+    normalizedDifficulty !== null
+      ? `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`
+      : `/child/game/${gameId}/difficulty`;
 
   useEffect(() => {
     const session = getChildSession();
@@ -89,7 +141,6 @@ export default function GamePage() {
       if (!attemptId && childProfileId) {
         setLoading(true);
         setMsg("Завантаження завдання...");
-        setMsgKind("info");
         try {
           const res = await startAttempt(
             childProfileId,
@@ -98,12 +149,21 @@ export default function GamePage() {
             effectiveLevel !== null ? effectiveLevel : undefined,
             effectiveLevelId !== null ? effectiveLevelId : undefined,
           );
+
           setAttemptId(res.attemptId);
           setTask(res.task);
+
           setCurrentLevelNumber(res.level?.number ?? effectiveLevel ?? null);
+
           setTotalTasks(res.totalTasks ?? null);
           setCompletedTasks(0);
+
           setTimeLeft(TIMER_DURATION_SEC);
+
+          setPickedIdx(null);
+          setPickedState(null);
+          setTimeoutOpen(false);
+          setSummary(null);
           setMsg("");
         } finally {
           setLoading(false);
@@ -113,27 +173,25 @@ export default function GamePage() {
 
     boot().catch((e: any) => {
       setMsg(e.message ?? "Error");
-      setMsgKind("bad");
     });
   }, [attemptId, childProfileId, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
 
   useEffect(() => {
-    if (!attemptId || !!summary) return;
+    if (!attemptId || !!summary || timeoutOpen) return;
 
     const intervalId = window.setInterval(() => {
       setTimeLeft((prev) => Math.max(prev - 1, 0));
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [attemptId, summary]);
+  }, [attemptId, summary, timeoutOpen]);
 
   useEffect(() => {
     async function completeByTimeout() {
-      if (!attemptId || !!summary || timeLeft > 0) return;
+      if (!attemptId || !!summary || timeLeft > 0 || timeoutOpen) return;
 
       setLoading(true);
-      setMsg("Час вийшов. Завершуємо гру...");
-      setMsgKind("info");
+      setMsg("");
 
       try {
         const res = await finishAttempt(attemptId, TIMER_DURATION_SEC);
@@ -142,20 +200,21 @@ export default function GamePage() {
           correctCount: res.summary.correctCount,
           totalCount: res.summary.totalCount,
         });
+
         setTask(null);
         setCompletedTasks(res.summary.totalCount);
-        setMsg("Час вийшов. Гру завершено.");
-        setMsgKind("bad");
+
+        setTimeoutReason("Час вийшов! Гру завершено.");
+        setTimeoutOpen(true);
       } catch (e: any) {
         setMsg(e.message ?? "Не вдалося завершити гру по таймеру");
-        setMsgKind("bad");
       } finally {
         setLoading(false);
       }
     }
 
     completeByTimeout();
-  }, [attemptId, summary, timeLeft]);
+  }, [attemptId, summary, timeLeft, timeoutOpen]);
 
   const current: TaskState | null = useMemo(() => {
     if (!task) return null;
@@ -176,20 +235,20 @@ export default function GamePage() {
     return [];
   }, [current]);
 
-  const positionIndex = (current?.position ?? 0) + 1;
-  const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : `${positionIndex}`;
+  const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : "0";
   const progressValue = totalTasks
     ? Math.min(100, Math.round((Math.min(completedTasks, totalTasks) / totalTasks) * 100))
     : 18;
 
-  const levelTitle = currentLevelNumber ? `Проходження рівня ${currentLevelNumber}` : "Проходження рівня";
-  const levelsHref =
-    normalizedDifficulty !== null
-      ? `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`
-      : `/child/game/${gameId}/difficulty`;
-
-  async function sendAnswer(userAnswer: any) {
+  const levelTitle = currentLevelNumber ? `Рівень ${currentLevelNumber}` : "Рівень";
+  async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
+    if (pickedIdx !== null) return; 
+
+    if (typeof clickedIndex === "number") {
+      setPickedIdx(clickedIndex);
+      setPickedState(null);
+    }
 
     setLoading(true);
     setMsg("");
@@ -201,46 +260,56 @@ export default function GamePage() {
         userAnswer,
       });
 
-      if ("finished" in res && res.finished) {
-        setSummary({
-          score: res.summary?.score ?? 0,
-          correctCount: res.summary?.correctCount ?? 0,
-          totalCount: res.summary?.totalCount ?? 0,
-        });
-        setCompletedTasks(res.summary?.totalCount ?? 0);
-        setMsg("Гру завершено!");
-        setMsgKind("ok");
-        setTask(null);
-        return;
-      }
+      const isCorrect = !!res.isCorrect;
+      setPickedState(isCorrect ? "ok" : "bad");
+      setMsg(isCorrect ? "Правильно!" : "Неправильно!");
 
-      const next = res.nextTask;
-      setTask({
-        taskId: next.taskId,
-        position: next.position,
-        taskVersion: {
-          id: next.taskVersion.id,
-          prompt: next.taskVersion.prompt,
-          data: next.taskVersion.data,
-        },
-      });
+      const finished = "finished" in res && res.finished;
+      const nextTask = !finished ? res.nextTask : null;
 
-      setCompletedTasks((prev) => res.progress?.totalCount ?? prev);
-      setTotalTasks((prev) => res.progress?.totalTasks ?? prev);
+      const nextCompleted = finished
+        ? (res.summary?.totalCount ?? 0)
+        : (res.progress?.totalCount ?? completedTasks);
 
-      if (res.isCorrect) {
-        setMsg("Правильно!");
-        setMsgKind("ok");
-      } else {
-        setMsg("Неправильно!");
-        setMsgKind("bad");
-      }
+      const nextTotal = finished
+        ? (res.summary?.totalCount ?? totalTasks ?? null)
+        : (res.progress?.totalTasks ?? totalTasks);
 
-      setTextAnswer("");
+      window.setTimeout(() => {
+        if (finished) {
+          const nextSummary: Summary = {
+            score: res.summary?.score ?? 0,
+            correctCount: res.summary?.correctCount ?? 0,
+            totalCount: res.summary?.totalCount ?? 0,
+          };
+          setSummary(nextSummary);
+          setCompletedTasks(nextCompleted);
+          setTask(null);
+          setMsg("");
+        } else if (nextTask) {
+          setTask({
+            taskId: nextTask.taskId,
+            position: nextTask.position,
+            taskVersion: {
+              id: nextTask.taskVersion.id,
+              prompt: nextTask.taskVersion.prompt,
+              data: nextTask.taskVersion.data,
+            },
+          });
+          setCompletedTasks(nextCompleted);
+          setTotalTasks(nextTotal ?? null);
+          setTextAnswer("");
+          setMsg("");
+        }
+
+        setPickedIdx(null);
+        setPickedState(null);
+        setLoading(false);
+      }, 650);
     } catch (e: any) {
       setMsg(e.message ?? "Error");
-      setMsgKind("bad");
-    } finally {
+      setPickedIdx(null);
+      setPickedState(null);
       setLoading(false);
     }
   }
@@ -249,6 +318,8 @@ export default function GamePage() {
     .toString()
     .padStart(2, "0");
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
+
+  const starsFilled = summary ? scoreToStars(summary.score, summary.totalCount) : 0;
 
   return (
     <main className={styles.page}>
@@ -274,27 +345,21 @@ export default function GamePage() {
         </section>
 
         <section className={styles.card}>
-          {!!msg && (
-            <div
-              className={[
-                styles.toast,
-                msgKind === "ok" ? styles.toastOk : msgKind === "bad" ? styles.toastBad : styles.toastInfo,
-              ].join(" ")}
-            >
-              {msgKind === "ok" ? "✅" : msgKind === "bad" ? "❌" : "ℹ️"} {msg}
-            </div>
-          )}
+          {!!msg && !timeoutOpen && (
+  <div className={styles.toast}>
+    {msg}
+  </div>
+)}
+
+
 
           {!current ? (
             summary ? (
               <div className={styles.summary}>
-                <h2 className={styles.summaryTitle}>Результат</h2>
+                <StarsRow filled={starsFilled} />
+
                 <div className={styles.summaryRow}>
-                  <span>Зірки</span>
-                  <b>{summary.score}</b>
-                </div>
-                <div className={styles.summaryRow}>
-                  <span>Правильні</span>
+                  <span>Правильні відповіді</span>
                   <b>
                     {summary.correctCount} / {summary.totalCount}
                   </b>
@@ -318,18 +383,32 @@ export default function GamePage() {
 
               {options.length > 0 ? (
                 <div className={styles.answers}>
-                  {options.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      disabled={loading}
-                      onClick={() => sendAnswer({ answer: opt })}
-                      className={styles.answerBtn}
-                      type="button"
-                    >
-                      <span className={styles.answerText}>{String(opt)}</span>
-                      <span className={styles.answerSheen} />
-                    </button>
-                  ))}
+                  {options.map((opt, idx) => {
+                    const isPicked = pickedIdx === idx;
+                    const cls =
+                      styles.answerBtn +
+                      " " +
+                      (isPicked && pickedState === "ok"
+                        ? styles.answerOk
+                        : isPicked && pickedState === "bad"
+                        ? styles.answerBad
+                        : isPicked
+                        ? styles.answerPending
+                        : "");
+
+                    return (
+                      <button
+                        key={idx}
+                        disabled={loading || pickedIdx !== null}
+                        onClick={() => sendAnswer({ answer: opt }, idx)}
+                        className={cls}
+                        type="button"
+                      >
+                        <span className={styles.answerText}>{String(opt)}</span>
+                        <span className={styles.answerSheen} />
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className={styles.textAnswerRow}>
@@ -364,12 +443,49 @@ export default function GamePage() {
         <footer className={styles.hud}>
           <div className={styles.hudItem}>
             <span className={styles.hudIcon}>⏳</span>
-            <span className={styles.hudValue}>
+            <span className={`${styles.hudValue} ${timeLeft <= 10 ? styles.hudDanger : ""}`}>
               {minutes}:{seconds}
             </span>
           </div>
         </footer>
       </div>
+
+      {timeoutOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+          <div className={styles.modal}>
+            <div className={styles.modalIcon}>⏳</div>
+            <h2 className={styles.modalTitle}>Час вийшов</h2>
+            <p className={styles.modalText}>{timeoutReason}</p>
+
+            {summary && (
+              <>
+                <StarsRow filled={scoreToStars(summary.score, summary.totalCount)} />
+
+                <div className={styles.modalStats}>
+                  <div className={styles.modalStatRow}>
+                    <span>Правильні</span>
+                    <b>
+                      {summary.correctCount} / {summary.totalCount}
+                    </b>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className={styles.modalActions}>
+              <Link className={styles.primaryBtn} href="/child/subjects">
+                До меню
+              </Link>
+              <Link className={styles.secondaryBtn} href={levelsHref}>
+                До списку рівнів
+              </Link>
+              <button type="button" className={styles.ghostBtn} onClick={() => setTimeoutOpen(false)}>
+                Закрити
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
