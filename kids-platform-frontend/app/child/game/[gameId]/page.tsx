@@ -477,8 +477,8 @@ export default function GamePage() {
               {isDragTask ? (
                 <>
                   <div className={styles.dragLayout}>
-                    <div className={styles.dragLeftColumn}>
-                      <div className={styles.dragColumnTitle}>Куди відноситься</div>
+                    <div className={styles.dragRightColumn}>
+                      <div className={styles.dragColumnTitle}>Куди відноситься (праворуч)</div>
                       <div className={styles.dragItemsList}>
                         {dragTargets.map((target) => {
                           const assignedItems = dragAssignments[target] ?? [];
@@ -534,8 +534,8 @@ export default function GamePage() {
                       </div>
                     </div>
 
-                    <div className={styles.dragRightColumn}>
-                      <div className={styles.dragColumnTitle}>Картки справа</div>
+                    <div className={styles.dragLeftColumn}>
+                      <div className={styles.dragColumnTitle}>Картки зліва</div>
                       <div className={styles.dropTargetsList}>
                         {availableDragItems.map((item) => (
                           <button
@@ -552,7 +552,7 @@ export default function GamePage() {
                         ))}
 
                         {availableDragItems.length === 0 && (
-                          <div className={styles.dragHint}>Всі картки вже розкладені по лівих відповідях.</div>
+                          <div className={styles.dragHint}>Всі картки вже розкладені по правих відповідях.</div>
                         )}
                       </div>
                     </div>
