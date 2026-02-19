@@ -477,7 +477,7 @@ export default function GamePage() {
               {isDragTask ? (
                 <>
                   <div className={styles.dragLayout}>
-                    <div>
+                    <div className={styles.dragLeftColumn}>
                       <div className={styles.dragColumnTitle}>Куди відноситься</div>
                       <div className={styles.dragItemsList}>
                         {dragTargets.map((target) => {
@@ -534,7 +534,7 @@ export default function GamePage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className={styles.dragRightColumn}>
                       <div className={styles.dragColumnTitle}>Картки справа</div>
                       <div className={styles.dropTargetsList}>
                         {availableDragItems.map((item) => (

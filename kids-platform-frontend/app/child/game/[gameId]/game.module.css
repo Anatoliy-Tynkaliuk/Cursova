@@ -320,6 +320,14 @@
   gap: 16px;
 }
 
+.dragLeftColumn {
+  order: 1;
+}
+
+.dragRightColumn {
+  order: 2;
+}
+
 .dragColumnTitle {
   margin-bottom: 10px;
   font-size: 20px;
@@ -668,6 +676,8 @@
   .question { font-size: 36px; }
   .answerBtn { height: 68px; }
   .dragLayout { grid-template-columns: 1fr; }
+  .dragLeftColumn,
+  .dragRightColumn { order: initial; }
 }
 
 
