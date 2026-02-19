@@ -1,0 +1,262 @@
+/* ===============================
+   PAGE BACKGROUND (COSMIC STYLE)
+=================================*/
+
+.levelsPage {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("/background.png");
+  background-size: cover;
+  background-position: center;
+  padding: 20px;
+  color: white;
+  font-family: system-ui, sans-serif;
+}
+
+/* ===============================
+   MAIN CARD
+=================================*/
+
+.levelsCard {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  background: rgba(20, 15, 40, 0.85);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* якщо хочеш — можеш прибрати, але нехай буде */
+.overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  pointer-events: none;
+  background: radial-gradient(800px 300px at 20% 0%, rgba(255,255,255,0.06), transparent 60%);
+}
+
+/* ===============================
+   HEADER
+=================================*/
+
+.levelsHeader {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.levelsTitle {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.levelsMeta {
+  margin: 4px 0;
+  color: #ddd;
+}
+
+.levelsHint {
+  margin-top: 16px;
+  margin-bottom: 10px;
+  color: #ccc;
+}
+
+.levelsMuted {
+  color: #aaa;
+}
+
+/* ===============================
+   TOP BUTTONS
+=================================*/
+
+.topActions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btnPurple {
+  background: linear-gradient(90deg, #b66cff, #7b4cff);
+}
+
+.btnBlue {
+  background: linear-gradient(90deg, #4aa3ff, #5c6cff);
+}
+
+/* ===============================
+   LEVEL LIST
+=================================*/
+
+.levelList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+/* ===============================
+   LEVEL BUTTON STYLE
+=================================*/
+
+.levelBtn {
+  position: relative;
+  overflow: hidden;
+
+  height: 60px;
+  border-radius: 18px;
+  font-weight: 800;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  transition: 0.2s;
+}
+
+.levelBtn:hover {
+  transform: translateY(-2px);
+}
+
+/* світловий ефект */
+.levelBtn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px 200px at 0% 50%, rgba(255, 255, 255, 0.12), transparent 60%);
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.levelBtn:hover::before {
+  opacity: 1;
+}
+
+/* ===============================
+   WATERMARK CONTENT
+=================================*/
+
+.levelContent {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.levelLabel {
+  position: relative;
+  z-index: 2;
+  font-size: 18px;
+  letter-spacing: 0.2px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+/* іконка позаду напису */
+.levelBgIcon {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+transform: translateY(-30px); /* 🔥 піднімає іконку */
+
+  transition: 0.2s;
+}
+
+.levelBgIconImg {
+  transform: scale(1.05);
+}
+
+.levelBtn:hover .levelBgIcon {
+  opacity: 0.2;
+}
+
+/* різна прозорість під стани */
+.locked .levelBgIcon {
+  opacity: 0.5;
+}
+
+.active .levelBgIcon {
+  opacity: 0.5;
+}
+
+.completed .levelBgIcon {
+  opacity: 0.5;
+}
+
+/* ===============================
+   STATES
+=================================*/
+
+.completed {
+  background: linear-gradient(90deg, #6cff95, #39d979);
+  color: #062016;
+}
+
+.active {
+  background: linear-gradient(90deg, #4aa3ff, #5c6cff);
+}
+
+.locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===============================
+   MOBILE
+=================================*/
+
+@media (max-width: 480px) {
+  .levelsCard {
+    padding: 18px;
+  }
+
+  .levelsTitle {
+    font-size: 26px;
+  }
+
+  .btn {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .levelBtn {
+    height: 54px;
+  }
+
+  .levelLabel {
+    font-size: 16px;
+  }
+}
