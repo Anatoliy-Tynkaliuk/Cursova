@@ -1,0 +1,5 @@
+ALTER TABLE "child_profiles"
+ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN NOT NULL DEFAULT true;
+
+ALTER TABLE "task_versions"
+ADD COLUMN IF NOT EXISTS "isArchived" BOOLEAN NOT NULL DEFAULT false;

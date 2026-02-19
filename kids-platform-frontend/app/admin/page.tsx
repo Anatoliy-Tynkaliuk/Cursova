@@ -298,8 +298,9 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminAgeGroup(groupId);
-      setMessage("Вікову групу видалено.");
-      setAgeGroups((prev) => prev.filter((group) => group.id !== groupId));
+      setMessage("Вікову групу архівовано.");
+      const ageGroupsData = await getAdminAgeGroups();
+      setAgeGroups(ageGroupsData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -352,8 +353,9 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminGame(gameId);
-      setMessage("Гру видалено.");
-      setGames((prev) => prev.filter((g) => g.id !== gameId));
+      setMessage("Гру архівовано.");
+      const gamesData = await getAdminGames();
+      setGames(gamesData);
     } catch (e: any) {
       setError(e.message ?? "Error");
     }
@@ -416,14 +418,14 @@ export default function AdminPage() {
   }
 
   async function onDeleteGameLevel(levelId: number) {
-    const confirmed = window.confirm("Видалити рівень повністю разом із завданнями цього рівня?");
+    const confirmed = window.confirm("Архівувати рівень? Його можна буде відновити.");
     if (!confirmed) return;
 
     setError(null);
     setMessage(null);
     try {
       await deleteAdminGameLevel(levelId);
-      setMessage("Рівень видалено.");
+      setMessage("Рівень архівовано.");
       const [levelsData, tasksData] = await Promise.all([
         getAdminGameLevels(),
         getAdminTasks(),
@@ -478,7 +480,7 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminTask(taskIdToDelete);
-      setMessage("Завдання видалено.");
+      setMessage("Завдання архівовано.");
       setTasks((prev) => prev.filter((t) => t.id !== taskIdToDelete));
       setTaskVersions((prev) => prev.filter((v) => v.taskId !== taskIdToDelete));
     } catch (e: any) {
@@ -594,7 +596,7 @@ export default function AdminPage() {
     setMessage(null);
     try {
       await deleteAdminTaskVersion(taskVersionId);
-      setMessage("Версію завдання видалено.");
+      setMessage("Версію завдання архівовано.");
       setTaskVersions((prev) => prev.filter((v) => v.id !== taskVersionId));
     } catch (e: any) {
       setError(e.message ?? "Error");
@@ -890,7 +892,7 @@ export default function AdminPage() {
                   </label>
                   <div className={styles.actionsRow}>
                     <button onClick={() => onUpdateGameLevel(level)}>Зберегти</button>
-                    <button onClick={() => onDeleteGameLevel(level.id)}>Видалити</button>
+                    <button onClick={() => onDeleteGameLevel(level.id)}>Архівувати</button>
                   </div>
                 </div>
               </li>
@@ -1267,7 +1269,7 @@ export default function AdminPage() {
                 </label>
                 <div className={styles.actionsRow}>
                   <button onClick={() => onUpdateAgeGroup(group)}>Зберегти</button>
-                  <button onClick={() => onDeleteAgeGroup(group.id)}>Видалити</button>
+                  <button onClick={() => onDeleteAgeGroup(group.id)}>Архівувати</button>
                 </div>
               </div>
             </li>
@@ -1351,7 +1353,7 @@ export default function AdminPage() {
               </label>
               <div className={styles.actionsRow}>
                 <button onClick={() => onUpdateGame(g)}>Зберегти</button>
-                <button onClick={() => onDeleteGame(g.id)}>Видалити</button>
+                <button onClick={() => onDeleteGame(g.id)}>Архівувати</button>
               </div>
             </li>
           ))}
@@ -1426,7 +1428,7 @@ export default function AdminPage() {
                     </div>
                     <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                       <button onClick={() => onUpdateTask(t)}>Зберегти</button>
-                      <button onClick={() => onDeleteTask(t.id)}>Видалити</button>
+                      <button onClick={() => onDeleteTask(t.id)}>Архівувати</button>
                     </div>
                     <div style={{ marginTop: 8 }}>
                       <div style={{ fontSize: 12, opacity: 0.8 }}>Версії:</div>
@@ -1491,7 +1493,7 @@ export default function AdminPage() {
                             </label>
                             <div className={styles.actionsRow}>
                               <button onClick={() => onUpdateTaskVersion(v)}>Зберегти</button>
-                              <button onClick={() => onDeleteTaskVersion(v.id)}>Видалити</button>
+                              <button onClick={() => onDeleteTaskVersion(v.id)}>Архівувати</button>
                             </div>
                           </li>
                         ))}

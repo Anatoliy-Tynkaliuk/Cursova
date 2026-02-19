@@ -66,7 +66,10 @@ export class AdminService {
   }
 
   async deleteAgeGroup(id: number) {
-    await this.prisma.ageGroup.delete({ where: { id: BigInt(id) } });
+    await this.prisma.ageGroup.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -108,7 +111,10 @@ export class AdminService {
   }
 
   async deleteModule(id: number) {
-    await this.prisma.module.delete({ where: { id: BigInt(id) } });
+    await this.prisma.module.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -150,7 +156,10 @@ export class AdminService {
   }
 
   async deleteGameType(id: number) {
-    await this.prisma.gameType.delete({ where: { id: BigInt(id) } });
+    await this.prisma.gameType.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -206,7 +215,10 @@ export class AdminService {
   }
 
   async deleteGame(id: number) {
-    await this.prisma.game.delete({ where: { id: BigInt(id) } });
+    await this.prisma.game.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
@@ -359,12 +371,16 @@ export class AdminService {
   }
 
   async deleteTask(id: number) {
-    await this.prisma.task.delete({ where: { id: BigInt(id) } });
+    await this.prisma.task.update({
+      where: { id: BigInt(id) },
+      data: { isActive: false },
+    });
     return { ok: true };
   }
 
   async listTaskVersions() {
     const versions = await this.prisma.taskVersion.findMany({
+      where: { isArchived: false },
       orderBy: { id: "asc" },
       include: { task: true },
     });
@@ -393,6 +409,7 @@ export class AdminService {
         explanation: dto.explanation,
         difficulty: dto.difficulty ?? 1,
         isCurrent: dto.isCurrent ?? false,
+        isArchived: false,
       },
     });
     return { id: Number(version.id) };
@@ -416,7 +433,13 @@ export class AdminService {
   }
 
   async deleteTaskVersion(id: number) {
-    await this.prisma.taskVersion.delete({ where: { id: BigInt(id) } });
+    await this.prisma.taskVersion.update({
+      where: { id: BigInt(id) },
+      data: {
+        isArchived: true,
+        isCurrent: false,
+      },
+    });
     return { ok: true };
   }
 

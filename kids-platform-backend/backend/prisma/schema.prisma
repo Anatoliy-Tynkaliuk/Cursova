@@ -45,6 +45,7 @@ model ChildProfile {
   ageGroupId BigInt
   avatar     String?
   settings   Json     @default("{}")
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
 
   ageGroup   AgeGroup     @relation(fields: [ageGroupId], references: [id], onDelete: Restrict)
@@ -183,13 +184,14 @@ model TaskVersion {
   explanation String?
   difficulty  Int      @default(1)
   isCurrent   Boolean  @default(false)
+  isArchived  Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   task    Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
   answers TaskAnswer[]
 
   @@unique([taskId, version])
-  @@index([taskId, isCurrent])
+  @@index([taskId, isCurrent, isArchived])
   @@map("task_versions")
 }
 

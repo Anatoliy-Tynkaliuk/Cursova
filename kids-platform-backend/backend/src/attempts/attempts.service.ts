@@ -249,6 +249,7 @@ export class AttemptsService {
       where: {
         taskId: task.id,
         isCurrent: true,
+        isArchived: false,
         difficulty,
       },
       orderBy: [{ version: "desc" }],
@@ -259,6 +260,7 @@ export class AttemptsService {
         where: {
           taskId: task.id,
           isCurrent: true,
+          isArchived: false,
         },
         orderBy: [{ version: "desc" }],
       });
@@ -372,6 +374,7 @@ export class AttemptsService {
         versions: {
           some: {
             isCurrent: true,
+            isArchived: false,
             difficulty: tv.difficulty,
           },
         },
@@ -381,6 +384,7 @@ export class AttemptsService {
         versions: {
           where: {
             isCurrent: true,
+            isArchived: false,
             difficulty: tv.difficulty,
           },
           orderBy: { version: "desc" },

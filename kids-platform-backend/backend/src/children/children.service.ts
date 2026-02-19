@@ -23,6 +23,7 @@ export class ChildrenService {
 
     if (user.role === "admin") {
       const all = await this.prisma.childProfile.findMany({
+        where: { isActive: true },
         include: { ageGroup: true },
         orderBy: { id: "asc" },
       });
@@ -32,7 +33,10 @@ export class ChildrenService {
     if (user.role !== "parent") throw new ForbiddenException("Only parent/admin");
 
     const links = await this.prisma.parentChild.findMany({
-      where: { parentUserId: userId },
+      where: {
+        parentUserId: userId,
+        child: { isActive: true },
+      },
       include: { child: { include: { ageGroup: true } } },
       orderBy: { createdAt: "asc" },
     });
@@ -70,11 +74,11 @@ export class ChildrenService {
   async createInvite(user: any, childId: number) {
     if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
 
-    const child = await this.prisma.childProfile.findUnique({
-      where: { id: BigInt(childId) },
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
       include: { ageGroup: true },
     });
-    if (!child) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
     // parent може робити invite тільки для своєї дитини
     if (user.role === "parent") {
@@ -120,6 +124,7 @@ export class ChildrenService {
     });
 
     if (!invite) throw new NotFoundException("Code not found");
+    if (!invite.child.isActive) throw new BadRequestException("Child profile is inactive");
     if (invite.isRevoked) throw new BadRequestException("Code revoked");
     if (invite.expiresAt.getTime() < Date.now()) throw new BadRequestException("Code expired");
 
@@ -138,11 +143,11 @@ export class ChildrenService {
   async getStats(user: any, childId: number) {
     if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
 
-    const child = await this.prisma.childProfile.findUnique({
-      where: { id: BigInt(childId) },
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
       include: { ageGroup: true },
     });
-    if (!child) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
     if (user.role === "parent") {
       const link = await this.prisma.parentChild.findUnique({
@@ -199,10 +204,10 @@ export class ChildrenService {
       throw new ForbiddenException("Only parent/admin");
     }
 
-    const child = await this.prisma.childProfile.findUnique({
-      where: { id: BigInt(childId) },
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
     });
-    if (!child) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
     if (user?.role === "parent") {
       const link = await this.prisma.parentChild.findUnique({
@@ -282,10 +287,10 @@ export class ChildrenService {
       throw new ForbiddenException("Only parent/admin");
     }
 
-    const child = await this.prisma.childProfile.findUnique({
-      where: { id: BigInt(childId) },
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
     });
-    if (!child) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
     if (user.role === "parent") {
       const link = await this.prisma.parentChild.findUnique({
@@ -294,9 +299,16 @@ export class ChildrenService {
       if (!link) throw new ForbiddenException("Not your child");
     }
 
-    await this.prisma.childProfile.delete({
-      where: { id: child.id },
-    });
+    await this.prisma.$transaction([
+      this.prisma.childProfile.update({
+        where: { id: child.id },
+        data: { isActive: false },
+      }),
+      this.prisma.linkInvite.updateMany({
+        where: { childProfileId: child.id, isRevoked: false },
+        data: { isRevoked: true },
+      }),
+    ]);
 
     return { ok: true };
   }
