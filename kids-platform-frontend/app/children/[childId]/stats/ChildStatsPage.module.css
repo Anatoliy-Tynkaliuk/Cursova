@@ -1,0 +1,276 @@
+.page {
+  min-height: 100vh;
+  padding: 24px 16px 40px;
+  background-image: url("/background.png");
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+}
+
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: 38px;
+  font-weight: 900;
+}
+
+.back {
+  text-decoration: none;
+  color: #e4ebff;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.profile {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  margin-bottom: 18px;
+}
+
+.profileLabel {
+  margin: 0;
+  color: #9fbcff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.name {
+  margin: 4px 0;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.profileMeta {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14px;
+}
+
+.progressBlock {
+  min-width: 260px;
+}
+
+.progressText {
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.progressBar {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #61d9ff 0%, #8eff76 100%);
+}
+
+.progressPercent {
+  margin-top: 6px;
+  color: #b9cbff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  min-height: 204px;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+  display: flex;
+}
+
+.cardEarned {
+  border-color: rgba(143, 255, 165, 0.82);
+  background: linear-gradient(180deg, rgba(55, 113, 89, 0.42) 0%, rgba(255, 255, 255, 0.06) 100%);
+}
+
+.cardLocked {
+  opacity: 0.92;
+}
+
+.cardBg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardBgImg {
+  object-fit: contain;
+  opacity: 0.6;
+  filter: blur(0.2px) saturate(1.15) contrast(1.05);
+  transform: scale(1.15);
+}
+
+.cardContent {
+  position: relative;
+  z-index: 1;
+  padding: 14px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.badgeStatus {
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 4px 8px;
+  backdrop-filter: blur(6px);
+}
+
+.chain {
+  font-size: 16px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55));
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.cardDesc {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+  line-height: 1.3;
+  min-height: 38px;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.metricRow {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #cbdaff;
+  padding-top: 12px;
+}
+
+.progressLine {
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.progressLineFill {
+  height: 100%;
+  background: linear-gradient(90deg, #59d7ff, #a9ff6e);
+}
+
+.statsSection {
+  margin-top: 18px;
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.statsTitle {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.statsList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.status,
+.error,
+.empty {
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 14px;
+}
+
+.status {
+  background: rgba(102, 186, 255, 0.2);
+}
+
+.error {
+  background: rgba(255, 72, 72, 0.2);
+}
+
+.empty {
+  text-align: center;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 920px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .progressBlock {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
