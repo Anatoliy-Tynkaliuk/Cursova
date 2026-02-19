@@ -286,6 +286,7 @@ export class AdminService {
         title: dto.title,
         levelNumber: dto.levelNumber,
         isActive: dto.isActive,
+        deletedAt: dto.isActive === true ? null : dto.isActive === false ? new Date() : undefined,
       },
     });
     return { id: Number(level.id) };
