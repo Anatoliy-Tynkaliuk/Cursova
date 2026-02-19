@@ -93,6 +93,15 @@ export class AttemptsService {
       return rule ? rule.currentValue >= rule.targetValue : false;
     });
 
+    const eligibleBadgeIds = eligibleBadges.map((badge) => badge.id);
+
+    await this.prisma.childBadge.deleteMany({
+      where: {
+        childProfileId,
+        ...(eligibleBadgeIds.length > 0 ? { badgeId: { notIn: eligibleBadgeIds } } : {}),
+      },
+    });
+
     if (eligibleBadges.length === 0) return;
 
     await this.prisma.childBadge.createMany({

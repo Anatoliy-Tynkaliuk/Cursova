@@ -217,7 +217,7 @@ export class ChildrenService {
       if (!link) throw new ForbiddenException("Not your child");
     }
 
-    const [allAttempts, badges, earned] = await Promise.all([
+    const [allAttempts, badges] = await Promise.all([
       this.prisma.attempt.findMany({
         where: { childProfileId: child.id },
         select: {
@@ -230,12 +230,10 @@ export class ChildrenService {
         },
       }),
       this.prisma.badge.findMany({ orderBy: { id: "asc" } }),
-      this.prisma.childBadge.findMany({ where: { childProfileId: child.id } }),
     ]);
 
     const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
 
-    const earnedSet = new Set(earned.map((b) => Number(b.badgeId)));
 
     return {
       finishedAttempts: metrics.finishedAttempts,
@@ -251,7 +249,7 @@ export class ChildrenService {
           code: badge.code,
           title: badge.title,
           description: badge.description,
-          isEarned: earnedSet.has(Number(badge.id)),
+          isEarned: rule ? rule.currentValue >= rule.targetValue : false,
           metricKey: rule?.metricKey ?? null,
           metricLabel: rule?.metricLabel ?? null,
           currentValue: rule?.currentValue ?? null,
