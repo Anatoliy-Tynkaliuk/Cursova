@@ -78,7 +78,6 @@ export default function AdminPage() {
 
   const [taskGameId, setTaskGameId] = useState<number | "">("");
   const [taskLevelId, setTaskLevelId] = useState<number | "">("");
-  const [taskPosition, setTaskPosition] = useState(1);
   const [taskIsActive, setTaskIsActive] = useState(true);
 
   const [taskId, setTaskId] = useState<number | "">("");
@@ -127,7 +126,7 @@ export default function AdminPage() {
   );
 
   const taskRequiresLevel = selectedTaskGameLevels.length > 0;
-  const taskFormValid = taskGameId !== "" && taskPosition > 0 && (!taskRequiresLevel || taskLevelId !== "");
+  const taskFormValid = taskGameId !== "" && (!taskRequiresLevel || taskLevelId !== "");
 
   const selectedTask = useMemo(
     () => (taskId === "" ? null : tasks.find((item) => item.id === taskId) ?? null),
@@ -215,12 +214,21 @@ export default function AdminPage() {
     }, {});
   }, [taskVersions]);
 
-  const nextPositionForGame = useMemo(() => {
-    if (taskGameId === "") return 1;
+  const taskPositionScopeList = useMemo(() => {
+    if (taskGameId === "") return [] as AdminTaskItem[];
+
     const list = groupedTasks[taskGameId] ?? [];
-    if (list.length === 0) return 1;
-    return Math.max(...list.map((t) => t.position)) + 1;
-  }, [groupedTasks, taskGameId]);
+    if (taskLevelId === "") {
+      return list.filter((task) => task.levelId === null);
+    }
+
+    return list.filter((task) => task.levelId === taskLevelId);
+  }, [groupedTasks, taskGameId, taskLevelId]);
+
+  const nextTaskPosition = useMemo(() => {
+    if (taskPositionScopeList.length === 0) return 1;
+    return Math.max(...taskPositionScopeList.map((task) => task.position)) + 1;
+  }, [taskPositionScopeList]);
 
   const nextLevelNumberForSelection = useMemo(() => {
     if (levelGameId === "") return 1;
@@ -233,11 +241,6 @@ export default function AdminPage() {
     return Math.max(...levels.map((level) => level.levelNumber)) + 1;
   }, [gameLevels, levelDifficulty, levelGameId]);
 
-  const taskPositionTaken = useMemo(() => {
-    if (taskGameId === "") return false;
-    const list = groupedTasks[taskGameId] ?? [];
-    return list.some((t) => t.position === taskPosition);
-  }, [groupedTasks, taskGameId, taskPosition]);
 
   useEffect(() => {
     if (linkedTaskDifficulty !== null) {
@@ -436,21 +439,17 @@ export default function AdminPage() {
 
   async function onCreateTask() {
     if (!taskFormValid || typeof taskGameId !== "number") return;
-    if (taskPositionTaken) {
-      setError(`Для цієї гри вже є завдання з позицією ${taskPosition}.`);
-      return;
-    }
+
     setError(null);
     setMessage(null);
     try {
       await createAdminTask({
         gameId: taskGameId,
         levelId: taskLevelId === "" ? undefined : taskLevelId,
-        position: taskPosition,
+        position: nextTaskPosition,
         isActive: taskIsActive,
       });
       setMessage("Завдання створено.");
-      setTaskPosition(1);
       setTaskLevelId("");
       const tasksData = await getAdminTasks();
       setTasks(tasksData);
@@ -911,7 +910,6 @@ export default function AdminPage() {
             onChange={(e) => {
               const value = Number(e.target.value);
               setTaskGameId(value);
-              setTaskPosition(value ? nextPositionForGame : 1);
               setTaskLevelId("");
             }}
           >
@@ -937,16 +935,12 @@ export default function AdminPage() {
               </option>
             ))}
           </select>
-          <label className={styles.inlineLabel}>
+          <div className={styles.inlineLabel}>
             Позиція
-            <input
-              type="number"
-              min={1}
-              value={taskPosition}
-              onChange={(e) => setTaskPosition(Number(e.target.value))}
-              className={styles.smallInput}
-            />
-          </label>
+            <div className={styles.smallInput} style={{ display: "flex", alignItems: "center" }}>
+              {nextTaskPosition}
+            </div>
+          </div>
           <label className={styles.inlineLabel}>
             <input
               type="checkbox"
@@ -958,11 +952,6 @@ export default function AdminPage() {
           <button disabled={!taskFormValid} onClick={onCreateTask}>
             Створити завдання
           </button>
-          {taskPositionTaken && (
-            <div style={{ fontSize: 12, color: "#b45309" }}>
-              Для цієї гри вже є завдання з позицією {taskPosition}. Вибери іншу позицію.
-            </div>
-          )}
           {taskRequiresLevel && taskLevelId === "" && (
             <div style={{ fontSize: 12, color: "#b45309" }}>
               Для цієї гри вже налаштовані рівні — обери конкретний рівень.
