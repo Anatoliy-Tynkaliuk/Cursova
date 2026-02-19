@@ -45,6 +45,7 @@ model ChildProfile {
   ageGroupId BigInt
   avatar     String?
   settings   Json     @default("{}")
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
 
   ageGroup   AgeGroup     @relation(fields: [ageGroupId], references: [id], onDelete: Restrict)
@@ -258,7 +259,6 @@ model Badge {
   code        String   @unique
   title       String
   description String?
-  icon        String?
 
   childBadges ChildBadge[]
 
