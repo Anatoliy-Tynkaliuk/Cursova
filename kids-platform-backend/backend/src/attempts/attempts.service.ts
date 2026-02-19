@@ -22,6 +22,49 @@ function deepEqual(a: any, b: any): boolean {
   return false;
 }
 
+type DragPair = { item: string; target: string };
+
+function normalizeDragPairsValue(value: unknown): DragPair[] | null {
+  if (!value || typeof value !== "object") return null;
+
+  const pairs = (value as { pairs?: unknown }).pairs;
+  if (!Array.isArray(pairs)) return null;
+
+  const normalized: DragPair[] = [];
+
+  for (const pair of pairs) {
+    if (!pair || typeof pair !== "object") return null;
+
+    const item = (pair as { item?: unknown }).item;
+    const target = (pair as { target?: unknown }).target;
+
+    if (typeof item !== "string" || typeof target !== "string") return null;
+
+    normalized.push({ item: item.trim(), target: target.trim() });
+  }
+
+  normalized.sort((a, b) => {
+    if (a.target === b.target) {
+      return a.item.localeCompare(b.item);
+    }
+
+    return a.target.localeCompare(b.target);
+  });
+
+  return normalized;
+}
+
+export function answersAreEquivalent(userAnswer: unknown, correctAnswer: unknown): boolean {
+  const normalizedUserPairs = normalizeDragPairsValue(userAnswer);
+  const normalizedCorrectPairs = normalizeDragPairsValue(correctAnswer);
+
+  if (normalizedUserPairs && normalizedCorrectPairs) {
+    return deepEqual(normalizedUserPairs, normalizedCorrectPairs);
+  }
+
+  return deepEqual(userAnswer, correctAnswer);
+}
+
 @Injectable()
 export class AttemptsService {
   constructor(private prisma: PrismaService) {}
@@ -336,7 +379,7 @@ export class AttemptsService {
       throw new BadRequestException("taskId does not match taskVersionId");
     }
 
-    const isCorrect = deepEqual(dto.userAnswer, tv.correctJson);
+    const isCorrect = answersAreEquivalent(dto.userAnswer, tv.correctJson);
 
     await this.prisma.taskAnswer.create({
       data: {
