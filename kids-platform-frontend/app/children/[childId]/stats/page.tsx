@@ -129,11 +129,6 @@ export default function ChildStatsPage() {
                           <span className={styles.badgeStatus}>
                             {badge.isEarned ? "Отримано" : "Закрито"}
                           </span>
-                          {!badge.isEarned && (
-                            <span className={styles.chain} aria-hidden="true">
-                              ⛓️
-                            </span>
-                          )}
                         </div>
 
                         <h3 className={styles.cardTitle}>{badge.title}</h3>
