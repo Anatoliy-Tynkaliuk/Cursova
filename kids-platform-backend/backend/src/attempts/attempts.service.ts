@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { PrismaService } from "../prisma/prisma.service";
 import { AnswerDto } from "./dto/answer.dto";
 import { buildAchievementRule, type AchievementMetrics } from "../children/achievement-rules";
+import { calculateAchievementMetrics } from "../children/achievement-metrics";
 
 function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
@@ -70,7 +71,7 @@ export class AttemptsService {
   constructor(private prisma: PrismaService) {}
 
   private async awardBadges(childProfileId: bigint) {
-    const [allAttempts, finishedAttempts, scoreAgg, correctAgg, badges] = await Promise.all([
+    const [allAttempts, badges] = await Promise.all([
       this.prisma.attempt.findMany({
         where: { childProfileId },
         select: {
@@ -78,28 +79,14 @@ export class AttemptsService {
           isFinished: true,
           correctCount: true,
           totalCount: true,
+          score: true,
+          levelId: true,
         },
       }),
-      this.prisma.attempt.count({ where: { childProfileId, isFinished: true } }),
-      this.prisma.attempt.aggregate({ where: { childProfileId, isFinished: true }, _sum: { score: true } }),
-      this.prisma.attempt.aggregate({ where: { childProfileId, isFinished: true }, _sum: { correctCount: true } }),
       this.prisma.badge.findMany(),
     ]);
 
-    const loginDays = new Set(allAttempts.map((attempt) => attempt.createdAt.toISOString().slice(0, 10))).size;
-    const totalAttempts = allAttempts.length;
-    const perfectGames = allAttempts.filter(
-      (attempt) => attempt.isFinished && attempt.totalCount > 0 && attempt.correctCount === attempt.totalCount,
-    ).length;
-
-    const metrics: AchievementMetrics = {
-      finishedAttempts,
-      totalStars: scoreAgg._sum.score ?? 0,
-      loginDays,
-      correctAnswers: correctAgg._sum.correctCount ?? 0,
-      totalAttempts,
-      perfectGames,
-    };
+    const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
 
     const eligibleBadges = badges.filter((badge) => {
       const rule = buildAchievementRule(badge.code, metrics);
