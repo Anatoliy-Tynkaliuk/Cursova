@@ -135,7 +135,6 @@ export type AdminBadgeItem = {
   code: string;
   title: string;
   description?: string | null;
-  icon?: string | null;
 };
 
 export async function getAdminModules() {
@@ -337,7 +336,6 @@ export async function createAdminBadge(payload: {
   code: string;
   title: string;
   description?: string;
-  icon?: string;
 }) {
   return api<{ id: number }>("/admin/badges", "POST", payload);
 }
@@ -348,7 +346,6 @@ export async function updateAdminBadge(
     code?: string;
     title?: string;
     description?: string;
-    icon?: string;
   }
 ) {
   return api<{ id: number }>(`/admin/badges/${badgeId}`, "PATCH", payload);
@@ -387,13 +384,21 @@ export type ChildBadgeItem = {
   code: string;
   title: string;
   description?: string | null;
-  icon?: string | null;
   isEarned: boolean;
+  metricKey?: string | null;
+  metricLabel?: string | null;
+  currentValue?: number | null;
+  targetValue?: number | null;
+  progressPercent?: number | null;
 };
 
 export type ChildBadgesResponse = {
   finishedAttempts: number;
   totalStars: number;
+  loginDays?: number;
+  totalAttempts?: number;
+  correctAnswers?: number;
+  perfectGames?: number;
   badges: ChildBadgeItem[];
 };
 
