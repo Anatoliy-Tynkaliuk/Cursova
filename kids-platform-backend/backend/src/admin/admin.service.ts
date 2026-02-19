@@ -380,7 +380,6 @@ export class AdminService {
 
   async listTaskVersions() {
     const versions = await this.prisma.taskVersion.findMany({
-      where: { isArchived: false },
       orderBy: { id: "asc" },
       include: { task: true },
     });
@@ -409,7 +408,6 @@ export class AdminService {
         explanation: dto.explanation,
         difficulty: dto.difficulty ?? 1,
         isCurrent: dto.isCurrent ?? false,
-        isArchived: false,
       },
     });
     return { id: Number(version.id) };
@@ -433,12 +431,8 @@ export class AdminService {
   }
 
   async deleteTaskVersion(id: number) {
-    await this.prisma.taskVersion.update({
+    await this.prisma.taskVersion.delete({
       where: { id: BigInt(id) },
-      data: {
-        isArchived: true,
-        isCurrent: false,
-      },
     });
     return { ok: true };
   }
