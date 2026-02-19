@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AnswerDto } from "./dto/answer.dto";
+import { buildAchievementRule, type AchievementMetrics } from "../children/achievement-rules";
 
 function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
@@ -25,23 +26,41 @@ function deepEqual(a: any, b: any): boolean {
 export class AttemptsService {
   constructor(private prisma: PrismaService) {}
 
-  private parseFinishedAttemptsThreshold(code: string) {
-    const match = code.match(/^FINISHED_(\d+)$/i);
-    if (!match) return null;
-    const value = Number(match[1]);
-    return Number.isFinite(value) ? value : null;
-  }
-
   private async awardBadges(childProfileId: bigint) {
-    const finishedAttempts = await this.prisma.attempt.count({
-      where: { childProfileId, isFinished: true },
-    });
+    const [allAttempts, finishedAttempts, scoreAgg, correctAgg, badges] = await Promise.all([
+      this.prisma.attempt.findMany({
+        where: { childProfileId },
+        select: {
+          createdAt: true,
+          isFinished: true,
+          correctCount: true,
+          totalCount: true,
+        },
+      }),
+      this.prisma.attempt.count({ where: { childProfileId, isFinished: true } }),
+      this.prisma.attempt.aggregate({ where: { childProfileId, isFinished: true }, _sum: { score: true } }),
+      this.prisma.attempt.aggregate({ where: { childProfileId, isFinished: true }, _sum: { correctCount: true } }),
+      this.prisma.badge.findMany(),
+    ]);
 
-    const badges = await this.prisma.badge.findMany();
+    const loginDays = new Set(allAttempts.map((attempt) => attempt.createdAt.toISOString().slice(0, 10))).size;
+    const totalAttempts = allAttempts.length;
+    const perfectGames = allAttempts.filter(
+      (attempt) => attempt.isFinished && attempt.totalCount > 0 && attempt.correctCount === attempt.totalCount,
+    ).length;
+
+    const metrics: AchievementMetrics = {
+      finishedAttempts,
+      totalStars: scoreAgg._sum.score ?? 0,
+      loginDays,
+      correctAnswers: correctAgg._sum.correctCount ?? 0,
+      totalAttempts,
+      perfectGames,
+    };
 
     const eligibleBadges = badges.filter((badge) => {
-      const threshold = this.parseFinishedAttemptsThreshold(badge.code);
-      return threshold !== null && finishedAttempts >= threshold;
+      const rule = buildAchievementRule(badge.code, metrics);
+      return rule ? rule.currentValue >= rule.targetValue : false;
     });
 
     if (eligibleBadges.length === 0) return;
