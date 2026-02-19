@@ -100,3 +100,134 @@
   font-size: 12px;
   opacity: 0.7;
 }
+.pageLead {
+  margin: 6px 0 14px;
+  color: #475569;
+  max-width: 900px;
+}
+
+.kpiGrid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  margin-bottom: 18px;
+}
+
+.kpiCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  display: grid;
+  gap: 4px;
+}
+
+.kpiCard span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.kpiCard strong {
+  font-size: 20px;
+}
+
+.positionBadge {
+  width: 80px;
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.warningText {
+  font-size: 12px;
+  color: #b45309;
+}
+
+.formGridVersion {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+}
+
+.infoPanel {
+  font-size: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.helperMuted {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.itemTitle {
+  font-weight: 600;
+}
+
+.itemCode {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.listGridLarge {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.listGridCompact {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.metaMuted {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.metaMutedSpaced {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.groupCard {
+  margin-bottom: 12px;
+}
+
+.taskCard {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.versionCard {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.inlineLabelCompact {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.actionsRowTop {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mt8 {
+  margin-top: 8px;
+}

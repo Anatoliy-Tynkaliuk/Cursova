@@ -654,6 +654,13 @@ export default function AdminPage() {
   return (
     <div className={styles.page}>
       <h1>Адмінка контенту</h1>
+      <p className={styles.pageLead}>Керуйте іграми, рівнями, завданнями та бейджами в одному місці. Спочатку створіть структуру (вікові групи → ігри → рівні), потім додавайте завдання та версії.</p>
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard}><span>Модулі</span><strong>{modules.length}</strong></div>
+        <div className={styles.kpiCard}><span>Ігри</span><strong>{games.length}</strong></div>
+        <div className={styles.kpiCard}><span>Рівні</span><strong>{gameLevels.length}</strong></div>
+        <div className={styles.kpiCard}><span>Завдання</span><strong>{tasks.length}</strong></div>
+      </div>
       {loading && <p>Завантаження...</p>}
       {error && <p className={styles.errorText}>{error}</p>}
       {message && <p className={styles.successText}>{message}</p>}
@@ -939,7 +946,7 @@ export default function AdminPage() {
           </select>
           <div className={styles.inlineLabel}>
             Позиція
-            <div className={styles.smallInput} style={{ display: "flex", alignItems: "center" }}>
+            <div className={styles.positionBadge}>
               {nextTaskPosition}
             </div>
           </div>
@@ -955,7 +962,7 @@ export default function AdminPage() {
             Створити завдання
           </button>
           {taskRequiresLevel && taskLevelId === "" && (
-            <div style={{ fontSize: 12, color: "#b45309" }}>
+            <div className={styles.warningText}>
               Для цієї гри вже налаштовані рівні — обери конкретний рівень.
             </div>
           )}
@@ -964,7 +971,7 @@ export default function AdminPage() {
 
       <section className={styles.sectionCard}>
         <h2>Додати версію завдання</h2>
-        <div style={{ display: "grid", gap: 12, maxWidth: 560 }}>
+        <div className={styles.formGridVersion}>
           <select
             value={taskId}
             onChange={(e) => {
@@ -984,7 +991,7 @@ export default function AdminPage() {
           </select>
 
           {selectedTaskGame && (
-            <div style={{ fontSize: 12, background: "#f5f5f5", borderRadius: 8, padding: 10 }}>
+            <div className={styles.infoPanel}>
               Тип гри для цього завдання: <b>{selectedTaskGame.gameTypeCode}</b>.
               {isTestTaskType && " Заповни запитання, варіанти відповідей і правильну відповідь."}
               {isDragTaskType && " Заповни запитання, елементи для перетягування, цілі та відповідності."}
@@ -1082,7 +1089,7 @@ export default function AdminPage() {
             />
           </label>
           {linkedTaskDifficulty !== null && (
-            <div style={{ fontSize: 12, color: "#6b7280" }}>
+            <div className={styles.helperMuted}>
               Для завдання з рівнем складність визначається автоматично: D{linkedTaskDifficulty}.
             </div>
           )}
@@ -1283,8 +1290,8 @@ export default function AdminPage() {
         <ul className={styles.listGrid}>
           {modules.map((m) => (
             <li key={m.id} className={styles.listItem}>
-              <div style={{ fontWeight: 600 }}>{m.title}</div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>{m.code}</div>
+              <div className={styles.itemTitle}>{m.title}</div>
+              <div className={styles.itemCode}>{m.code}</div>
             </li>
           ))}
         </ul>
@@ -1292,7 +1299,7 @@ export default function AdminPage() {
 
       <section className={styles.sectionSpacing}>
         <h2>Ігри</h2>
-        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 10 }}>
+        <ul className={styles.listGridLarge}>
           {games.map((g) => (
             <li key={g.id} className={styles.listItem}>
               <input
@@ -1314,10 +1321,10 @@ export default function AdminPage() {
                 }
                 rows={2}
               />
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
+              <div className={styles.metaMuted}>
                 module: {g.moduleCode} | age: {g.minAgeGroupCode}
               </div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
+              <div className={styles.metaMuted}>
                 Рівні: D1={levelsByGameDifficulty[`${g.id}:1`] ?? 0}, D2={levelsByGameDifficulty[`${g.id}:2`] ?? 0}, D3={levelsByGameDifficulty[`${g.id}:3`] ?? 0}
               </div>
               <label className={styles.inlineLabel}>
@@ -1366,12 +1373,12 @@ export default function AdminPage() {
           <p>Ще немає ігор.</p>
         ) : (
           games.map((g) => (
-            <div key={g.id} style={{ marginBottom: 12 }}>
-              <div style={{ fontWeight: 600 }}>{g.title}</div>
-              <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 6 }}>
+            <div key={g.id} className={styles.groupCard}>
+              <div className={styles.itemTitle}>{g.title}</div>
+              <ul className={styles.listGridCompact}>
                 {(groupedTasks[g.id] ?? []).map((t) => (
-                  <li key={t.id} style={{ border: "1px solid #eee", borderRadius: 6, padding: 8 }}>
-                    <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 8 }}>
+                  <li key={t.id} className={styles.taskCard}>
+                    <div className={styles.metaMutedSpaced}>
                       Рівень: {t.levelNumber ? `D${t.difficulty} • ${t.levelNumber}` : "без рівня"}
                     </div>
                     <div className={styles.inlineLabel}>
@@ -1395,7 +1402,7 @@ export default function AdminPage() {
                             </option>
                           ))) || null}
                       </select>
-                      <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <label className={styles.inlineLabelCompact}>
                         Позиція
                         <input
                           type="number"
@@ -1411,7 +1418,7 @@ export default function AdminPage() {
                           className={styles.smallInput}
                         />
                       </label>
-                      <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <label className={styles.inlineLabelCompact}>
                         <input
                           type="checkbox"
                           checked={t.isActive}
@@ -1426,15 +1433,15 @@ export default function AdminPage() {
                         Активне
                       </label>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <div className={styles.actionsRowTop}>
                       <button onClick={() => onUpdateTask(t)}>Зберегти</button>
                       <button onClick={() => onDeleteTask(t.id)}>Архівувати</button>
                     </div>
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>Версії:</div>
-                      <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 6 }}>
+                    <div className={styles.mt8}>
+                      <div className={styles.metaMuted}>Версії:</div>
+                      <ul className={styles.listGridCompact}>
                         {(groupedTaskVersions[t.id] ?? []).map((v) => (
-                          <li key={v.id} style={{ border: "1px solid #ddd", borderRadius: 6, padding: 8 }}>
+                          <li key={v.id} className={styles.versionCard}>
                             <input
                               value={v.prompt}
                               onChange={(e) =>
@@ -1477,7 +1484,7 @@ export default function AdminPage() {
                               }
                               rows={2}
                             />
-                            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                            <label className={styles.inlineLabelCompact}>
                               <input
                                 type="checkbox"
                                 checked={v.isCurrent}
