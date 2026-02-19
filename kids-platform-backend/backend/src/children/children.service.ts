@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateChildDto } from "./dto";
 import { buildAchievementRule, type AchievementMetrics } from "./achievement-rules";
+import { calculateAchievementMetrics } from "./achievement-metrics";
 
 function randomCode(len = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -216,7 +217,7 @@ export class ChildrenService {
       if (!link) throw new ForbiddenException("Not your child");
     }
 
-    const [allAttempts, finishedAttempts, scoreAgg, correctAgg, badges, earned] = await Promise.all([
+    const [allAttempts, badges, earned] = await Promise.all([
       this.prisma.attempt.findMany({
         where: { childProfileId: child.id },
         select: {
@@ -224,46 +225,25 @@ export class ChildrenService {
           isFinished: true,
           correctCount: true,
           totalCount: true,
+          score: true,
+          levelId: true,
         },
-      }),
-      this.prisma.attempt.count({ where: { childProfileId: child.id, isFinished: true } }),
-      this.prisma.attempt.aggregate({
-        where: { childProfileId: child.id, isFinished: true },
-        _sum: { score: true },
-      }),
-      this.prisma.attempt.aggregate({
-        where: { childProfileId: child.id, isFinished: true },
-        _sum: { correctCount: true },
       }),
       this.prisma.badge.findMany({ orderBy: { id: "asc" } }),
       this.prisma.childBadge.findMany({ where: { childProfileId: child.id } }),
     ]);
 
-    const totalStars = scoreAgg._sum.score ?? 0;
-    const loginDays = new Set(allAttempts.map((attempt) => attempt.createdAt.toISOString().slice(0, 10))).size;
-    const totalAttempts = allAttempts.length;
-    const perfectGames = allAttempts.filter(
-      (attempt) => attempt.isFinished && attempt.totalCount > 0 && attempt.correctCount === attempt.totalCount,
-    ).length;
-
-    const metrics: AchievementMetrics = {
-      finishedAttempts,
-      totalStars,
-      loginDays,
-      correctAnswers: correctAgg._sum.correctCount ?? 0,
-      totalAttempts,
-      perfectGames,
-    };
+    const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
 
     const earnedSet = new Set(earned.map((b) => Number(b.badgeId)));
 
     return {
-      finishedAttempts,
-      totalStars,
-      loginDays,
-      totalAttempts,
+      finishedAttempts: metrics.finishedAttempts,
+      totalStars: metrics.totalStars,
+      loginDays: metrics.loginDays,
+      totalAttempts: metrics.totalAttempts,
       correctAnswers: metrics.correctAnswers,
-      perfectGames,
+      perfectGames: metrics.perfectGames,
       badges: badges.map((badge) => {
         const rule = buildAchievementRule(badge.code, metrics);
         return {
