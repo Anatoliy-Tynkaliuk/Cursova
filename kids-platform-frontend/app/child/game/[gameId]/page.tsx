@@ -113,6 +113,7 @@ export default function GamePage() {
   const [dragAssignments, setDragAssignments] = useState<Record<string, string[]>>({});
   const [dragHoverTarget, setDragHoverTarget] = useState<string | null>(null);
   const [selectedDragItem, setSelectedDragItem] = useState<string | null>(null);
+  const [sequenceOrder, setSequenceOrder] = useState<string[]>([]);
 
   const levelsHref =
     normalizedDifficulty !== null
@@ -234,7 +235,6 @@ export default function GamePage() {
     const d = current?.data;
     if (!d) return [];
     if (Array.isArray(d.options)) return d.options;
-    if (Array.isArray(d.items)) return d.items;
     return [];
   }, [current]);
 
@@ -251,11 +251,21 @@ export default function GamePage() {
   }, [current]);
 
   const isDragTask = dragItems.length > 0 && dragTargets.length > 0;
+  const isSequenceTask = !isDragTask && dragItems.length > 0;
 
   const availableDragItems = useMemo(() => {
     const usedItems = new Set(Object.values(dragAssignments).flat());
     return dragItems.filter((item) => !usedItems.has(item));
   }, [dragAssignments, dragItems]);
+
+  useEffect(() => {
+    if (isSequenceTask) {
+      setSequenceOrder(dragItems);
+      return;
+    }
+
+    setSequenceOrder([]);
+  }, [dragItems, isSequenceTask, current?.taskVersionId]);
 
   const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : "0";
   const progressValue = totalTasks
@@ -331,6 +341,25 @@ export default function GamePage() {
 
     sendAnswer({ pairs });
   }
+
+  function moveSequenceItem(fromIndex: number, toIndex: number) {
+    setSequenceOrder((prev) => {
+      if (fromIndex < 0 || toIndex < 0 || fromIndex >= prev.length || toIndex >= prev.length) {
+        return prev;
+      }
+
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  }
+
+  function submitSequenceAnswer() {
+    if (!isSequenceTask || sequenceOrder.length === 0) return;
+    sendAnswer({ order: sequenceOrder });
+  }
+
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
     if (pickedIdx !== null) return; 
@@ -392,6 +421,7 @@ export default function GamePage() {
           setDragAssignments({});
           setSelectedDragItem(null);
           setDragHoverTarget(null);
+          setSequenceOrder([]);
           setMsg("");
         }
 
@@ -565,6 +595,44 @@ export default function GamePage() {
                     onClick={submitDragAnswer}
                   >
                     Перевірити відповідність
+                  </button>
+                </>
+              ) : isSequenceTask ? (
+                <>
+                  <div className={styles.sequenceWrap}>
+                    {sequenceOrder.map((item, index) => (
+                      <div key={`${item}-${index}`} className={styles.sequenceItem}>
+                        <span className={styles.sequenceIndex}>{index + 1}</span>
+                        <span className={styles.sequenceValue}>{item}</span>
+                        <div className={styles.sequenceActions}>
+                          <button
+                            type="button"
+                            className={styles.sequenceMoveBtn}
+                            disabled={loading || pickedIdx !== null || index === 0}
+                            onClick={() => moveSequenceItem(index, index - 1)}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.sequenceMoveBtn}
+                            disabled={loading || pickedIdx !== null || index === sequenceOrder.length - 1}
+                            onClick={() => moveSequenceItem(index, index + 1)}
+                          >
+                            ↓
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.sendBtn}
+                    disabled={loading || pickedIdx !== null || sequenceOrder.length === 0}
+                    onClick={submitSequenceAnswer}
+                  >
+                    Перевірити порядок
                   </button>
                 </>
               ) : options.length > 0 ? (

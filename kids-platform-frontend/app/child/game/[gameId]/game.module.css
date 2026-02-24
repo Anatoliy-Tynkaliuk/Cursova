@@ -415,6 +415,65 @@
   border-color: rgba(255, 90, 110, 0.55);
 }
 
+
+.sequenceWrap {
+  margin: 18px auto 0;
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  gap: 10px;
+}
+
+.sequenceItem {
+  min-height: 64px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 6, 20, 0.24);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.sequenceIndex {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sequenceValue {
+  font-size: 22px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.sequenceActions {
+  display: flex;
+  gap: 8px;
+}
+
+.sequenceMoveBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(10, 6, 20, 0.18);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 20px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.sequenceMoveBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 /* ===== SUMMARY ===== */
 
 .summary {

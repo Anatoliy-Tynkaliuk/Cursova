@@ -88,6 +88,8 @@ export default function AdminPage() {
   const [dragItemsText, setDragItemsText] = useState("");
   const [dragTargetsText, setDragTargetsText] = useState("");
   const [dragPairsText, setDragPairsText] = useState("");
+  const [sequenceItemsText, setSequenceItemsText] = useState("");
+  const [sequenceOrderText, setSequenceOrderText] = useState("");
   const [taskDataJson, setTaskDataJson] = useState("{\"options\":[]}");
   const [taskCorrectJson, setTaskCorrectJson] = useState("{\"answer\":\"\"}");
   const [taskExplanation, setTaskExplanation] = useState("");
@@ -142,6 +144,7 @@ export default function AdminPage() {
   const selectedTaskTypeCode = (selectedTaskGame?.gameTypeCode ?? "").toLowerCase();
   const isTestTaskType = selectedTaskTypeCode === "test";
   const isDragTaskType = selectedTaskTypeCode === "drag";
+  const isSequenceTaskType = selectedTaskTypeCode === "sequence";
 
   const taskVersionFormValid = taskId !== "" && taskPrompt.trim().length > 0;
   const badgeFormValid = badgeCode.trim().length > 0 && badgeTitle.trim().length > 0;
@@ -539,6 +542,42 @@ export default function AdminPage() {
 
         dataJson = { items, targets };
         correctJson = { pairs };
+      } else if (isSequenceTaskType) {
+        const items = sequenceItemsText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+        const order = sequenceOrderText
+          .split("\n")
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+        if (items.length < 2) {
+          throw new Error("Для порядку додай мінімум 2 елементи");
+        }
+
+        if (order.length !== items.length) {
+          throw new Error("Кількість елементів у правильному порядку має збігатися зі списком елементів");
+        }
+
+        const itemSet = new Set(items);
+        if (itemSet.size !== items.length) {
+          throw new Error("Елементи для порядку повинні бути унікальними");
+        }
+
+        const orderSet = new Set(order);
+        if (orderSet.size !== order.length) {
+          throw new Error("Елементи правильного порядку повинні бути унікальними");
+        }
+
+        const hasUnknownOrderItems = order.some((item) => !itemSet.has(item));
+        if (hasUnknownOrderItems) {
+          throw new Error("У правильному порядку є елементи, яких немає в списку");
+        }
+
+        dataJson = { items };
+        correctJson = { order };
       } else {
         dataJson = taskDataJson.trim() ? JSON.parse(taskDataJson) : {};
         correctJson = taskCorrectJson.trim() ? JSON.parse(taskCorrectJson) : {};
@@ -561,6 +600,8 @@ export default function AdminPage() {
       setDragItemsText("");
       setDragTargetsText("");
       setDragPairsText("");
+      setSequenceItemsText("");
+      setSequenceOrderText("");
       setTaskDataJson("{\"options\":[]}");
       setTaskCorrectJson("{\"answer\":\"\"}");
       setTaskExplanation("");
@@ -997,6 +1038,7 @@ export default function AdminPage() {
               Тип гри для цього завдання: <b>{selectedTaskGame.gameTypeCode}</b>.
               {isTestTaskType && " Заповни запитання, варіанти відповідей і правильну відповідь."}
               {isDragTaskType && " Заповни запитання, елементи для перетягування, цілі та відповідності."}
+              {isSequenceTaskType && " Заповни інструкцію, список елементів та правильний порядок."}
             </div>
           )}
 
@@ -1012,7 +1054,7 @@ export default function AdminPage() {
           </label>
 
           <input
-            placeholder={isTestTaskType ? "Запитання тесту" : isDragTaskType ? "Інструкція для перетягування" : "Prompt"}
+            placeholder={isTestTaskType ? "Запитання тесту" : isDragTaskType ? "Інструкція для перетягування" : isSequenceTaskType ? "Інструкція для порядку" : "Prompt"}
             value={taskPrompt}
             onChange={(e) => setTaskPrompt(e.target.value)}
           />
@@ -1056,7 +1098,24 @@ export default function AdminPage() {
             </>
           )}
 
-          {!isTestTaskType && !isDragTaskType && (
+          {isSequenceTaskType && (
+            <>
+              <textarea
+                placeholder={"Елементи для впорядкування (кожен з нового рядка)\nНаприклад:\n1\n3\n2"}
+                value={sequenceItemsText}
+                onChange={(e) => setSequenceItemsText(e.target.value)}
+                rows={4}
+              />
+              <textarea
+                placeholder={"Правильний порядок (кожен з нового рядка)\nНаприклад:\n1\n2\n3"}
+                value={sequenceOrderText}
+                onChange={(e) => setSequenceOrderText(e.target.value)}
+                rows={4}
+              />
+            </>
+          )}
+
+          {!isTestTaskType && !isDragTaskType && !isSequenceTaskType && (
             <>
               <textarea
                 placeholder="dataJson (JSON)"

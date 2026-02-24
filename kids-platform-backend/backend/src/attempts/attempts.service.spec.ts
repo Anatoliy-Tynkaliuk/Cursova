@@ -1,4 +1,22 @@
-import { AttemptsService } from "./attempts.service";
+import { answersAreEquivalent, AttemptsService } from "./attempts.service";
+
+describe("answersAreEquivalent", () => {
+  it("matches sequence answers by ordered items", () => {
+    expect(
+      answersAreEquivalent({ order: ["1", "2", "3"] }, { order: ["1", "2", "3"] }),
+    ).toBe(true);
+
+    expect(
+      answersAreEquivalent({ order: ["1", "3", "2"] }, { order: ["1", "2", "3"] }),
+    ).toBe(false);
+  });
+
+  it("normalizes sequence items to strings and trims spaces", () => {
+    expect(
+      answersAreEquivalent({ order: [1, " 2", "3 "] }, { order: ["1", "2", "3"] }),
+    ).toBe(true);
+  });
+});
 
 describe("AttemptsService unlockNextLevelIfNeeded", () => {
   function createService(prisma: any) {
