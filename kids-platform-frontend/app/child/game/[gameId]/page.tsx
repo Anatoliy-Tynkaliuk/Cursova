@@ -391,6 +391,18 @@ export default function GamePage() {
     sendAnswer({ order: sequenceSlots });
   }
 
+  function handleSequenceAnswerClick(item: string) {
+    if (loading || pickedIdx !== null) return;
+
+    const firstEmptyIndex = sequenceSlots.findIndex((slotItem) => slotItem === null);
+    if (firstEmptyIndex === -1) {
+      setSelectedSequenceItem((prev) => (prev === item ? null : item));
+      return;
+    }
+
+    assignSequenceItem(firstEmptyIndex, item);
+  }
+
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
     if (pickedIdx !== null) return; 
@@ -669,7 +681,7 @@ export default function GamePage() {
             draggable={!loading}
             disabled={loading || pickedIdx !== null}
             onDragStart={(e) => handleSequenceItemDragStart(e, item)}
-            onClick={() => setSelectedSequenceItem((prev) => (prev === item ? null : item))}
+            onClick={() => handleSequenceAnswerClick(item)}
           >
             {item}
           </button>
