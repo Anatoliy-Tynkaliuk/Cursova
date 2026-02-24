@@ -25,6 +25,15 @@ function deepEqual(a: any, b: any): boolean {
 
 type DragPair = { item: string; target: string };
 
+function normalizeSequenceOrderValue(value: unknown): string[] | null {
+  if (!value || typeof value !== "object") return null;
+
+  const order = (value as { order?: unknown }).order;
+  if (!Array.isArray(order)) return null;
+
+  return order.map((item) => String(item).trim());
+}
+
 function normalizeDragPairsValue(value: unknown): DragPair[] | null {
   if (!value || typeof value !== "object") return null;
 
@@ -58,9 +67,15 @@ function normalizeDragPairsValue(value: unknown): DragPair[] | null {
 export function answersAreEquivalent(userAnswer: unknown, correctAnswer: unknown): boolean {
   const normalizedUserPairs = normalizeDragPairsValue(userAnswer);
   const normalizedCorrectPairs = normalizeDragPairsValue(correctAnswer);
+  const normalizedUserSequence = normalizeSequenceOrderValue(userAnswer);
+  const normalizedCorrectSequence = normalizeSequenceOrderValue(correctAnswer);
 
   if (normalizedUserPairs && normalizedCorrectPairs) {
     return deepEqual(normalizedUserPairs, normalizedCorrectPairs);
+  }
+
+  if (normalizedUserSequence && normalizedCorrectSequence) {
+    return deepEqual(normalizedUserSequence, normalizedCorrectSequence);
   }
 
   return deepEqual(userAnswer, correctAnswer);

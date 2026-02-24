@@ -113,6 +113,8 @@ export default function GamePage() {
   const [dragAssignments, setDragAssignments] = useState<Record<string, string[]>>({});
   const [dragHoverTarget, setDragHoverTarget] = useState<string | null>(null);
   const [selectedDragItem, setSelectedDragItem] = useState<string | null>(null);
+  const [sequenceSlots, setSequenceSlots] = useState<Array<string | null>>([]);
+  const [selectedSequenceItem, setSelectedSequenceItem] = useState<string | null>(null);
 
   const levelsHref =
     normalizedDifficulty !== null
@@ -234,7 +236,6 @@ export default function GamePage() {
     const d = current?.data;
     if (!d) return [];
     if (Array.isArray(d.options)) return d.options;
-    if (Array.isArray(d.items)) return d.items;
     return [];
   }, [current]);
 
@@ -251,11 +252,28 @@ export default function GamePage() {
   }, [current]);
 
   const isDragTask = dragItems.length > 0 && dragTargets.length > 0;
+  const isSequenceTask = !isDragTask && dragItems.length > 0;
 
   const availableDragItems = useMemo(() => {
     const usedItems = new Set(Object.values(dragAssignments).flat());
     return dragItems.filter((item) => !usedItems.has(item));
   }, [dragAssignments, dragItems]);
+
+  useEffect(() => {
+    if (isSequenceTask) {
+      setSequenceSlots(dragItems.map(() => null));
+      setSelectedSequenceItem(null);
+      return;
+    }
+
+    setSequenceSlots([]);
+    setSelectedSequenceItem(null);
+  }, [dragItems, isSequenceTask, current?.taskVersionId]);
+
+  const availableSequenceItems = useMemo(() => {
+    const usedItems = new Set(sequenceSlots.filter((item): item is string => item !== null));
+    return dragItems.filter((item) => !usedItems.has(item));
+  }, [dragItems, sequenceSlots]);
 
   const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : "0";
   const progressValue = totalTasks
@@ -331,6 +349,48 @@ export default function GamePage() {
 
     sendAnswer({ pairs });
   }
+
+  function assignSequenceItem(slotIndex: number, item: string) {
+    setSequenceSlots((prev) => {
+      if (slotIndex < 0 || slotIndex >= prev.length) return prev;
+
+      const next = prev.map((slotItem) => (slotItem === item ? null : slotItem));
+      next[slotIndex] = item;
+      return next;
+    });
+    setSelectedSequenceItem(null);
+  }
+
+  function clearSequenceSlot(slotIndex: number) {
+    setSequenceSlots((prev) => {
+      if (slotIndex < 0 || slotIndex >= prev.length) return prev;
+      if (prev[slotIndex] === null) return prev;
+
+      const next = [...prev];
+      next[slotIndex] = null;
+      return next;
+    });
+  }
+
+  function handleSequenceItemDragStart(event: DragEvent<HTMLButtonElement>, item: string) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", item);
+    setSelectedSequenceItem(item);
+  }
+
+  function handleSequenceDrop(event: DragEvent<HTMLButtonElement>, slotIndex: number) {
+    event.preventDefault();
+    const droppedItem = event.dataTransfer.getData("text/plain");
+    if (!droppedItem) return;
+    assignSequenceItem(slotIndex, droppedItem);
+  }
+
+  function submitSequenceAnswer() {
+    if (!isSequenceTask || sequenceSlots.length === 0) return;
+    if (sequenceSlots.some((item) => item === null)) return;
+    sendAnswer({ order: sequenceSlots });
+  }
+
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
     if (pickedIdx !== null) return; 
@@ -392,6 +452,8 @@ export default function GamePage() {
           setDragAssignments({});
           setSelectedDragItem(null);
           setDragHoverTarget(null);
+          setSequenceSlots([]);
+          setSelectedSequenceItem(null);
           setMsg("");
         }
 
@@ -567,7 +629,84 @@ export default function GamePage() {
                     Перевірити відповідність
                   </button>
                 </>
-              ) : options.length > 0 ? (
+              ) : isSequenceTask ? (
+  <>
+    <div className={styles.sequencePage}>
+      <h2 className={styles.sequenceTitle}>впорядкуй</h2>
+
+      {/* Слоти-підкреслення */}
+      <div className={styles.sequenceSlots}>
+        {sequenceSlots.map((item, index) => (
+          <button
+            key={`slot-${index}`}
+            type="button"
+            className={`${styles.underlineSlot} ${item ? styles.underlineSlotFilled : ""}`}
+            disabled={loading || pickedIdx !== null}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleSequenceDrop(e, index)}
+            onClick={() => {
+              // якщо вибраний варіант — вставляємо у цей слот
+              if (selectedSequenceItem) {
+                assignSequenceItem(index, selectedSequenceItem);
+                return;
+              }
+              // якщо слот заповнений — видаляємо
+              if (item) clearSequenceSlot(index);
+            }}
+          >
+            <span className={styles.slotText}>{item ?? ""}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Варіанти по центру, вертикально */}
+      <div className={styles.sequenceAnswers}>
+        {availableSequenceItems.map((item) => (
+          <button
+            key={item}
+            type="button"
+            className={`${styles.answerBtn} ${selectedSequenceItem === item ? styles.answerBtnSelected : ""}`}
+            draggable={!loading}
+            disabled={loading || pickedIdx !== null}
+            onDragStart={(e) => handleSequenceItemDragStart(e, item)}
+            onClick={() => setSelectedSequenceItem((prev) => (prev === item ? null : item))}
+          >
+            {item}
+          </button>
+        ))}
+
+        {availableSequenceItems.length === 0 && (
+          <div className={styles.answersHint}>Всі елементи вже розставлені.</div>
+        )}
+      </div>
+
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.sendBtn}
+          disabled={
+            loading ||
+            pickedIdx !== null ||
+            sequenceSlots.length === 0 ||
+            sequenceSlots.some((x) => x === null)
+          }
+          onClick={submitSequenceAnswer}
+        >
+          Перевірити порядок
+        </button>
+
+        <button
+          type="button"
+          className={styles.backBtn}
+          disabled={loading}
+          onClick={() => (window.location.href = "/child/levels")}
+        >
+          До списку рівнів
+        </button>
+      </div>
+    </div>
+  </>
+) : options.length > 0 ? (
                 <div className={styles.answers}>
                   {options.map((opt, idx) => {
                     const isPicked = pickedIdx === idx;
