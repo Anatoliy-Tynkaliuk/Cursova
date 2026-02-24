@@ -113,7 +113,8 @@ export default function GamePage() {
   const [dragAssignments, setDragAssignments] = useState<Record<string, string[]>>({});
   const [dragHoverTarget, setDragHoverTarget] = useState<string | null>(null);
   const [selectedDragItem, setSelectedDragItem] = useState<string | null>(null);
-  const [sequenceOrder, setSequenceOrder] = useState<string[]>([]);
+  const [sequenceSlots, setSequenceSlots] = useState<Array<string | null>>([]);
+  const [selectedSequenceItem, setSelectedSequenceItem] = useState<string | null>(null);
 
   const levelsHref =
     normalizedDifficulty !== null
@@ -260,12 +261,19 @@ export default function GamePage() {
 
   useEffect(() => {
     if (isSequenceTask) {
-      setSequenceOrder(dragItems);
+      setSequenceSlots(dragItems.map(() => null));
+      setSelectedSequenceItem(null);
       return;
     }
 
-    setSequenceOrder([]);
+    setSequenceSlots([]);
+    setSelectedSequenceItem(null);
   }, [dragItems, isSequenceTask, current?.taskVersionId]);
+
+  const availableSequenceItems = useMemo(() => {
+    const usedItems = new Set(sequenceSlots.filter((item): item is string => item !== null));
+    return dragItems.filter((item) => !usedItems.has(item));
+  }, [dragItems, sequenceSlots]);
 
   const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : "0";
   const progressValue = totalTasks
@@ -342,22 +350,45 @@ export default function GamePage() {
     sendAnswer({ pairs });
   }
 
-  function moveSequenceItem(fromIndex: number, toIndex: number) {
-    setSequenceOrder((prev) => {
-      if (fromIndex < 0 || toIndex < 0 || fromIndex >= prev.length || toIndex >= prev.length) {
-        return prev;
-      }
+  function assignSequenceItem(slotIndex: number, item: string) {
+    setSequenceSlots((prev) => {
+      if (slotIndex < 0 || slotIndex >= prev.length) return prev;
+
+      const next = prev.map((slotItem) => (slotItem === item ? null : slotItem));
+      next[slotIndex] = item;
+      return next;
+    });
+    setSelectedSequenceItem(null);
+  }
+
+  function clearSequenceSlot(slotIndex: number) {
+    setSequenceSlots((prev) => {
+      if (slotIndex < 0 || slotIndex >= prev.length) return prev;
+      if (prev[slotIndex] === null) return prev;
 
       const next = [...prev];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
+      next[slotIndex] = null;
       return next;
     });
   }
 
+  function handleSequenceItemDragStart(event: DragEvent<HTMLButtonElement>, item: string) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", item);
+    setSelectedSequenceItem(item);
+  }
+
+  function handleSequenceDrop(event: DragEvent<HTMLButtonElement>, slotIndex: number) {
+    event.preventDefault();
+    const droppedItem = event.dataTransfer.getData("text/plain");
+    if (!droppedItem) return;
+    assignSequenceItem(slotIndex, droppedItem);
+  }
+
   function submitSequenceAnswer() {
-    if (!isSequenceTask || sequenceOrder.length === 0) return;
-    sendAnswer({ order: sequenceOrder });
+    if (!isSequenceTask || sequenceSlots.length === 0) return;
+    if (sequenceSlots.some((item) => item === null)) return;
+    sendAnswer({ order: sequenceSlots });
   }
 
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
@@ -421,7 +452,8 @@ export default function GamePage() {
           setDragAssignments({});
           setSelectedDragItem(null);
           setDragHoverTarget(null);
-          setSequenceOrder([]);
+          setSequenceSlots([]);
+          setSelectedSequenceItem(null);
           setMsg("");
         }
 
@@ -599,37 +631,63 @@ export default function GamePage() {
                 </>
               ) : isSequenceTask ? (
                 <>
-                  <div className={styles.sequenceWrap}>
-                    {sequenceOrder.map((item, index) => (
-                      <div key={`${item}-${index}`} className={styles.sequenceItem}>
-                        <span className={styles.sequenceIndex}>{index + 1}</span>
-                        <span className={styles.sequenceValue}>{item}</span>
-                        <div className={styles.sequenceActions}>
+                  <div className={styles.sequenceLayout}>
+                    <div className={styles.sequenceBank}>
+                      <div className={styles.dragColumnTitle}>Варіанти</div>
+                      <div className={styles.dropTargetsList}>
+                        {availableSequenceItems.map((item) => (
                           <button
+                            key={item}
                             type="button"
-                            className={styles.sequenceMoveBtn}
-                            disabled={loading || pickedIdx !== null || index === 0}
-                            onClick={() => moveSequenceItem(index, index - 1)}
+                            className={`${styles.dragItemCard} ${selectedSequenceItem === item ? styles.dragItemSelected : ""}`}
+                            draggable={!loading}
+                            disabled={loading || pickedIdx !== null}
+                            onDragStart={(event) => handleSequenceItemDragStart(event, item)}
+                            onClick={() => setSelectedSequenceItem((prev) => (prev === item ? null : item))}
                           >
-                            ↑
+                            {item}
                           </button>
-                          <button
-                            type="button"
-                            className={styles.sequenceMoveBtn}
-                            disabled={loading || pickedIdx !== null || index === sequenceOrder.length - 1}
-                            onClick={() => moveSequenceItem(index, index + 1)}
-                          >
-                            ↓
-                          </button>
-                        </div>
+                        ))}
+
+                        {availableSequenceItems.length === 0 && (
+                          <div className={styles.dragHint}>Всі елементи вже розставлені.</div>
+                        )}
                       </div>
-                    ))}
+                    </div>
+
+                    <div className={styles.sequenceSlotsWrap}>
+                      <div className={styles.dragColumnTitle}>Правильна послідовність</div>
+                      <div className={styles.sequenceWrap}>
+                        {sequenceSlots.map((item, index) => (
+                          <button
+                            key={`slot-${index}`}
+                            type="button"
+                            className={`${styles.sequenceSlot} ${item ? styles.sequenceSlotFilled : ""}`}
+                            disabled={loading || pickedIdx !== null}
+                            onDragOver={(event) => event.preventDefault()}
+                            onDrop={(event) => handleSequenceDrop(event, index)}
+                            onClick={() => {
+                              if (selectedSequenceItem) {
+                                assignSequenceItem(index, selectedSequenceItem);
+                                return;
+                              }
+                              if (item) {
+                                clearSequenceSlot(index);
+                              }
+                            }}
+                          >
+                            <span className={styles.sequenceIndex}>{index + 1}</span>
+                            <span className={styles.sequenceValue}>{item ?? "Встав сюди"}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <button
                     type="button"
                     className={styles.sendBtn}
-                    disabled={loading || pickedIdx !== null || sequenceOrder.length === 0}
+                    disabled={loading || pickedIdx !== null || sequenceSlots.length === 0 || sequenceSlots.some((item) => item === null)}
                     onClick={submitSequenceAnswer}
                   >
                     Перевірити порядок

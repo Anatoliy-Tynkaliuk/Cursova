@@ -416,24 +416,47 @@
 }
 
 
-.sequenceWrap {
-  margin: 18px auto 0;
-  width: 100%;
-  max-width: 760px;
+.sequenceLayout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.sequenceBank {
   display: grid;
   gap: 10px;
 }
 
-.sequenceItem {
+.sequenceSlotsWrap {
+  display: grid;
+  gap: 10px;
+}
+
+.sequenceWrap {
+  width: 100%;
+  max-width: 520px;
+  display: grid;
+  gap: 10px;
+}
+
+.sequenceSlot {
   min-height: 64px;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(10, 6, 20, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(76, 44, 140, 0.38);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr;
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
+  color: rgba(255, 255, 255, 0.96);
+  text-align: left;
+}
+
+.sequenceSlotFilled {
+  background: rgba(96, 58, 170, 0.52);
+  border-color: rgba(182, 146, 255, 0.62);
 }
 
 .sequenceIndex {
@@ -448,31 +471,9 @@
 }
 
 .sequenceValue {
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 900;
   text-align: left;
-}
-
-.sequenceActions {
-  display: flex;
-  gap: 8px;
-}
-
-.sequenceMoveBtn {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: rgba(10, 6, 20, 0.18);
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 20px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.sequenceMoveBtn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 /* ===== SUMMARY ===== */
 
@@ -735,6 +736,7 @@
   .question { font-size: 36px; }
   .answerBtn { height: 68px; }
   .dragLayout { grid-template-columns: 1fr; }
+  .sequenceLayout { grid-template-columns: 1fr; }
   .dragLeftColumn,
   .dragRightColumn { order: initial; }
 }
