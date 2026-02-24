@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   createAdminGame,
+  createAdminGameType,
   createAdminGameLevel,
   createAdminAgeGroup,
   createAdminBadge,
@@ -62,6 +63,12 @@ export default function AdminPage() {
   const [ageGroupSortOrder, setAgeGroupSortOrder] = useState(1);
   const [ageGroupIsActive, setAgeGroupIsActive] = useState(true);
 
+  const [newGameTypeCode, setNewGameTypeCode] = useState("sequence");
+  const [newGameTypeTitle, setNewGameTypeTitle] = useState("Порядок (Sequence)");
+  const [newGameTypeDescription, setNewGameTypeDescription] = useState("Розташувати елементи у правильній послідовності");
+  const [newGameTypeIcon, setNewGameTypeIcon] = useState("🔢");
+  const [newGameTypeIsActive, setNewGameTypeIsActive] = useState(true);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [moduleId, setModuleId] = useState<number | "">("");
@@ -99,6 +106,8 @@ export default function AdminPage() {
   const [badgeCode, setBadgeCode] = useState("");
   const [badgeTitle, setBadgeTitle] = useState("");
   const [badgeDescription, setBadgeDescription] = useState("");
+
+  const gameTypeFormValid = newGameTypeCode.trim().length > 0 && newGameTypeTitle.trim().length > 0;
 
   const ageGroupFormValid =
     ageGroupCode.trim().length > 0 &&
@@ -250,6 +259,33 @@ export default function AdminPage() {
       setTaskDifficulty(linkedTaskDifficulty);
     }
   }, [linkedTaskDifficulty]);
+
+  async function onCreateGameType() {
+    if (!gameTypeFormValid) return;
+    setError(null);
+    setMessage(null);
+    try {
+      const normalizedCode = newGameTypeCode.trim().toLowerCase();
+      const exists = gameTypes.some((item) => item.code.toLowerCase() === normalizedCode);
+      if (exists) {
+        throw new Error(`Тип гри з кодом ${normalizedCode} вже існує`);
+      }
+
+      await createAdminGameType({
+        code: normalizedCode,
+        title: newGameTypeTitle.trim(),
+        description: newGameTypeDescription.trim() || undefined,
+        icon: newGameTypeIcon.trim() || undefined,
+        isActive: newGameTypeIsActive,
+      });
+
+      setMessage("Тип гри створено.");
+      const gameTypesData = await getAdminGameTypes();
+      setGameTypes(gameTypesData);
+    } catch (e: any) {
+      setError(e.message ?? "Помилка створення типу гри");
+    }
+  }
 
   async function onCreateAgeGroup() {
     if (!ageGroupFormValid) return;
@@ -760,6 +796,47 @@ export default function AdminPage() {
           <button disabled={!ageGroupFormValid} onClick={onCreateAgeGroup}>
             Створити вікову групу
           </button>
+        </div>
+      </section>
+
+      <section className={styles.sectionCard}>
+        <h2>Додати тип гри</h2>
+        <div className={styles.formGrid}>
+          <input
+            placeholder="Код (наприклад sequence)"
+            value={newGameTypeCode}
+            onChange={(e) => setNewGameTypeCode(e.target.value)}
+          />
+          <input
+            placeholder="Назва типу гри"
+            value={newGameTypeTitle}
+            onChange={(e) => setNewGameTypeTitle(e.target.value)}
+          />
+          <input
+            placeholder="Іконка (необов'язково)"
+            value={newGameTypeIcon}
+            onChange={(e) => setNewGameTypeIcon(e.target.value)}
+          />
+          <textarea
+            placeholder="Опис (необов'язково)"
+            value={newGameTypeDescription}
+            onChange={(e) => setNewGameTypeDescription(e.target.value)}
+            rows={3}
+          />
+          <label className={styles.inlineLabel}>
+            <input
+              type="checkbox"
+              checked={newGameTypeIsActive}
+              onChange={(e) => setNewGameTypeIsActive(e.target.checked)}
+            />
+            Активний
+          </label>
+          <button disabled={!gameTypeFormValid} onClick={onCreateGameType}>
+            Створити тип гри
+          </button>
+        </div>
+        <div className={styles.helperMuted}>
+          Для ігор на послідовність використовуй код <b>sequence</b>.
         </div>
       </section>
 
