@@ -63,12 +63,6 @@ export default function AdminPage() {
   const [ageGroupSortOrder, setAgeGroupSortOrder] = useState(1);
   const [ageGroupIsActive, setAgeGroupIsActive] = useState(true);
 
-  const [newGameTypeCode, setNewGameTypeCode] = useState("sequence");
-  const [newGameTypeTitle, setNewGameTypeTitle] = useState("Порядок (Sequence)");
-  const [newGameTypeDescription, setNewGameTypeDescription] = useState("Розташувати елементи у правильній послідовності");
-  const [newGameTypeIcon, setNewGameTypeIcon] = useState("🔢");
-  const [newGameTypeIsActive, setNewGameTypeIsActive] = useState(true);
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [moduleId, setModuleId] = useState<number | "">("");
@@ -107,8 +101,6 @@ export default function AdminPage() {
   const [badgeTitle, setBadgeTitle] = useState("");
   const [badgeDescription, setBadgeDescription] = useState("");
 
-  const gameTypeFormValid = newGameTypeCode.trim().length > 0 && newGameTypeTitle.trim().length > 0;
-
   const ageGroupFormValid =
     ageGroupCode.trim().length > 0 &&
     ageGroupTitle.trim().length > 0 &&
@@ -119,6 +111,29 @@ export default function AdminPage() {
     moduleId !== "" &&
     gameTypeId !== "" &&
     minAgeGroupId !== "";
+
+  const sequenceGameType = useMemo(
+    () => gameTypes.find((item) => item.code.toLowerCase() === "sequence") ?? null,
+    [gameTypes],
+  );
+
+  const gameTypeSelectOptions = useMemo(() => {
+    if (sequenceGameType) {
+      return gameTypes;
+    }
+
+    return [
+      ...gameTypes,
+      {
+        id: -1,
+        code: "sequence",
+        title: "Порядок (Sequence)",
+        description: "Розташувати елементи у правильній послідовності",
+        icon: "🔢",
+        isActive: true,
+      },
+    ];
+  }, [gameTypes, sequenceGameType]);
 
   const levelFormValid = levelGameId !== "" && levelTitle.trim().length > 0 && [1, 2, 3].includes(levelDifficulty);
   const levelsByGameDifficulty = useMemo(() => {
@@ -260,33 +275,6 @@ export default function AdminPage() {
     }
   }, [linkedTaskDifficulty]);
 
-  async function onCreateGameType() {
-    if (!gameTypeFormValid) return;
-    setError(null);
-    setMessage(null);
-    try {
-      const normalizedCode = newGameTypeCode.trim().toLowerCase();
-      const exists = gameTypes.some((item) => item.code.toLowerCase() === normalizedCode);
-      if (exists) {
-        throw new Error(`Тип гри з кодом ${normalizedCode} вже існує`);
-      }
-
-      await createAdminGameType({
-        code: normalizedCode,
-        title: newGameTypeTitle.trim(),
-        description: newGameTypeDescription.trim() || undefined,
-        icon: newGameTypeIcon.trim() || undefined,
-        isActive: newGameTypeIsActive,
-      });
-
-      setMessage("Тип гри створено.");
-      const gameTypesData = await getAdminGameTypes();
-      setGameTypes(gameTypesData);
-    } catch (e: any) {
-      setError(e.message ?? "Помилка створення типу гри");
-    }
-  }
-
   async function onCreateAgeGroup() {
     if (!ageGroupFormValid) return;
     setError(null);
@@ -350,9 +338,32 @@ export default function AdminPage() {
     setError(null);
     setMessage(null);
     try {
+      let effectiveGameTypeId = gameTypeId;
+
+      if (effectiveGameTypeId === -1) {
+        await createAdminGameType({
+          code: "sequence",
+          title: "Порядок (Sequence)",
+          description: "Розташувати елементи у правильній послідовності",
+          icon: "🔢",
+          isActive: true,
+        });
+
+        const refreshedGameTypes = await getAdminGameTypes();
+        setGameTypes(refreshedGameTypes);
+
+        const createdSequenceType = refreshedGameTypes.find((item) => item.code.toLowerCase() === "sequence");
+        if (!createdSequenceType) {
+          throw new Error("Не вдалося створити тип гри sequence");
+        }
+
+        effectiveGameTypeId = createdSequenceType.id;
+        setGameTypeId(createdSequenceType.id);
+      }
+
       const createdGame = await createAdminGame({
         moduleId,
-        gameTypeId,
+        gameTypeId: effectiveGameTypeId,
         minAgeGroupId,
         title: title.trim(),
         description: description.trim() || undefined,
@@ -800,47 +811,6 @@ export default function AdminPage() {
       </section>
 
       <section className={styles.sectionCard}>
-        <h2>Додати тип гри</h2>
-        <div className={styles.formGrid}>
-          <input
-            placeholder="Код (наприклад sequence)"
-            value={newGameTypeCode}
-            onChange={(e) => setNewGameTypeCode(e.target.value)}
-          />
-          <input
-            placeholder="Назва типу гри"
-            value={newGameTypeTitle}
-            onChange={(e) => setNewGameTypeTitle(e.target.value)}
-          />
-          <input
-            placeholder="Іконка (необов'язково)"
-            value={newGameTypeIcon}
-            onChange={(e) => setNewGameTypeIcon(e.target.value)}
-          />
-          <textarea
-            placeholder="Опис (необов'язково)"
-            value={newGameTypeDescription}
-            onChange={(e) => setNewGameTypeDescription(e.target.value)}
-            rows={3}
-          />
-          <label className={styles.inlineLabel}>
-            <input
-              type="checkbox"
-              checked={newGameTypeIsActive}
-              onChange={(e) => setNewGameTypeIsActive(e.target.checked)}
-            />
-            Активний
-          </label>
-          <button disabled={!gameTypeFormValid} onClick={onCreateGameType}>
-            Створити тип гри
-          </button>
-        </div>
-        <div className={styles.helperMuted}>
-          Для ігор на послідовність використовуй код <b>sequence</b>.
-        </div>
-      </section>
-
-      <section className={styles.sectionCard}>
         <h2>Додати гру</h2>
         <div className={styles.formGrid}>
           <input
@@ -864,9 +834,9 @@ export default function AdminPage() {
           </select>
           <select value={gameTypeId} onChange={(e) => setGameTypeId(parseSelectNumber(e.target.value))}>
             <option value="">Тип гри</option>
-            {gameTypes.map((type) => (
+            {gameTypeSelectOptions.map((type) => (
               <option key={type.id} value={type.id}>
-                {type.title}
+                {type.title} ({type.code})
               </option>
             ))}
           </select>
