@@ -630,70 +630,83 @@ export default function GamePage() {
                   </button>
                 </>
               ) : isSequenceTask ? (
-                <>
-                  <div className={styles.sequenceLayout}>
-                    <div className={styles.sequenceBank}>
-                      <div className={styles.dragColumnTitle}>Варіанти</div>
-                      <div className={styles.dropTargetsList}>
-                        {availableSequenceItems.map((item) => (
-                          <button
-                            key={item}
-                            type="button"
-                            className={`${styles.dragItemCard} ${selectedSequenceItem === item ? styles.dragItemSelected : ""}`}
-                            draggable={!loading}
-                            disabled={loading || pickedIdx !== null}
-                            onDragStart={(event) => handleSequenceItemDragStart(event, item)}
-                            onClick={() => setSelectedSequenceItem((prev) => (prev === item ? null : item))}
-                          >
-                            {item}
-                          </button>
-                        ))}
+  <>
+    <div className={styles.sequencePage}>
+      <h2 className={styles.sequenceTitle}>впорядкуй</h2>
 
-                        {availableSequenceItems.length === 0 && (
-                          <div className={styles.dragHint}>Всі елементи вже розставлені.</div>
-                        )}
-                      </div>
-                    </div>
+      {/* Слоти-підкреслення */}
+      <div className={styles.sequenceSlots}>
+        {sequenceSlots.map((item, index) => (
+          <button
+            key={`slot-${index}`}
+            type="button"
+            className={`${styles.underlineSlot} ${item ? styles.underlineSlotFilled : ""}`}
+            disabled={loading || pickedIdx !== null}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleSequenceDrop(e, index)}
+            onClick={() => {
+              // якщо вибраний варіант — вставляємо у цей слот
+              if (selectedSequenceItem) {
+                assignSequenceItem(index, selectedSequenceItem);
+                return;
+              }
+              // якщо слот заповнений — видаляємо
+              if (item) clearSequenceSlot(index);
+            }}
+          >
+            <span className={styles.slotText}>{item ?? ""}</span>
+          </button>
+        ))}
+      </div>
 
-                    <div className={styles.sequenceSlotsWrap}>
-                      <div className={styles.dragColumnTitle}>Правильна послідовність</div>
-                      <div className={styles.sequenceWrap}>
-                        {sequenceSlots.map((item, index) => (
-                          <button
-                            key={`slot-${index}`}
-                            type="button"
-                            className={`${styles.sequenceSlot} ${item ? styles.sequenceSlotFilled : ""}`}
-                            disabled={loading || pickedIdx !== null}
-                            onDragOver={(event) => event.preventDefault()}
-                            onDrop={(event) => handleSequenceDrop(event, index)}
-                            onClick={() => {
-                              if (selectedSequenceItem) {
-                                assignSequenceItem(index, selectedSequenceItem);
-                                return;
-                              }
-                              if (item) {
-                                clearSequenceSlot(index);
-                              }
-                            }}
-                          >
-                            <span className={styles.sequenceIndex}>{index + 1}</span>
-                            <span className={styles.sequenceValue}>{item ?? "Встав сюди"}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+      {/* Варіанти по центру, вертикально */}
+      <div className={styles.sequenceAnswers}>
+        {availableSequenceItems.map((item) => (
+          <button
+            key={item}
+            type="button"
+            className={`${styles.answerBtn} ${selectedSequenceItem === item ? styles.answerBtnSelected : ""}`}
+            draggable={!loading}
+            disabled={loading || pickedIdx !== null}
+            onDragStart={(e) => handleSequenceItemDragStart(e, item)}
+            onClick={() => setSelectedSequenceItem((prev) => (prev === item ? null : item))}
+          >
+            {item}
+          </button>
+        ))}
 
-                  <button
-                    type="button"
-                    className={styles.sendBtn}
-                    disabled={loading || pickedIdx !== null || sequenceSlots.length === 0 || sequenceSlots.some((item) => item === null)}
-                    onClick={submitSequenceAnswer}
-                  >
-                    Перевірити порядок
-                  </button>
-                </>
-              ) : options.length > 0 ? (
+        {availableSequenceItems.length === 0 && (
+          <div className={styles.answersHint}>Всі елементи вже розставлені.</div>
+        )}
+      </div>
+
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.sendBtn}
+          disabled={
+            loading ||
+            pickedIdx !== null ||
+            sequenceSlots.length === 0 ||
+            sequenceSlots.some((x) => x === null)
+          }
+          onClick={submitSequenceAnswer}
+        >
+          Перевірити порядок
+        </button>
+
+        <button
+          type="button"
+          className={styles.backBtn}
+          disabled={loading}
+          onClick={() => (window.location.href = "/child/levels")}
+        >
+          До списку рівнів
+        </button>
+      </div>
+    </div>
+  </>
+) : options.length > 0 ? (
                 <div className={styles.answers}>
                   {options.map((opt, idx) => {
                     const isPicked = pickedIdx === idx;
