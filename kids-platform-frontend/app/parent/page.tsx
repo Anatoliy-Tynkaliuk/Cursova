@@ -9,7 +9,7 @@ import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
 type Child = { id: number; name: string; ageGroupCode: string };
 
 function ageLabel(code: string) {
-  if (code === "3_5") return "3–5";
+  if (code === "4_5" || code === "3_5") return "4–5";
   if (code === "6_8") return "6–8";
   if (code === "9_12") return "9–12";
   return code;
@@ -23,7 +23,7 @@ function avatarFor(index: number) {
 export default function ParentChildrenPage() {
   const [children, setChildren] = useState<Child[]>([]);
   const [name, setName] = useState("");
-  const [ageGroupCode, setAgeGroupCode] = useState("3_5");
+  const [ageGroupCode, setAgeGroupCode] = useState("4_5");
   const [inviteCode, setInviteCode] = useState<string>("");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
@@ -218,7 +218,7 @@ export default function ParentChildrenPage() {
                 value={ageGroupCode}
                 onChange={(e) => setAgeGroupCode(e.target.value)}
               >
-                <option value="3_5">3–5</option>
+                <option value="4_5">4–5</option>
                 <option value="6_8">6–8</option>
                 <option value="9_12">9–12</option>
               </select>
