@@ -81,9 +81,14 @@ export default function ChildSubjectsPage() {
   const level = useMemo(() => Math.max(1, Math.floor(finishedAttempts / 5) + 1), [finishedAttempts]);
 
   const stats = [
-    { label: "Рівень", value: String(level), icon: "⭐" },
-    { label: "Зірочки", value: String(totalStars), icon: "✨" },
-    { label: "Досягнення", value: String(earnedBadges), icon: "🏆" },
+    { label: "Рівень", value: String(level), iconSrc: "/landing/shield.png", iconAlt: "Рівень" },
+    { label: "Зірочки", value: String(totalStars), iconSrc: "/globe.svg", iconAlt: "Зірочки" },
+    {
+      label: "Досягнення",
+      value: String(earnedBadges),
+      iconSrc: "/landing/trophy.png",
+      iconAlt: "Досягнення",
+    },
   ];
 
   return (
@@ -130,7 +135,9 @@ export default function ChildSubjectsPage() {
           <div className={styles.statsGrid}>
             {stats.map((st) => (
               <div key={st.label} className={styles.statCard}>
-                <div className={styles.statIcon}>{st.icon}</div>
+                <div className={styles.statIcon}>
+                  <Image src={st.iconSrc} alt={st.iconAlt} width={24} height={24} />
+                </div>
                 <div className={styles.statText}>
                   <div className={styles.statLabel}>{st.label}</div>
                   <div className={styles.statValue}>{st.value}</div>
