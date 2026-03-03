@@ -16,6 +16,10 @@ export async function login(email: string, password: string) {
   );
 }
 
+export async function getMe() {
+  return api<{ id: number; email: string; username: string; role: string }>("/auth/me", "GET");
+}
+
 export async function getChildren() {
   return api<Array<{ id: number; name: string; ageGroupCode: string }>>("/children", "GET");
 }
