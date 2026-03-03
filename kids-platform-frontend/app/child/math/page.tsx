@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import styles from "./math.module.css";
 import { getChildBadgesPublic, getGames, type GameListItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
@@ -61,6 +61,12 @@ export default function MathPlanetPage() {
 
   const emptyState = useMemo(() => !loading && games.length === 0, [games.length, loading]);
 
+  const statsItems = [
+    { label: "Рівень", value: stats.level, iconSrc: "/landing/shield.png", iconAlt: "Рівень" },
+    { label: "Зірочок", value: stats.stars, iconSrc: "/globe.svg", iconAlt: "Зірочки" },
+    { label: "Досягнень", value: stats.achievements, iconSrc: "/landing/trophy.png", iconAlt: "Досягнення" },
+  ];
+
   return (
     <div className={styles.page}>
       <div className={styles.bg} />
@@ -114,33 +120,20 @@ export default function MathPlanetPage() {
         {error && <p className={styles.subtitle}>{error}</p>}
 
         <section className={styles.statsBar}>
-          <div className={styles.statItem}>
-            <div className={styles.statIcon}>⭐</div>
-            <div className={styles.statMeta}>
-              <div className={styles.statLabel}>Рівень</div>
-              <div className={styles.statValue}>{stats.level}</div>
-            </div>
-          </div>
-
-          <div className={styles.statDivider} />
-
-          <div className={styles.statItem}>
-            <div className={styles.statIcon}>✨</div>
-            <div className={styles.statMeta}>
-              <div className={styles.statLabel}>Зірочок</div>
-              <div className={styles.statValue}>{stats.stars}</div>
-            </div>
-          </div>
-
-          <div className={styles.statDivider} />
-
-          <div className={styles.statItem}>
-            <div className={styles.statIcon}>🏆</div>
-            <div className={styles.statMeta}>
-              <div className={styles.statLabel}>Досягнень</div>
-              <div className={styles.statValue}>{stats.achievements}</div>
-            </div>
-          </div>
+          {statsItems.map((item, index) => (
+            <Fragment key={item.label}>
+              <div key={item.label} className={styles.statItem}>
+                <div className={styles.statIcon}>
+                  <Image src={item.iconSrc} alt={item.iconAlt} width={24} height={24} />
+                </div>
+                <div className={styles.statMeta}>
+                  <div className={styles.statLabel}>{item.label}</div>
+                  <div className={styles.statValue}>{item.value}</div>
+                </div>
+              </div>
+              {index < statsItems.length - 1 && <div className={styles.statDivider} />}
+            </Fragment>
+          ))}
         </section>
 
         <div className={styles.cornerPlanet}>
