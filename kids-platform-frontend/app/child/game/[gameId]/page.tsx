@@ -4,7 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { DragEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { finishAttempt, startAttempt, submitAnswer, StartAttemptResponse } from "@/lib/endpoints";
+import {
+  finishAttempt,
+  startAttempt,
+  submitAnswer,
+  type StartAttemptResponse,
+} from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./game.module.css";
 
@@ -53,22 +58,14 @@ function StarsRow({ filled }: { filled: number }) {
       {Array.from({ length: 3 }).map((_, i) => (
         <div
           key={i}
-          className={`${styles.starWrapper} ${
-            i < filled ? styles.starOn : styles.starOff
-          }`}
+          className={`${styles.starWrapper} ${i < filled ? styles.starOn : styles.starOff}`}
         >
-          <Image
-            src="/star.png"
-            alt="star"
-            width={100}
-            height={100}
-          />
+          <Image src="/star.png" alt="star" width={100} height={100} />
         </div>
       ))}
     </div>
   );
 }
-
 
 export default function GamePage() {
   const params = useParams<{ gameId: string }>();
@@ -81,17 +78,24 @@ export default function GamePage() {
 
   const levelFromUrl = search.get("level");
   const selectedLevel =
-    Number.isInteger(Number(levelFromUrl)) && Number(levelFromUrl) > 0 ? Number(levelFromUrl) : null;
+    Number.isInteger(Number(levelFromUrl)) && Number(levelFromUrl) > 0
+      ? Number(levelFromUrl)
+      : null;
 
   const levelIdFromUrl = search.get("levelId");
   const selectedLevelId =
-    Number.isInteger(Number(levelIdFromUrl)) && Number(levelIdFromUrl) > 0 ? Number(levelIdFromUrl) : null;
+    Number.isInteger(Number(levelIdFromUrl)) && Number(levelIdFromUrl) > 0
+      ? Number(levelIdFromUrl)
+      : null;
 
+  // якщо є levelId — level number ігноруємо
   const effectiveLevel = selectedLevelId !== null ? null : selectedLevel;
   const effectiveLevelId = selectedLevelId;
 
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
-  const [attemptId, setAttemptId] = useState<number | null>(attemptIdFromUrl ? Number(attemptIdFromUrl) : null);
+  const [attemptId, setAttemptId] = useState<number | null>(
+    attemptIdFromUrl ? Number(attemptIdFromUrl) : null
+  );
 
   const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
   const [msg, setMsg] = useState<string>("");
@@ -108,17 +112,23 @@ export default function GamePage() {
   const [textAnswer, setTextAnswer] = useState("");
   const [pickedIdx, setPickedIdx] = useState<number | null>(null);
   const [pickedState, setPickedState] = useState<"ok" | "bad" | null>(null);
+
   const [timeoutOpen, setTimeoutOpen] = useState(false);
   const [timeoutReason, setTimeoutReason] = useState<string>("Час вийшов!");
+
   const [dragAssignments, setDragAssignments] = useState<Record<string, string[]>>({});
   const [dragHoverTarget, setDragHoverTarget] = useState<string | null>(null);
   const [selectedDragItem, setSelectedDragItem] = useState<string | null>(null);
+
+  const [sequenceSlots, setSequenceSlots] = useState<Array<string | null>>([]);
+  const [selectedSequenceItem, setSelectedSequenceItem] = useState<string | null>(null);
 
   const levelsHref =
     normalizedDifficulty !== null
       ? `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`
       : `/child/game/${gameId}/difficulty`;
 
+  // Session + redirect rules
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId) {
@@ -131,7 +141,12 @@ export default function GamePage() {
       return;
     }
 
-    if (!attemptIdFromUrl && normalizedDifficulty !== null && effectiveLevel === null && effectiveLevelId === null) {
+    if (
+      !attemptIdFromUrl &&
+      normalizedDifficulty !== null &&
+      effectiveLevel === null &&
+      effectiveLevelId === null
+    ) {
       window.location.href = `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`;
       return;
     }
@@ -139,18 +154,20 @@ export default function GamePage() {
     setChildProfileId(session.childProfileId);
   }, [attemptIdFromUrl, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
 
+  // Start attempt
   useEffect(() => {
     async function boot() {
       if (!attemptId && childProfileId) {
         setLoading(true);
         setMsg("Завантаження завдання...");
+
         try {
           const res = await startAttempt(
             childProfileId,
             gameId,
             normalizedDifficulty!,
             effectiveLevel !== null ? effectiveLevel : undefined,
-            effectiveLevelId !== null ? effectiveLevelId : undefined,
+            effectiveLevelId !== null ? effectiveLevelId : undefined
           );
 
           setAttemptId(res.attemptId);
@@ -174,13 +191,12 @@ export default function GamePage() {
       }
     }
 
-    boot().catch((e: any) => {
-      setMsg(e.message ?? "Error");
-    });
+    boot().catch((e: any) => setMsg(e.message ?? "Error"));
   }, [attemptId, childProfileId, gameId, normalizedDifficulty, effectiveLevel, effectiveLevelId]);
 
+  // Timer
   useEffect(() => {
-    if (!attemptId || !!summary || timeoutOpen) return;
+    if (!attemptId || summary || timeoutOpen) return;
 
     const intervalId = window.setInterval(() => {
       setTimeLeft((prev) => Math.max(prev - 1, 0));
@@ -189,9 +205,10 @@ export default function GamePage() {
     return () => window.clearInterval(intervalId);
   }, [attemptId, summary, timeoutOpen]);
 
+  // Finish by timeout
   useEffect(() => {
     async function completeByTimeout() {
-      if (!attemptId || !!summary || timeLeft > 0 || timeoutOpen) return;
+      if (!attemptId || summary || timeLeft > 0 || timeoutOpen) return;
 
       setLoading(true);
       setMsg("");
@@ -219,6 +236,7 @@ export default function GamePage() {
     completeByTimeout();
   }, [attemptId, summary, timeLeft, timeoutOpen]);
 
+  // Current task state
   const current: TaskState | null = useMemo(() => {
     if (!task) return null;
     return {
@@ -234,7 +252,6 @@ export default function GamePage() {
     const d = current?.data;
     if (!d) return [];
     if (Array.isArray(d.options)) return d.options;
-    if (Array.isArray(d.items)) return d.items;
     return [];
   }, [current]);
 
@@ -251,11 +268,29 @@ export default function GamePage() {
   }, [current]);
 
   const isDragTask = dragItems.length > 0 && dragTargets.length > 0;
+  const isSequenceTask = !isDragTask && dragItems.length > 0;
 
+  // Available drag items
   const availableDragItems = useMemo(() => {
     const usedItems = new Set(Object.values(dragAssignments).flat());
     return dragItems.filter((item) => !usedItems.has(item));
   }, [dragAssignments, dragItems]);
+
+  // Reset sequence slots when task changes
+  useEffect(() => {
+    if (isSequenceTask) {
+      setSequenceSlots(dragItems.map(() => null));
+      setSelectedSequenceItem(null);
+      return;
+    }
+    setSequenceSlots([]);
+    setSelectedSequenceItem(null);
+  }, [dragItems, isSequenceTask, current?.taskVersionId]);
+
+  const availableSequenceItems = useMemo(() => {
+    const usedItems = new Set(sequenceSlots.filter((item): item is string => item !== null));
+    return dragItems.filter((item) => !usedItems.has(item));
+  }, [dragItems, sequenceSlots]);
 
   const progressText = totalTasks ? `${Math.min(completedTasks, totalTasks)} / ${totalTasks}` : "0";
   const progressValue = totalTasks
@@ -264,20 +299,20 @@ export default function GamePage() {
 
   const levelTitle = currentLevelNumber ? `Рівень ${currentLevelNumber}` : "Рівень";
 
+  // Drag helpers
   function assignDragItem(target: string, item: string) {
     setDragAssignments((prev) => {
       const next: Record<string, string[]> = {};
 
       for (const key of Object.keys(prev)) {
         const filtered = prev[key].filter((assignedItem) => assignedItem !== item);
-        if (filtered.length > 0) {
-          next[key] = filtered;
-        }
+        if (filtered.length > 0) next[key] = filtered;
       }
 
       next[target] = [...(next[target] ?? []), item];
       return next;
     });
+
     setSelectedDragItem(null);
     setDragHoverTarget(null);
   }
@@ -299,11 +334,8 @@ export default function GamePage() {
       const next = { ...prev };
       const filtered = list.filter((assignedItem) => assignedItem !== item);
 
-      if (filtered.length === 0) {
-        delete next[target];
-      } else {
-        next[target] = filtered;
-      }
+      if (filtered.length === 0) delete next[target];
+      else next[target] = filtered;
 
       return next;
     });
@@ -331,9 +363,64 @@ export default function GamePage() {
 
     sendAnswer({ pairs });
   }
+
+  // Sequence helpers
+  function assignSequenceItem(slotIndex: number, item: string) {
+    setSequenceSlots((prev) => {
+      if (slotIndex < 0 || slotIndex >= prev.length) return prev;
+
+      const next = prev.map((slotItem) => (slotItem === item ? null : slotItem));
+      next[slotIndex] = item;
+      return next;
+    });
+    setSelectedSequenceItem(null);
+  }
+
+  function clearSequenceSlot(slotIndex: number) {
+    setSequenceSlots((prev) => {
+      if (slotIndex < 0 || slotIndex >= prev.length) return prev;
+      if (prev[slotIndex] === null) return prev;
+
+      const next = [...prev];
+      next[slotIndex] = null;
+      return next;
+    });
+  }
+
+  function handleSequenceItemDragStart(event: DragEvent<HTMLButtonElement>, item: string) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", item);
+    setSelectedSequenceItem(item);
+  }
+
+  function handleSequenceDrop(event: DragEvent<HTMLButtonElement>, slotIndex: number) {
+    event.preventDefault();
+    const droppedItem = event.dataTransfer.getData("text/plain");
+    if (!droppedItem) return;
+    assignSequenceItem(slotIndex, droppedItem);
+  }
+
+  function submitSequenceAnswer() {
+    if (!isSequenceTask || sequenceSlots.length === 0) return;
+    if (sequenceSlots.some((item) => item === null)) return;
+    sendAnswer({ order: sequenceSlots });
+  }
+
+  function handleSequenceAnswerClick(item: string) {
+    if (loading || pickedIdx !== null) return;
+
+    const firstEmptyIndex = sequenceSlots.findIndex((slotItem) => slotItem === null);
+    if (firstEmptyIndex === -1) {
+      setSelectedSequenceItem((prev) => (prev === item ? null : item));
+      return;
+    }
+
+    assignSequenceItem(firstEmptyIndex, item);
+  }
+
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
-    if (pickedIdx !== null) return; 
+    if (pickedIdx !== null) return;
 
     if (typeof clickedIndex === "number") {
       setPickedIdx(clickedIndex);
@@ -358,21 +445,20 @@ export default function GamePage() {
       const nextTask = !finished ? res.nextTask : null;
 
       const nextCompleted = finished
-        ? (res.summary?.totalCount ?? 0)
-        : (res.progress?.totalCount ?? completedTasks);
+        ? res.summary?.totalCount ?? 0
+        : res.progress?.totalCount ?? completedTasks;
 
       const nextTotal = finished
-        ? (res.summary?.totalCount ?? totalTasks ?? null)
-        : (res.progress?.totalTasks ?? totalTasks);
+        ? res.summary?.totalCount ?? totalTasks ?? null
+        : res.progress?.totalTasks ?? totalTasks;
 
       window.setTimeout(() => {
         if (finished) {
-          const nextSummary: Summary = {
+          setSummary({
             score: res.summary?.score ?? 0,
             correctCount: res.summary?.correctCount ?? 0,
             totalCount: res.summary?.totalCount ?? 0,
-          };
-          setSummary(nextSummary);
+          });
           setCompletedTasks(nextCompleted);
           setTask(null);
           setMsg("");
@@ -388,10 +474,16 @@ export default function GamePage() {
           });
           setCompletedTasks(nextCompleted);
           setTotalTasks(nextTotal ?? null);
+
           setTextAnswer("");
           setDragAssignments({});
           setSelectedDragItem(null);
           setDragHoverTarget(null);
+
+          // важливо: sequence slots будуть перезадані useEffect-ом,
+          // але ми все одно скидаємо вибір, щоб UI не мигав
+          setSelectedSequenceItem(null);
+
           setMsg("");
         }
 
@@ -414,6 +506,13 @@ export default function GamePage() {
 
   const starsFilled = summary ? scoreToStars(summary.score, summary.totalCount) : 0;
 
+  const toastClass =
+    pickedState === "ok"
+      ? `${styles.toast} ${styles.toastOk}`
+      : pickedState === "bad"
+      ? `${styles.toast} ${styles.toastBad}`
+      : `${styles.toast} ${styles.toastInfo}`;
+
   return (
     <main className={styles.page}>
       <div className={styles.bg} />
@@ -421,12 +520,13 @@ export default function GamePage() {
 
       <div className={styles.container}>
         <header className={styles.header}>
-          <Link className={styles.backBtn} href="/child/subjects">
+          <Link className={styles.headerBackBtn} href="/child/subjects">
             <span className={styles.backArrow}>←</span>
             Назад
           </Link>
 
           <div className={styles.headerTitle}>{levelTitle}</div>
+          <div />
         </header>
 
         <section className={styles.progressWrap}>
@@ -438,13 +538,7 @@ export default function GamePage() {
         </section>
 
         <section className={styles.card}>
-          {!!msg && !timeoutOpen && (
-  <div className={styles.toast}>
-    {msg}
-  </div>
-)}
-
-
+          {!!msg && !timeoutOpen && <div className={toastClass}>{msg}</div>}
 
           {!current ? (
             summary ? (
@@ -458,7 +552,7 @@ export default function GamePage() {
                   </b>
                 </div>
 
-                <div className={styles.actions}>
+                <div className={styles.summaryActions}>
                   <Link className={styles.primaryBtn} href="/child/subjects">
                     До меню
                   </Link>
@@ -468,7 +562,9 @@ export default function GamePage() {
                 </div>
               </div>
             ) : (
-              <div className={styles.loadingBox}>{loading ? "Завантаження..." : "Нема активного завдання."}</div>
+              <div className={styles.loadingBox}>
+                {loading ? "Завантаження..." : "Нема активного завдання."}
+              </div>
             )
           ) : (
             <>
@@ -478,7 +574,8 @@ export default function GamePage() {
                 <>
                   <div className={styles.dragLayout}>
                     <div className={styles.dragRightColumn}>
-                      <div className={styles.dragColumnTitle}>Куди відноситься (праворуч)</div>
+                      <div className={styles.dragColumnTitle}>Куди відноситься</div>
+
                       <div className={styles.dragItemsList}>
                         {dragTargets.map((target) => {
                           const assignedItems = dragAssignments[target] ?? [];
@@ -487,25 +584,28 @@ export default function GamePage() {
                             <button
                               key={target}
                               type="button"
-                              className={`${styles.dropTarget} ${dragHoverTarget === target ? styles.dropTargetHover : ""}`}
+                              className={`${styles.dropTarget} ${
+                                dragHoverTarget === target ? styles.dropTargetHover : ""
+                              }`}
                               disabled={loading || pickedIdx !== null}
                               onDragOver={(event) => {
                                 event.preventDefault();
                                 setDragHoverTarget(target);
                               }}
-                              onDragLeave={() => setDragHoverTarget((prev) => (prev === target ? null : prev))}
+                              onDragLeave={() =>
+                                setDragHoverTarget((prev) => (prev === target ? null : prev))
+                              }
                               onDrop={(event) => handleDropOnTarget(event, target)}
                               onClick={() => {
                                 if (selectedDragItem) {
                                   assignDragItem(target, selectedDragItem);
                                   return;
                                 }
-                                if (assignedItems.length > 0) {
-                                  clearDragTarget(target);
-                                }
+                                if (assignedItems.length > 0) clearDragTarget(target);
                               }}
                             >
                               <span className={styles.dropTargetLabel}>{target}</span>
+
                               {assignedItems.length > 0 ? (
                                 <span className={styles.dropTargetValuesWrap}>
                                   {assignedItems.map((item) => (
@@ -527,21 +627,20 @@ export default function GamePage() {
                             </button>
                           );
                         })}
-
-                        {dragTargets.length === 0 && (
-                          <div className={styles.dragHint}>Немає цілей для перетягування.</div>
-                        )}
                       </div>
                     </div>
 
                     <div className={styles.dragLeftColumn}>
-                      <div className={styles.dragColumnTitle}>Картки зліва</div>
+                      <div className={styles.dragColumnTitle}>Картки</div>
+
                       <div className={styles.dropTargetsList}>
                         {availableDragItems.map((item) => (
                           <button
                             key={item}
                             type="button"
-                            className={`${styles.dragItemCard} ${selectedDragItem === item ? styles.dragItemSelected : ""}`}
+                            className={`${styles.dragItemCard} ${
+                              selectedDragItem === item ? styles.dragItemSelected : ""
+                            }`}
                             draggable={!loading}
                             disabled={loading || pickedIdx !== null}
                             onDragStart={(event) => handleItemDragStart(event, item)}
@@ -552,7 +651,9 @@ export default function GamePage() {
                         ))}
 
                         {availableDragItems.length === 0 && (
-                          <div className={styles.dragHint}>Всі картки вже розкладені по правих відповідях.</div>
+                          <div className={styles.dragHint}>
+                            Всі картки вже розкладені по правих відповідях.
+                          </div>
                         )}
                       </div>
                     </div>
@@ -567,6 +668,79 @@ export default function GamePage() {
                     Перевірити відповідність
                   </button>
                 </>
+              ) : isSequenceTask ? (
+                <div className={styles.sequencePage}>
+                  <div className={styles.sequenceSlots}>
+                    {sequenceSlots.map((item, index) => (
+                      <button
+                        key={`slot-${index}`}
+                        type="button"
+                        className={`${styles.underlineSlot} ${
+                          item ? styles.underlineSlotFilled : ""
+                        }`}
+                        disabled={loading || pickedIdx !== null}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => handleSequenceDrop(e, index)}
+                        onClick={() => {
+                          if (selectedSequenceItem) {
+                            assignSequenceItem(index, selectedSequenceItem);
+                            return;
+                          }
+                          if (item) clearSequenceSlot(index);
+                        }}
+                      >
+                        <span className={styles.slotText}>{item ?? ""}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className={styles.sequenceAnswers}>
+                    {availableSequenceItems.map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`${styles.sequenceAnswerBtn} ${
+                          selectedSequenceItem === item ? styles.sequenceAnswerBtnSelected : ""
+                        }`}
+                        draggable={!loading}
+                        disabled={loading || pickedIdx !== null}
+                        onDragStart={(e) => handleSequenceItemDragStart(e, item)}
+                        onClick={() => handleSequenceAnswerClick(item)}
+                      >
+                        {item}
+                      </button>
+                    ))}
+
+                    {availableSequenceItems.length === 0 && (
+                      <div className={styles.answersHint}>Всі елементи вже розставлені.</div>
+                    )}
+                  </div>
+
+                  <div className={styles.sequenceActions}>
+                    <button
+                      type="button"
+                      className={styles.sequenceSendBtn}
+                      disabled={
+                        loading ||
+                        pickedIdx !== null ||
+                        sequenceSlots.length === 0 ||
+                        sequenceSlots.some((x) => x === null)
+                      }
+                      onClick={submitSequenceAnswer}
+                    >
+                      Перевірити порядок
+                    </button>
+
+                    <button
+                      type="button"
+                      className={styles.sequenceBackBtn}
+                      disabled={loading}
+                      onClick={() => (window.location.href = levelsHref)}
+                    >
+                      До списку рівнів
+                    </button>
+                  </div>
+                </div>
               ) : options.length > 0 ? (
                 <div className={styles.answers}>
                   {options.map((opt, idx) => {
@@ -617,11 +791,7 @@ export default function GamePage() {
                 </div>
               )}
 
-              <div className={styles.inlineActions}>
-                <Link className={styles.secondaryBtn} href={levelsHref}>
-                  До списку рівнів
-                </Link>
-              </div>
+              
             </>
           )}
         </section>
