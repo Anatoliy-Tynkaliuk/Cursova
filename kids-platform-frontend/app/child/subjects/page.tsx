@@ -81,15 +81,20 @@ export default function ChildSubjectsPage() {
   const level = useMemo(() => Math.max(1, Math.floor(finishedAttempts / 5) + 1), [finishedAttempts]);
 
   const stats = [
-    { label: "Рівень", value: String(level), icon: "⭐" },
-    { label: "Зірочки", value: String(totalStars), icon: "✨" },
-    { label: "Досягнення", value: String(earnedBadges), icon: "🏆" },
+    { label: "Рівень", value: String(level), iconSrc: "/levels.png", iconAlt: "Рівень" },
+    { label: "Зірочки", value: String(totalStars), iconSrc: "/star.png", iconAlt: "Зірочки" },
+    {
+      label: "Досягнення",
+      value: String(earnedBadges),
+      iconSrc: "/trophy.png",
+      iconAlt: "Досягнення",
+    },
   ];
 
   return (
     <div className={styles.page}>
       <Image
-        src="/Child_menu/background.png"
+        src="/background.png"
         alt="space background"
         fill
         priority
@@ -100,10 +105,7 @@ export default function ChildSubjectsPage() {
       <div className={styles.container}>
         <header className={styles.topBar}>
           <div className={styles.topTitle}>Меню дитини</div>
-
-          <Link href="/child" className={styles.backBtn}>
-            ← Назад
-          </Link>
+          <Link href="/child" className={styles.backBtn}>Назад</Link>
         </header>
 
         <h1 className={styles.greeting}>Привіт, {childName}!</h1>
@@ -130,7 +132,9 @@ export default function ChildSubjectsPage() {
           <div className={styles.statsGrid}>
             {stats.map((st) => (
               <div key={st.label} className={styles.statCard}>
-                <div className={styles.statIcon}>{st.icon}</div>
+                   <div className={styles.statIcon}>
+                  <Image src={st.iconSrc} alt={st.iconAlt} width={45} height={45} />
+                </div>
                 <div className={styles.statText}>
                   <div className={styles.statLabel}>{st.label}</div>
                   <div className={styles.statValue}>{st.value}</div>
@@ -142,7 +146,7 @@ export default function ChildSubjectsPage() {
 
         <section className={styles.bottom}>
           <div className={styles.bottomCard}>
-            <div className={styles.bottomTitle}>Нові місії вже чекають 🚀</div>
+            <div className={styles.bottomTitle}>Нові місії вже чекають</div>
 
             <div className={styles.bottomText}>
               Обирай планету, збирай зірочки та відкривай нові досягнення!
