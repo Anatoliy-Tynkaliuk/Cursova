@@ -141,21 +141,13 @@ export class ChildrenService {
     };
   }
 
-  async getStats(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
 
+  private async buildStatsResponse(childId: bigint) {
     const child = await this.prisma.childProfile.findFirst({
-      where: { id: BigInt(childId), isActive: true },
+      where: { id: childId, isActive: true },
       include: { ageGroup: true },
     });
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
-
-    if (user.role === "parent") {
-      const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
-      });
-      if (!link) throw new ForbiddenException("Not your child");
-    }
 
     const attempts = await this.prisma.attempt.findMany({
       where: { childProfileId: child.id },
@@ -198,6 +190,29 @@ export class ChildrenService {
         finishedAt: a.finishedAt,
       })),
     };
+  }
+
+  async getStats(user: any, childId: number) {
+    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
+      select: { id: true },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    if (user.role === "parent") {
+      const link = await this.prisma.parentChild.findUnique({
+        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+      });
+      if (!link) throw new ForbiddenException("Not your child");
+    }
+
+    return this.buildStatsResponse(child.id);
+  }
+
+  async getStatsPublic(childId: number) {
+    return this.buildStatsResponse(BigInt(childId));
   }
 
   async getBadges(user: any, childId: number) {

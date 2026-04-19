@@ -15,6 +15,14 @@ export default function ChildStatsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const completionPercent = stats?.summary.totalAttempts
+    ? Math.round((stats.summary.finishedAttempts / stats.summary.totalAttempts) * 100)
+    : 0;
+
+  const accuracyPercent = stats?.summary.totalQuestions
+    ? Math.round((stats.summary.totalCorrect / stats.summary.totalQuestions) * 100)
+    : 0;
+
   function parseThreshold(code: string) {
     const match = code.match(/^FINISHED_(\d+)$/i);
     if (!match) return null;
@@ -71,6 +79,8 @@ export default function ChildStatsPage() {
               <div>Правильні відповіді: {stats.summary.totalCorrect}</div>
               <div>Запитань: {stats.summary.totalQuestions}</div>
               <div>Бали: {stats.summary.totalScore}</div>
+              <div>Відсоток завершення: {completionPercent}%</div>
+              <div>Точність: {accuracyPercent}%</div>
             </div>
           </div>
 
@@ -111,7 +121,7 @@ export default function ChildStatsPage() {
             )}
           </section>
 
-          <h2>Останні ігри</h2>
+          <h2>Активність (останні ігри)</h2>
           {stats.attempts.length === 0 ? (
             <p>Ще немає спроб.</p>
           ) : (

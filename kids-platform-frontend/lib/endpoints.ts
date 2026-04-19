@@ -68,6 +68,10 @@ export async function getChildStats(childId: number) {
   return api<ChildStats>(`/children/${childId}/stats`, "GET");
 }
 
+export async function getChildStatsPublic(childId: number) {
+  return api<ChildStats>(`/child/${childId}/stats`, "GET");
+}
+
 export type AdminModuleItem = {
   id: number;
   code: string;
