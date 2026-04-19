@@ -16,6 +16,10 @@ export async function login(email: string, password: string) {
   );
 }
 
+export async function getMe() {
+  return api<{ id: number; email: string; username: string; role: string }>("/auth/me", "GET");
+}
+
 export async function getChildren() {
   return api<Array<{ id: number; name: string; ageGroupCode: string }>>("/children", "GET");
 }
@@ -62,6 +66,41 @@ export type ChildStats = {
 
 export async function getChildStats(childId: number) {
   return api<ChildStats>(`/children/${childId}/stats`, "GET");
+}
+
+export async function getChildStatsPublic(childId: number) {
+  return api<ChildStats>(`/child/${childId}/stats`, "GET");
+}
+
+export type ChildActivityReport = {
+  child: { id: number; name: string; ageGroupCode: string };
+  calendar: {
+    monthStart: string;
+    monthEndExclusive: string;
+    days: Array<{
+      date: string;
+      played: boolean;
+      attempts: number;
+      finishedLevels: number;
+      totalDurationSec: number;
+      modules: string[];
+    }>;
+  };
+  summary: {
+    week: { attempts: number; finishedLevels: number; totalDurationSec: number; avgDurationSec: number };
+    month: { attempts: number; finishedLevels: number; totalDurationSec: number; avgDurationSec: number };
+    year: { attempts: number; finishedLevels: number; totalDurationSec: number; avgDurationSec: number };
+  };
+};
+
+export async function getChildActivity(childId: number, month?: string) {
+  const query = month ? `?month=${encodeURIComponent(month)}` : "";
+  return api<ChildActivityReport>(`/children/${childId}/activity${query}`, "GET");
+}
+
+export async function getChildActivityPublic(childId: number, month?: string) {
+  const query = month ? `?month=${encodeURIComponent(month)}` : "";
+  return api<ChildActivityReport>(`/child/${childId}/activity${query}`, "GET");
 }
 
 export type AdminModuleItem = {

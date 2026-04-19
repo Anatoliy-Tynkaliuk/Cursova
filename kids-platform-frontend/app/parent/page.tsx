@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "../parent/parent-dashboard.module.css";
 
-import { getChildren, createChild, createInvite, deleteChild } from "@/lib/endpoints";
+import { getChildren, createChild, createInvite, deleteChild, getMe } from "@/lib/endpoints";
 import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
 
 type Child = { id: number; name: string; ageGroupCode: string };
 
 function ageLabel(code: string) {
-  if (code === "3_5") return "3–5";
+  if (code === "4_5" || code === "3_5") return "4–5";
   if (code === "6_8") return "6–8";
   if (code === "9_12") return "9–12";
   return code;
@@ -23,10 +23,11 @@ function avatarFor(index: number) {
 export default function ParentChildrenPage() {
   const [children, setChildren] = useState<Child[]>([]);
   const [name, setName] = useState("");
-  const [ageGroupCode, setAgeGroupCode] = useState("3_5");
+  const [ageGroupCode, setAgeGroupCode] = useState("4_5");
   const [inviteCode, setInviteCode] = useState<string>("");
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+  const [parentName, setParentName] = useState("Батьки");
 
   // ✅ новий стан: показувати/ховати форму
   const [showCreate, setShowCreate] = useState(false);
@@ -42,7 +43,11 @@ export default function ParentChildrenPage() {
       window.location.href = "/login";
       return;
     }
-    load().catch((e: any) => setErr(e.message ?? "Error"));
+    Promise.all([load(), getMe()])
+      .then(([, me]) => {
+        setParentName(me.username || "Батьки");
+      })
+      .catch((e: any) => setErr(e.message ?? "Error"));
   }, []);
 
   async function onCreateChild() {
@@ -99,7 +104,6 @@ export default function ParentChildrenPage() {
     window.location.href = "/login";
   }
 
-  const parentName = useMemo(() => "Олено", []);
 
   return (
     <div className={styles.page}>
@@ -152,6 +156,13 @@ export default function ParentChildrenPage() {
     onClick={() => (window.location.href = `/children/${c.id}/stats`)}
   >
     Перегляд досягнень
+  </button>
+
+  <button
+    className={styles.greenBtn}
+    onClick={() => (window.location.href = `/children/${c.id}/activity`)}
+  >
+    Активність
   </button>
 
   <div className={styles.rowBtns}>
@@ -214,7 +225,7 @@ export default function ParentChildrenPage() {
                 value={ageGroupCode}
                 onChange={(e) => setAgeGroupCode(e.target.value)}
               >
-                <option value="3_5">3–5</option>
+                <option value="4_5">4–5</option>
                 <option value="6_8">6–8</option>
                 <option value="9_12">9–12</option>
               </select>

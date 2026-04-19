@@ -71,7 +71,7 @@ export default function Home() {
             <div className={styles.featuresGrid}>
               <div className={styles.featureItem}>
                 <img
-                  className={styles.featureIcon}
+                  className={`${styles.featureIcon} ${styles.iconController}`}
                   src="/landing/controller.png"
                   alt="Ігрові вправи"
                 />
@@ -81,7 +81,7 @@ export default function Home() {
               </div>
               <div className={styles.featureItem}>
                 <img
-                  className={styles.featureIcon}
+                  className={`${styles.featureIcon} ${styles.iconTrophy}`}
                   src="/landing/trophy.png"
                   alt="Ігрова мотивація"
                 />
@@ -91,7 +91,7 @@ export default function Home() {
               </div>
               <div className={styles.featureItem}>
                 <img
-                  className={styles.featureIcon}
+                  className={`${styles.featureIcon} ${styles.iconShield}`}
                   src="/landing/shield.png"
                   alt="Безпечне середовище"
                 />
@@ -101,7 +101,7 @@ export default function Home() {
               </div>
               <div className={styles.featureItem}>
                 <img
-                  className={styles.featureIcon}
+                  className={`${styles.featureIcon} ${styles.iconKids}`}
                   src="/landing/planets.png"
                   alt="Для дітей"
                 />

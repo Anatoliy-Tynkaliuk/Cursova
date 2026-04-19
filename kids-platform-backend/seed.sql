@@ -1,6 +1,6 @@
 INSERT INTO age_groups (code, title, min_age, max_age, sort_order, is_active)
 VALUES
-  ('3_5', '3–5 років', 3, 5, 1, true),
+  ('4_5', '4–5 років', 4, 5, 1, true),
   ('6_8', '6–8 років', 6, 8, 2, true),
   ('9_12', '9–12 років', 9, 12, 3, true);
 
@@ -22,7 +22,7 @@ VALUES
     (SELECT id FROM game_types WHERE code = 'multiple_choice'),
     'Знайди зайвий предмет',
     'Визнач, який предмет не підходить до набору.',
-    (SELECT id FROM age_groups WHERE code = '3_5'),
+    (SELECT id FROM age_groups WHERE code = '4_5'),
     1,
     true
   ),
