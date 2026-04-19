@@ -165,6 +165,9 @@ export default function ChildSubjectsPage() {
               <Link href="/child/settings" className={styles.smallBtn}>
                 Налаштування
               </Link>
+              <Link href="/child/activity" className={styles.smallBtn}>
+                Активність
+              </Link>
             </div>
           </div>
         </section>

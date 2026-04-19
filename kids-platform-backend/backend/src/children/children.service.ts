@@ -215,6 +215,137 @@ export class ChildrenService {
     return this.buildStatsResponse(BigInt(childId));
   }
 
+  private resolveMonthRange(month?: string) {
+    const now = new Date();
+    let year = now.getUTCFullYear();
+    let monthIndex = now.getUTCMonth();
+
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
+      year = Number(month.slice(0, 4));
+      monthIndex = Number(month.slice(5, 7)) - 1;
+    }
+
+    const start = new Date(Date.UTC(year, monthIndex, 1, 0, 0, 0, 0));
+    const end = new Date(Date.UTC(year, monthIndex + 1, 1, 0, 0, 0, 0));
+    return { start, end };
+  }
+
+  private summarizeWindow(attempts: Array<{ createdAt: Date; isFinished: boolean; durationSec: number | null }>, from: Date) {
+    const rows = attempts.filter((attempt) => attempt.createdAt >= from);
+    const attemptsCount = rows.length;
+    const finishedLevels = rows.filter((attempt) => attempt.isFinished).length;
+    const totalDurationSec = rows.reduce((acc, attempt) => acc + (attempt.durationSec ?? 0), 0);
+    const avgDurationSec = attemptsCount > 0 ? Math.round(totalDurationSec / attemptsCount) : 0;
+
+    return { attempts: attemptsCount, finishedLevels, totalDurationSec, avgDurationSec };
+  }
+
+  private async buildActivityResponse(childId: bigint, month?: string) {
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: childId, isActive: true },
+      include: { ageGroup: true },
+    });
+    if (!child || !child.isActive) throw new NotFoundException("Child not found");
+
+    const { start, end } = this.resolveMonthRange(month);
+
+    const [monthAttempts, yearAttempts] = await Promise.all([
+      this.prisma.attempt.findMany({
+        where: { childProfileId: child.id, createdAt: { gte: start, lt: end } },
+        include: { game: { include: { module: true } } },
+        orderBy: { createdAt: "asc" },
+      }),
+      this.prisma.attempt.findMany({
+        where: {
+          childProfileId: child.id,
+          createdAt: { gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) },
+        },
+        select: { createdAt: true, isFinished: true, durationSec: true },
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
+
+    const dailyMap = new Map<string, { attempts: number; finishedLevels: number; totalDurationSec: number; modules: Set<string> }>();
+
+    for (const attempt of monthAttempts) {
+      const day = attempt.createdAt.toISOString().slice(0, 10);
+      const prev = dailyMap.get(day) ?? { attempts: 0, finishedLevels: 0, totalDurationSec: 0, modules: new Set<string>() };
+      prev.attempts += 1;
+      prev.finishedLevels += attempt.isFinished ? 1 : 0;
+      prev.totalDurationSec += attempt.durationSec ?? 0;
+      prev.modules.add(attempt.game.module.code);
+      dailyMap.set(day, prev);
+    }
+
+    const calendarDays = [] as Array<{
+      date: string;
+      played: boolean;
+      attempts: number;
+      finishedLevels: number;
+      totalDurationSec: number;
+      modules: string[];
+    }>;
+
+    for (let d = new Date(start); d < end; d = new Date(d.getTime() + 24 * 60 * 60 * 1000)) {
+      const key = d.toISOString().slice(0, 10);
+      const row = dailyMap.get(key);
+      calendarDays.push({
+        date: key,
+        played: !!row,
+        attempts: row?.attempts ?? 0,
+        finishedLevels: row?.finishedLevels ?? 0,
+        totalDurationSec: row?.totalDurationSec ?? 0,
+        modules: row ? Array.from(row.modules).sort() : [],
+      });
+    }
+
+    const now = Date.now();
+    const weekFrom = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const monthFrom = new Date(now - 30 * 24 * 60 * 60 * 1000);
+    const yearFrom = new Date(now - 365 * 24 * 60 * 60 * 1000);
+
+    return {
+      child: {
+        id: Number(child.id),
+        name: child.name,
+        ageGroupCode: child.ageGroup.code,
+      },
+      calendar: {
+        monthStart: start.toISOString().slice(0, 10),
+        monthEndExclusive: end.toISOString().slice(0, 10),
+        days: calendarDays,
+      },
+      summary: {
+        week: this.summarizeWindow(yearAttempts, weekFrom),
+        month: this.summarizeWindow(yearAttempts, monthFrom),
+        year: this.summarizeWindow(yearAttempts, yearFrom),
+      },
+    };
+  }
+
+  async getActivity(user: any, childId: number, month?: string) {
+    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
+      select: { id: true },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    if (user.role === "parent") {
+      const link = await this.prisma.parentChild.findUnique({
+        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+      });
+      if (!link) throw new ForbiddenException("Not your child");
+    }
+
+    return this.buildActivityResponse(child.id, month);
+  }
+
+  async getActivityPublic(childId: number, month?: string) {
+    return this.buildActivityResponse(BigInt(childId), month);
+  }
+
   async getBadges(user: any, childId: number) {
     if (user && user.role !== "parent" && user.role !== "admin") {
       throw new ForbiddenException("Only parent/admin");

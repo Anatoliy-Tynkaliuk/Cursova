@@ -158,6 +158,13 @@ export default function ParentChildrenPage() {
     Перегляд досягнень
   </button>
 
+  <button
+    className={styles.greenBtn}
+    onClick={() => (window.location.href = `/children/${c.id}/activity`)}
+  >
+    Активність
+  </button>
+
   <div className={styles.rowBtns}>
     <button className={styles.purpleBtn} onClick={() => onInvite(c.id)}>
       Код входу
