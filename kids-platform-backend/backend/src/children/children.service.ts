@@ -164,6 +164,47 @@ export class ChildrenService {
       take: 50,
     });
 
+    const activityDays = 14;
+    const todayUtc = new Date();
+    todayUtc.setUTCHours(0, 0, 0, 0);
+    const activityStartUtc = new Date(todayUtc);
+    activityStartUtc.setUTCDate(activityStartUtc.getUTCDate() - (activityDays - 1));
+
+    const recentAttempts = await this.prisma.attempt.findMany({
+      where: {
+        childProfileId: child.id,
+        createdAt: { gte: activityStartUtc },
+      },
+      select: {
+        createdAt: true,
+        durationSec: true,
+        isFinished: true,
+        correctCount: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const activityByDate = new Map<string, { didPlay: boolean; levelsPassed: number; durationSec: number }>();
+
+    for (const attempt of recentAttempts) {
+      const dateKey = attempt.createdAt.toISOString().slice(0, 10);
+      const prev = activityByDate.get(dateKey) ?? { didPlay: false, levelsPassed: 0, durationSec: 0 };
+      prev.didPlay = true;
+      prev.durationSec += Math.max(0, attempt.durationSec ?? 0);
+      if (attempt.isFinished && attempt.correctCount > 0) {
+        prev.levelsPassed += 1;
+      }
+      activityByDate.set(dateKey, prev);
+    }
+
+    const activity14Days = Array.from({ length: activityDays }, (_, idx) => {
+      const day = new Date(activityStartUtc);
+      day.setUTCDate(activityStartUtc.getUTCDate() + idx);
+      const date = day.toISOString().slice(0, 10);
+      const stats = activityByDate.get(date) ?? { didPlay: false, levelsPassed: 0, durationSec: 0 };
+      return { date, ...stats };
+    });
+
     const totalAttempts = attempts.length;
     const finishedAttempts = attempts.filter((a) => a.isFinished).length;
     const totalScore = attempts.reduce((acc, a) => acc + a.score, 0);
@@ -182,6 +223,7 @@ export class ChildrenService {
         totalScore,
         totalCorrect,
         totalQuestions,
+        activity14Days,
       },
       attempts: attempts.map((a) => ({
         id: Number(a.id),
@@ -194,6 +236,7 @@ export class ChildrenService {
         correctCount: a.correctCount,
         totalCount: a.totalCount,
         isFinished: a.isFinished,
+        durationSec: a.durationSec,
         createdAt: a.createdAt,
         finishedAt: a.finishedAt,
       })),

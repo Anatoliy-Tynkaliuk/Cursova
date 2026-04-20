@@ -111,16 +111,12 @@
   opacity: 0.8;
 }
 
-.badgesList,
-.attemptsList {
+.badgesList {
   list-style: none;
   margin: 14px 0 0;
   padding: 0;
   display: grid;
   gap: 10px;
-}
-
-.badgesList {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
 
@@ -166,10 +162,7 @@
 
 .badgeDesc,
 .badgeMeta,
-.badgeState,
-.attemptModule,
-.attemptResult,
-.attemptStatus {
+.badgeState {
   font-size: 13px;
   margin-top: 6px;
   opacity: 0.84;
@@ -181,16 +174,79 @@
   opacity: 1;
 }
 
-.attemptItem {
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 14px;
+.calendarGrid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  align-items: end;
+  gap: 8px;
+  min-height: 110px;
 }
 
-.attemptTitle {
-  font-size: 17px;
+.dayColumn {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.dayColumn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.04);
+}
+
+.dayDot {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+}
+
+.dayInactive {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.dayActive {
+  background: linear-gradient(180deg, #95ff83 0%, #2fd969 100%);
+  box-shadow: 0 0 12px rgba(111, 255, 127, 0.7), 0 6px 18px rgba(47, 217, 105, 0.35);
+}
+
+.daySelected {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4), 0 0 16px rgba(111, 255, 127, 0.7);
+}
+
+.calendarLegend {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dayLabel {
+  font-size: 10px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.dayDetails {
+  margin-top: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.dayDetailsDate {
   font-weight: 800;
+  font-size: 15px;
 }
 
 @media (max-width: 700px) {
@@ -209,5 +265,14 @@
 
   .summaryGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .calendarGrid,
+  .calendarLegend {
+    gap: 4px;
+  }
+
+  .dayLabel {
+    font-size: 9px;
   }
 }

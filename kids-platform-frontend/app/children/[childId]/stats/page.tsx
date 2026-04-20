@@ -8,12 +8,28 @@ import { getChildBadges, getChildStats, type ChildBadgeItem, type ChildStats } f
 import { isLoggedIn } from "@/lib/auth";
 import styles from "./page.module.css";
 
+type ActivityDay = ChildStats["summary"]["activity14Days"][number];
+
+function formatDayLabel(isoDate: string) {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  return date.toLocaleDateString("uk-UA", { day: "2-digit", month: "2-digit" });
+}
+
+function formatDuration(seconds: number) {
+  const safeSeconds = Math.max(0, seconds);
+  const hrs = Math.floor(safeSeconds / 3600);
+  const mins = Math.floor((safeSeconds % 3600) / 60);
+  if (hrs > 0) return `${hrs} год ${mins} хв`;
+  return `${mins} хв`;
+}
+
 export default function ChildStatsPage() {
   const params = useParams<{ childId: string }>();
   const childId = Number(params.childId);
   const [stats, setStats] = useState<ChildStats | null>(null);
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -42,6 +58,11 @@ export default function ChildStatsPage() {
         setStats(data);
         setBadges(badgeData.badges);
         setFinishedAttempts(badgeData.finishedAttempts);
+
+        const latestPlayedDay = [...(data.summary.activity14Days ?? [])]
+          .reverse()
+          .find((day) => day.didPlay)?.date;
+        setSelectedDay(latestPlayedDay ?? data.summary.activity14Days.at(-1)?.date ?? null);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");
       } finally {
@@ -56,6 +77,17 @@ export default function ChildStatsPage() {
     if (!stats) return 0;
     return stats.summary.totalAttempts * 3;
   }, [stats]);
+
+  const activityDays = useMemo(() => stats?.summary.activity14Days ?? [], [stats]);
+  const selectedDayInfo = useMemo<ActivityDay | null>(() => {
+    if (!selectedDay || activityDays.length === 0) return null;
+    return activityDays.find((day) => day.date === selectedDay) ?? null;
+  }, [activityDays, selectedDay]);
+
+  const maxLevelsInDay = useMemo(
+    () => Math.max(1, ...activityDays.map((day) => day.levelsPassed)),
+    [activityDays],
+  );
 
   return (
     <div className={styles.page}>
@@ -142,22 +174,53 @@ export default function ChildStatsPage() {
             </section>
 
             <section className={styles.panel}>
-              <h2 className={styles.sectionTitle}>Останні ігри</h2>
-              {stats.attempts.length === 0 ? (
-                <p className={styles.empty}>Ще немає спроб.</p>
+              <h2 className={styles.sectionTitle}>Активність за 2 тижні</h2>
+              <p className={styles.subInfo}>
+                Зеленим підсвічені дні, коли дитина заходила в ігри. Наведи курсор або натисни на колонку.
+              </p>
+
+              {activityDays.length === 0 ? (
+                <p className={styles.empty}>Поки що немає активності за останні 14 днів.</p>
               ) : (
-                <ul className={styles.attemptsList}>
-                  {stats.attempts.map((attempt) => (
-                    <li key={attempt.id} className={styles.attemptItem}>
-                      <div className={styles.attemptTitle}>{attempt.game.title}</div>
-                      <div className={styles.attemptModule}>module: {attempt.game.moduleCode}</div>
-                      <div className={styles.attemptResult}>
-                        Результат: {attempt.correctCount}/{attempt.totalCount} | Бали: {attempt.score}/3
-                      </div>
-                      <div className={styles.attemptStatus}>{attempt.isFinished ? "Завершено" : "У процесі"}</div>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <div className={styles.calendarGrid}>
+                    {activityDays.map((day) => {
+                      const height = day.didPlay
+                        ? Math.max(36, Math.round((day.levelsPassed / maxLevelsInDay) * 96))
+                        : 18;
+
+                      return (
+                        <button
+                          key={day.date}
+                          type="button"
+                          onClick={() => setSelectedDay(day.date)}
+                          className={`${styles.dayColumn} ${day.didPlay ? styles.dayActive : styles.dayInactive} ${selectedDay === day.date ? styles.daySelected : ""}`}
+                          title={`${formatDayLabel(day.date)} • Рівнів пройдено: ${day.levelsPassed} • Час: ${formatDuration(day.durationSec)}`}
+                          style={{ height }}
+                          aria-label={`День ${formatDayLabel(day.date)}. Пройдено рівнів: ${day.levelsPassed}. Час у грі: ${formatDuration(day.durationSec)}`}
+                        >
+                          <span className={styles.dayDot} />
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className={styles.calendarLegend}>
+                    {activityDays.map((day) => (
+                      <span key={`label-${day.date}`} className={styles.dayLabel}>
+                        {formatDayLabel(day.date)}
+                      </span>
+                    ))}
+                  </div>
+
+                  {selectedDayInfo && (
+                    <div className={styles.dayDetails}>
+                      <div className={styles.dayDetailsDate}>{formatDayLabel(selectedDayInfo.date)}</div>
+                      <div>Пройдено рівнів: {selectedDayInfo.levelsPassed}</div>
+                      <div>Час на сайті: {formatDuration(selectedDayInfo.durationSec)}</div>
+                    </div>
+                  )}
+                </>
               )}
             </section>
           </>
