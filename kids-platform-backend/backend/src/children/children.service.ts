@@ -164,6 +164,17 @@ export class ChildrenService {
       take: 50,
     });
 
+    const allAttemptsForSummary = await this.prisma.attempt.findMany({
+      where: { childProfileId: child.id },
+      select: {
+        levelId: true,
+        isFinished: true,
+        score: true,
+        correctCount: true,
+        totalCount: true,
+      },
+    });
+
     const activityWindowDays = 365;
     const todayUtc = new Date();
     todayUtc.setUTCHours(0, 0, 0, 0);
@@ -210,11 +221,60 @@ export class ChildrenService {
       return { date, ...stats };
     });
 
-    const totalAttempts = attempts.length;
-    const finishedAttempts = attempts.filter((a) => a.isFinished).length;
-    const totalScore = attempts.reduce((acc, a) => acc + a.score, 0);
-    const totalCorrect = attempts.reduce((acc, a) => acc + a.correctCount, 0);
-    const totalQuestions = attempts.reduce((acc, a) => acc + a.totalCount, 0);
+    const bestFinishedByLevel = new Map<string, { score: number; correctCount: number; totalCount: number }>();
+    const finishedWithoutLevel: Array<{ score: number; correctCount: number; totalCount: number }> = [];
+    const uniqueLevelAttempts = new Set<string>();
+    let attemptsWithoutLevelCount = 0;
+
+    for (const attempt of allAttemptsForSummary) {
+      if (attempt.levelId) {
+        const levelKey = attempt.levelId.toString();
+        uniqueLevelAttempts.add(levelKey);
+
+        if (!attempt.isFinished) continue;
+
+        const prevBest = bestFinishedByLevel.get(levelKey);
+        if (
+          !prevBest ||
+          attempt.score > prevBest.score ||
+          (attempt.score === prevBest.score && attempt.correctCount > prevBest.correctCount)
+        ) {
+          bestFinishedByLevel.set(levelKey, {
+            score: attempt.score,
+            correctCount: attempt.correctCount,
+            totalCount: attempt.totalCount,
+          });
+        }
+      } else {
+        attemptsWithoutLevelCount += 1;
+        if (attempt.isFinished) {
+          finishedWithoutLevel.push({
+            score: attempt.score,
+            correctCount: attempt.correctCount,
+            totalCount: attempt.totalCount,
+          });
+        }
+      }
+    }
+
+    let totalScore = 0;
+    let totalCorrect = 0;
+    let totalQuestions = 0;
+
+    for (const best of bestFinishedByLevel.values()) {
+      totalScore += best.score;
+      totalCorrect += best.correctCount;
+      totalQuestions += best.totalCount;
+    }
+
+    for (const item of finishedWithoutLevel) {
+      totalScore += item.score;
+      totalCorrect += item.correctCount;
+      totalQuestions += item.totalCount;
+    }
+
+    const totalAttempts = uniqueLevelAttempts.size + attemptsWithoutLevelCount;
+    const finishedAttempts = bestFinishedByLevel.size + finishedWithoutLevel.length;
 
     return {
       child: {
