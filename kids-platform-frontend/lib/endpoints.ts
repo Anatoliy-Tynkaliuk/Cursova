@@ -16,6 +16,10 @@ export async function login(email: string, password: string) {
   );
 }
 
+export async function getMe() {
+  return api<{ id: number; email: string; username: string; role: string }>("/auth/me", "GET");
+}
+
 export async function getChildren() {
   return api<Array<{ id: number; name: string; ageGroupCode: string }>>("/children", "GET");
 }
@@ -62,6 +66,10 @@ export type ChildStats = {
 
 export async function getChildStats(childId: number) {
   return api<ChildStats>(`/children/${childId}/stats`, "GET");
+}
+
+export async function getChildStatsPublic(childId: number) {
+  return api<ChildStats>(`/child/${childId}/stats`, "GET");
 }
 
 export type AdminModuleItem = {
