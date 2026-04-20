@@ -127,7 +127,7 @@ export default function LogicPlanetPage() {
         {/* STATS BAR */}
         <section className={styles.statsBar}>
           <div className={styles.statItem}>
-            <div className={styles.statIcon}>⭐</div>
+            <div className={styles.statIcon}><Image src="/levels.png" alt="Рівень" width={34} height={34} /></div>
             <div className={styles.statMeta}>
               <div className={styles.statLabel}>Рівень</div>
               <div className={styles.statValue}>{stats.level}</div>
@@ -137,7 +137,7 @@ export default function LogicPlanetPage() {
           <div className={styles.statDivider} />
 
           <div className={styles.statItem}>
-            <div className={styles.statIcon}>✨</div>
+            <div className={styles.statIcon}><Image src="/star.png" alt="Зірочки" width={34} height={34} /></div>
             <div className={styles.statMeta}>
               <div className={styles.statLabel}>Зірочок</div>
               <div className={styles.statValue}>{stats.stars}</div>
@@ -147,7 +147,7 @@ export default function LogicPlanetPage() {
           <div className={styles.statDivider} />
 
           <div className={styles.statItem}>
-            <div className={styles.statIcon}>🏆</div>
+            <div className={styles.statIcon}><Image src="/trophy.png" alt="Досягнення" width={34} height={34} /></div>
             <div className={styles.statMeta}>
               <div className={styles.statLabel}>Досягнень</div>
               <div className={styles.statValue}>{stats.achievements}</div>
