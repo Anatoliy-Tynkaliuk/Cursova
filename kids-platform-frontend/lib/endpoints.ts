@@ -51,7 +51,13 @@ export type ChildStats = {
     totalScore: number;
     totalCorrect: number;
     totalQuestions: number;
-    activityYearDays: Array<{
+    activityYearDays?: Array<{
+      date: string;
+      didPlay: boolean;
+      levelsPassed: number;
+      durationSec: number;
+    }>;
+    activity14Days?: Array<{
       date: string;
       didPlay: boolean;
       levelsPassed: number;

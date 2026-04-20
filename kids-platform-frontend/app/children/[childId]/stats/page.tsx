@@ -8,7 +8,12 @@ import { getChildBadges, getChildStats, type ChildBadgeItem, type ChildStats } f
 import { isLoggedIn } from "@/lib/auth";
 import styles from "./page.module.css";
 
-type ActivityDay = ChildStats["summary"]["activityYearDays"][number];
+type ActivityDay = {
+  date: string;
+  didPlay: boolean;
+  levelsPassed: number;
+  durationSec: number;
+};
 
 function toMonthKey(isoDate: string) {
   return isoDate.slice(0, 7);
@@ -30,6 +35,36 @@ function formatDuration(seconds: number) {
   const mins = Math.floor((safeSeconds % 3600) / 60);
   if (hrs > 0) return `${hrs} год ${mins} хв`;
   return `${mins} хв`;
+}
+
+function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
+  const rawYear = stats.summary.activityYearDays ?? [];
+  const raw14 = stats.summary.activity14Days ?? [];
+
+  if (rawYear.length > 0) return rawYear;
+  if (raw14.length > 0) return raw14;
+
+  const byDate = new Map<string, ActivityDay>();
+  for (const attempt of stats.attempts ?? []) {
+    const dateKey = String(attempt.createdAt).slice(0, 10);
+    const prev = byDate.get(dateKey) ?? { date: dateKey, didPlay: false, levelsPassed: 0, durationSec: 0 };
+    prev.didPlay = true;
+    prev.durationSec += Math.max(0, attempt.durationSec ?? 0);
+    if (attempt.isFinished && attempt.correctCount > 0) prev.levelsPassed += 1;
+    byDate.set(dateKey, prev);
+  }
+
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0, 0, 0, 0);
+  const startUtc = new Date(todayUtc);
+  startUtc.setUTCDate(startUtc.getUTCDate() - 364);
+
+  return Array.from({ length: 365 }, (_, idx) => {
+    const day = new Date(startUtc);
+    day.setUTCDate(startUtc.getUTCDate() + idx);
+    const key = day.toISOString().slice(0, 10);
+    return byDate.get(key) ?? { date: key, didPlay: false, levelsPassed: 0, durationSec: 0 };
+  });
 }
 
 export default function ChildStatsPage() {
@@ -69,14 +104,13 @@ export default function ChildStatsPage() {
         setBadges(badgeData.badges);
         setFinishedAttempts(badgeData.finishedAttempts);
 
-        const availableMonths = [...new Set((data.summary.activityYearDays ?? []).map((d) => toMonthKey(d.date)))];
+        const normalizedDays = normalizeActivityDays(data);
+        const availableMonths = [...new Set(normalizedDays.map((d) => toMonthKey(d.date)))];
         const lastMonth = availableMonths.at(-1) ?? null;
         setSelectedMonth(lastMonth);
 
-        const latestPlayedDay = [...(data.summary.activityYearDays ?? [])]
-          .reverse()
-          .find((day) => day.didPlay)?.date;
-        setSelectedDay(latestPlayedDay ?? data.summary.activityYearDays.at(-1)?.date ?? null);
+        const latestPlayedDay = [...normalizedDays].reverse().find((day) => day.didPlay)?.date;
+        setSelectedDay(latestPlayedDay ?? normalizedDays.at(-1)?.date ?? null);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");
       } finally {
@@ -92,7 +126,7 @@ export default function ChildStatsPage() {
     return stats.summary.totalAttempts * 3;
   }, [stats]);
 
-  const activityDays = useMemo(() => stats?.summary.activityYearDays ?? [], [stats]);
+  const activityDays = useMemo(() => (stats ? normalizeActivityDays(stats) : []), [stats]);
   const monthKeys = useMemo(() => [...new Set(activityDays.map((day) => toMonthKey(day.date)))], [activityDays]);
 
   const selectedMonthIndex = selectedMonth ? monthKeys.indexOf(selectedMonth) : -1;
@@ -213,8 +247,8 @@ export default function ChildStatsPage() {
               <h2 className={styles.sectionTitle}>Календар активності (1 рік)</h2>
               <p className={styles.subInfo}>Активні дні підсвічені зеленим. Можна переглядати різні місяці.</p>
 
-              {monthKeys.length === 0 || !selectedMonth ? (
-                <p className={styles.empty}>Поки що немає активності за останній рік.</p>
+              {!selectedMonth ? (
+                <p className={styles.empty}>Не вдалося підготувати календар активності.</p>
               ) : (
                 <>
                   <div className={styles.monthNav}>
