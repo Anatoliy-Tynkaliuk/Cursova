@@ -37,6 +37,14 @@ function formatDuration(seconds: number) {
   return `${mins} хв`;
 }
 
+
+const WEEKDAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+
+function getMondayFirstWeekday(isoDate: string) {
+  const weekday = new Date(`${isoDate}T00:00:00Z`).getUTCDay();
+  return weekday === 0 ? 6 : weekday - 1;
+}
+
 function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
   const rawYear = stats.summary.activityYearDays ?? [];
   const raw14 = stats.summary.activity14Days ?? [];
@@ -154,10 +162,19 @@ export default function ChildStatsPage() {
     );
   }, [monthDays]);
 
-  const maxLevelsInMonthDay = useMemo(
-    () => Math.max(1, ...monthDays.map((day) => day.levelsPassed)),
-    [monthDays],
-  );
+
+  const calendarCells = useMemo(() => {
+    if (monthDays.length === 0) return [] as Array<ActivityDay | null>;
+    const leadingEmpty = getMondayFirstWeekday(monthDays[0].date);
+    const cells: Array<ActivityDay | null> = [];
+
+    for (let i = 0; i < leadingEmpty; i++) cells.push(null);
+    cells.push(...monthDays);
+
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [monthDays]);
+
 
   return (
     <div className={styles.page}>
@@ -276,34 +293,30 @@ export default function ChildStatsPage() {
                     <div>Час активності за місяць: {formatDuration(monthTotals.durationSec)}</div>
                   </div>
 
-                  <div className={styles.calendarGrid} style={{ gridTemplateColumns: `repeat(${monthDays.length}, minmax(0, 1fr))` }}>
-                    {monthDays.map((day) => {
-                      const height = day.didPlay
-                        ? Math.max(30, Math.round((day.levelsPassed / maxLevelsInMonthDay) * 98))
-                        : 16;
+                  <div className={styles.weekdaysRow}>
+                    {WEEKDAY_LABELS.map((label) => (
+                      <div key={label} className={styles.weekdayCell}>{label}</div>
+                    ))}
+                  </div>
+
+                  <div className={styles.monthCalendarGrid}>
+                    {calendarCells.map((day, idx) => {
+                      if (!day) return <div key={`empty-${idx}`} className={styles.emptyDayCell} />;
 
                       return (
                         <button
                           key={day.date}
                           type="button"
                           onClick={() => setSelectedDay(day.date)}
-                          className={`${styles.dayColumn} ${day.didPlay ? styles.dayActive : styles.dayInactive} ${selectedDay === day.date ? styles.daySelected : ""}`}
+                          className={`${styles.dayCell} ${day.didPlay ? styles.dayActive : styles.dayInactive} ${selectedDay === day.date ? styles.daySelected : ""}`}
                           title={`${formatDayLabel(day.date)} • Рівнів: ${day.levelsPassed} • Час: ${formatDuration(day.durationSec)}`}
-                          style={{ height }}
                           aria-label={`День ${formatDayLabel(day.date)}. Рівнів ${day.levelsPassed}. Час ${formatDuration(day.durationSec)}`}
                         >
-                          <span className={styles.dayDot} />
+                          <span className={styles.dayNumber}>{new Date(`${day.date}T00:00:00Z`).getUTCDate()}</span>
+                          {day.didPlay && <span className={styles.dayMeta}>{day.levelsPassed} рів.</span>}
                         </button>
                       );
                     })}
-                  </div>
-
-                  <div className={styles.calendarLegend} style={{ gridTemplateColumns: `repeat(${monthDays.length}, minmax(0, 1fr))` }}>
-                    {monthDays.map((day) => (
-                      <span key={`label-${day.date}`} className={styles.dayLabel}>
-                        {new Date(`${day.date}T00:00:00Z`).getUTCDate()}
-                      </span>
-                    ))}
                   </div>
 
                   {selectedDayInfo && (

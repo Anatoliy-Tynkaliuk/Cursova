@@ -219,63 +219,79 @@
   padding: 8px 10px;
 }
 
-.calendarGrid {
-  margin-top: 16px;
+.weekdaysRow {
+  margin-top: 14px;
   display: grid;
-  align-items: end;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
-  min-height: 110px;
 }
 
-.dayColumn {
-  width: 100%;
-  border-radius: 10px;
-  border: 1px solid transparent;
+.weekdayCell {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(225, 232, 255, 0.85);
+}
+
+.monthCalendarGrid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.emptyDayCell {
+  min-height: 78px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.dayCell {
+  min-height: 78px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  padding: 0;
+  padding: 9px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: flex-start;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.dayColumn:hover {
-  transform: translateY(-3px);
-  filter: brightness(1.04);
+.dayCell:hover {
+  transform: translateY(-2px);
 }
 
-.dayDot {
-  width: 100%;
-  height: 100%;
-  border-radius: 10px;
+.dayNumber {
+  font-weight: 800;
+  font-size: 16px;
+  color: #f4f7ff;
+}
+
+.dayMeta {
+  font-size: 11px;
+  color: rgba(224, 255, 226, 0.95);
+  font-weight: 700;
 }
 
 .dayInactive {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.14);
+  opacity: 0.7;
 }
 
 .dayActive {
-  background: linear-gradient(180deg, #95ff83 0%, #2fd969 100%);
-  box-shadow: 0 0 12px rgba(111, 255, 127, 0.7), 0 6px 18px rgba(47, 217, 105, 0.35);
+  border-color: rgba(120, 255, 149, 0.7);
+  background: linear-gradient(165deg, rgba(133, 255, 142, 0.28), rgba(47, 217, 105, 0.2));
+  box-shadow: 0 8px 20px rgba(40, 200, 106, 0.25), 0 0 0 1px rgba(140, 255, 151, 0.35) inset;
 }
 
 .daySelected {
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4), 0 0 16px rgba(111, 255, 127, 0.7);
+  border-color: rgba(180, 225, 255, 1);
+  box-shadow: 0 0 0 2px rgba(180, 225, 255, 0.45), 0 10px 24px rgba(73, 164, 255, 0.25);
 }
 
-.calendarLegend {
-  margin-top: 8px;
-  display: grid;
-  gap: 8px;
-}
-
-.dayLabel {
-  font-size: 10px;
-  text-align: center;
-  opacity: 0.8;
-}
 
 .dayDetails {
   margin-top: 14px;
@@ -310,9 +326,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .calendarGrid,
-  .calendarLegend {
-    gap: 4px;
+  .weekdaysRow,
+  .monthCalendarGrid {
+    gap: 6px;
   }
 
   .monthNav {
@@ -327,7 +343,13 @@
     grid-template-columns: 1fr;
   }
 
-  .dayLabel {
-    font-size: 9px;
+  .dayCell,
+  .emptyDayCell {
+    min-height: 64px;
+    border-radius: 10px;
+  }
+
+  .dayNumber {
+    font-size: 14px;
   }
 }
