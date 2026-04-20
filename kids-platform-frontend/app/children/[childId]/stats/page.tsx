@@ -45,6 +45,17 @@ function getMondayFirstWeekday(isoDate: string) {
   return weekday === 0 ? 6 : weekday - 1;
 }
 
+
+function getAttemptDurationSec(attempt: ChildStats["attempts"][number]) {
+  if (attempt.durationSec != null) return Math.max(0, attempt.durationSec);
+  if (!attempt.finishedAt) return 0;
+
+  const created = Date.parse(String(attempt.createdAt));
+  const finished = Date.parse(String(attempt.finishedAt));
+  if (!Number.isFinite(created) || !Number.isFinite(finished)) return 0;
+  return Math.max(0, Math.floor((finished - created) / 1000));
+}
+
 function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
   const rawYear = stats.summary.activityYearDays ?? [];
   const raw14 = stats.summary.activity14Days ?? [];
@@ -57,7 +68,7 @@ function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
     const dateKey = String(attempt.createdAt).slice(0, 10);
     const prev = byDate.get(dateKey) ?? { date: dateKey, didPlay: false, levelsPassed: 0, durationSec: 0 };
     prev.didPlay = true;
-    prev.durationSec += Math.max(0, attempt.durationSec ?? 0);
+    prev.durationSec += getAttemptDurationSec(attempt);
     if (attempt.isFinished && attempt.correctCount > 0) prev.levelsPassed += 1;
     byDate.set(dateKey, prev);
   }

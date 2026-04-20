@@ -177,6 +177,7 @@ export class ChildrenService {
       },
       select: {
         createdAt: true,
+        finishedAt: true,
         durationSec: true,
         isFinished: true,
         correctCount: true,
@@ -190,7 +191,11 @@ export class ChildrenService {
       const dateKey = attempt.createdAt.toISOString().slice(0, 10);
       const prev = activityByDate.get(dateKey) ?? { didPlay: false, levelsPassed: 0, durationSec: 0 };
       prev.didPlay = true;
-      prev.durationSec += Math.max(0, attempt.durationSec ?? 0);
+      const fallbackDuration = attempt.finishedAt
+        ? Math.max(0, Math.floor((attempt.finishedAt.getTime() - attempt.createdAt.getTime()) / 1000))
+        : 0;
+      const effectiveDuration = Math.max(0, attempt.durationSec ?? fallbackDuration);
+      prev.durationSec += effectiveDuration;
       if (attempt.isFinished && attempt.correctCount > 0) {
         prev.levelsPassed += 1;
       }
@@ -236,7 +241,7 @@ export class ChildrenService {
         correctCount: a.correctCount,
         totalCount: a.totalCount,
         isFinished: a.isFinished,
-        durationSec: a.durationSec,
+        durationSec: a.durationSec ?? (a.finishedAt ? Math.max(0, Math.floor((a.finishedAt.getTime() - a.createdAt.getTime()) / 1000)) : null),
         createdAt: a.createdAt,
         finishedAt: a.finishedAt,
       })),
