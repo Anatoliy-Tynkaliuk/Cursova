@@ -125,6 +125,14 @@ export default function ParentChildrenPage() {
           </div>
         )}
 
+        {inviteCode && (
+          <section className={styles.inviteStandalone}>
+            <div className={styles.inviteTitle}>Код для входу дитини:</div>
+            <div className={styles.inviteCode}>{inviteCode}</div>
+            <div className={styles.inviteHint}>Дитина вводить цей код на сторінці /child/join</div>
+          </section>
+        )}
+
         <section className={styles.panel}>
           <div className={styles.cards}>
             {children.map((c, idx) => (
@@ -223,14 +231,6 @@ export default function ParentChildrenPage() {
                 Додати
               </button>
             </div>
-
-            {inviteCode && (
-              <div className={styles.inviteBox}>
-                <div className={styles.inviteTitle}>Код для входу дитини:</div>
-                <div className={styles.inviteCode}>{inviteCode}</div>
-                <div className={styles.inviteHint}>Дитина вводить цей код на сторінці /child/join</div>
-              </div>
-            )}
           </section>
         )}
       </main>

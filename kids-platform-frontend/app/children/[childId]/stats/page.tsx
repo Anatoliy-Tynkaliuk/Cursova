@@ -279,7 +279,9 @@ export default function ChildStatsPage() {
                 <p className={styles.empty}>Не вдалося підготувати календар активності.</p>
               ) : (
                 <>
-                  <div className={styles.monthNav}>
+                  <div className={styles.monthTitle}>{formatMonthLabel(selectedMonth)}</div>
+
+                  <div className={styles.monthControlsRow}>
                     <button
                       type="button"
                       className={styles.monthBtn}
@@ -288,7 +290,12 @@ export default function ChildStatsPage() {
                     >
                       ← Попередній
                     </button>
-                    <div className={styles.monthTitle}>{formatMonthLabel(selectedMonth)}</div>
+
+                    <div className={styles.monthSummaryInline}>
+                      <div>Пройдено рівнів за місяць: {monthTotals.levelsPassed}</div>
+                      <div>Час активності за місяць: {formatDuration(monthTotals.durationSec)}</div>
+                    </div>
+
                     <button
                       type="button"
                       className={styles.monthBtn}
@@ -297,11 +304,6 @@ export default function ChildStatsPage() {
                     >
                       Наступний →
                     </button>
-                  </div>
-
-                  <div className={styles.monthSummary}>
-                    <div>Пройдено рівнів за місяць: {monthTotals.levelsPassed}</div>
-                    <div>Час активності за місяць: {formatDuration(monthTotals.durationSec)}</div>
                   </div>
 
                   <div className={styles.weekdaysRow}>

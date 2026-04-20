@@ -99,6 +99,17 @@
   border-color: rgba(120, 255, 180, 0.25);
 }
 
+
+.inviteStandalone {
+  max-width: 800px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.26);
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+}
+
 .panel {
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.14);

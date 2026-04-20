@@ -175,20 +175,35 @@
 }
 
 
-.monthNav {
+.monthTitle {
   margin-top: 14px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 22px;
+  text-transform: capitalize;
+}
+
+.monthControlsRow {
+  margin-top: 10px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
 }
 
-.monthTitle {
-  text-align: center;
-  font-weight: 800;
-  font-size: 18px;
-  text-transform: capitalize;
+.monthSummaryInline {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
 }
+
+.monthSummaryInline > div {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 10px;
+}
+
 
 .monthBtn {
   border-radius: 12px;
@@ -202,21 +217,6 @@
 .monthBtn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-}
-
-.monthSummary {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.monthSummary > div {
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  padding: 8px 10px;
 }
 
 .weekdaysRow {
@@ -331,16 +331,12 @@
     gap: 6px;
   }
 
-  .monthNav {
+  .monthControlsRow {
     grid-template-columns: 1fr;
   }
 
-  .monthTitle {
-    order: -1;
-  }
-
-  .monthSummary {
-    grid-template-columns: 1fr;
+  .monthBtn {
+    width: 100%;
   }
 
   .dayCell,
