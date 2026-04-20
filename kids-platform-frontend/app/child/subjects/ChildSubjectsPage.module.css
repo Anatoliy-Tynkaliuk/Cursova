@@ -8,8 +8,8 @@
 
 .bgImg {
   object-fit: cover;
-}
 
+}
 
 .container {
   position: relative;
@@ -19,13 +19,11 @@
   padding: 22px 16px 50px;
 }
 
-/* TOP BAR */
 .topBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-
   padding: 14px 16px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -45,7 +43,6 @@
   color: rgba(255, 255, 255, 0.92);
   font-weight: 800;
   font-size: 12px;
-
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -56,7 +53,6 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* GREETING */
 .greeting {
   margin: 18px 0 12px;
   text-align: center;
@@ -66,7 +62,6 @@
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
-/* MAIN PANEL */
 .panel {
   margin-top: 10px;
   border-radius: 26px;
@@ -95,20 +90,15 @@
   }
 }
 
-/* PLANET CARD = PLANET SIZE */
 .planetCard {
   position: relative;
   overflow: hidden;
-
-  height: 260px; /* планета = контейнер */
+  height: 260px; 
   border-radius: 26px;
-
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.06);
-
   text-decoration: none;
   color: white;
-
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
 
@@ -118,16 +108,14 @@
   border-color: rgba(255, 255, 255, 0.22);
 }
 
-/* image fills */
 .planetBg {
-  object-fit: contain; /* не обрізаємо планету */
+  object-fit: contain; 
   transform: scale(1.1);
   filter:
     drop-shadow(0 30px 70px rgba(0, 0, 0, 0.6))
     saturate(1.1);
 }
 
-/* overlay for text readability */
 .planetOverlay {
   position: absolute;
   inset: 0;
@@ -142,12 +130,10 @@
 .planetContent {
   position: absolute;
   inset: 0;
-
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-
   padding: 16px;
   text-align: center;
 }
@@ -175,7 +161,6 @@
   }
 }
 
-/* STATS */
 .statsPanel {
   margin-top: 14px;
   border-radius: 22px;
@@ -211,8 +196,8 @@
 }
 
 .statIcon {
-  width: 42px;
-  height: 42px;
+  width: 55px;
+  height: 50px;
   border-radius: 999px;
   display: flex;
   align-items: center;
@@ -238,7 +223,6 @@
   font-weight: 900;
 }
 
-/* BOTTOM (NO astronaut) */
 .bottom {
   margin-top: 18px;
 }
