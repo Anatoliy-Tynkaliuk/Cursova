@@ -1,277 +1,165 @@
-.page {
-  min-height: 100vh;
-  padding: 24px 16px 40px;
-    background-image: url("/background.png");
-  background-size: cover;
-  background-position: center;
-  transform: scale(1.02);color: #ffffff;
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
+import { getChildSession } from "@/lib/auth";
+import styles from "./ChildAchievementsPage.module.css";
+
+function getBadgeProgress(badge: ChildBadgeItem) {
+  if (badge.progressPercent != null) return badge.progressPercent;
+  if (badge.isEarned) return 100;
+  return 0;
 }
 
-.container {
-  max-width: 980px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-
-.title {
-  margin: 0;
-  font-size: 38px;
-  font-weight: 900;
-}
-
-.back {
-  text-decoration: none;
-  color: #e4ebff;
-  font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.09);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.profile {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  align-items: center;
-  border-radius: 18px;
-  padding: 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  margin-bottom: 18px;
-}
-
-.profileLabel {
-  margin: 0;
-  color: #9fbcff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.name {
-  margin: 4px 0;
-  font-size: 30px;
-  font-weight: 900;
-}
-
-.profileMeta {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 14px;
-}
-
-.progressBlock {
-  min-width: 260px;
-}
-
-.progressText {
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.progressBar {
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: linear-gradient(90deg, #61d9ff 0%, #8eff76 100%);
-}
-
-.progressPercent {
-  margin-top: 6px;
-  color: #b9cbff;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-
-.card {
-  position: relative;           
-  overflow: hidden;           
-  border-radius: 18px;
-  min-height: 204px;
-
-  border: 1px solid rgba(255, 255, 255, 0.17);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
-
-  display: flex;
-}
-
-.cardEarned {
-  border-color: rgba(143, 255, 165, 0.82);
-  background: linear-gradient(180deg, rgba(55, 113, 89, 0.42) 0%, rgba(255, 255, 255, 0.06) 100%);
-}
-
-.cardLocked {
-  opacity: 0.92;
-}
-
-
-.cardBg {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cardBgImg {
-  object-fit: contain;
-  opacity: 0.6;                
-  filter: blur(0.2px) saturate(1.15) contrast(1.05);
-  transform: scale(1.15);     
-}
-
-.cardContent {
-  position: relative;
-  z-index: 1;
-  padding: 14px;
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-}
-
-.cardHead {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 10px;
-  gap: 10px;
-}
-
-.badgeStatus {
-  font-size: 11px;
-  font-weight: 800;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 4px 8px;
-  backdrop-filter: blur(6px);
-}
-
-.chain {
-  font-size: 16px;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.55));
-}
-
-.cardTitle {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 900;
-  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-}
-
-.cardDesc {
-  margin: 8px 0 0;
-  color: rgba(255, 255, 255, 0.86);
-  font-size: 14px;
-  line-height: 1.3;
-  min-height: 38px;
-  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.30);
-}
-
-.metricRow {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #cbdaff;
-  padding-top: 12px;
-}
-
-.progressLine {
-  margin-top: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-}
-
-.progressLineFill {
-  height: 100%;
-  background: linear-gradient(90deg, #59d7ff, #a9ff6e);
-}
-
-.error {
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 14px;
-  background: rgba(255, 72, 72, 0.2);
-}
-
-.empty {
-  text-align: center;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.82);
-  margin: 18px 0;
-}
-
-.bottom {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.allBtn {
-  display: inline-block;
-  text-decoration: none;
-  color: white;
-  font-weight: 900;
-  padding: 12px 20px;
-  border-radius: 14px;
-  background: linear-gradient(90deg, #44cdf3 0%, #7e6dff 100%);
-}
-
-@media (max-width: 920px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+function getProgressText(badge: ChildBadgeItem) {
+  if (badge.currentValue != null && badge.targetValue != null) {
+    return `${badge.currentValue}/${badge.targetValue}`;
   }
-
-  .profile {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .progressBlock {
-    min-width: 0;
-    width: 100%;
-  }
+  return badge.isEarned ? "Виконано" : "0%";
 }
 
-@media (max-width: 560px) {
-  .header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
+export default function ChildAchievementsPage() {
+  const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
+  const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [totalStars, setTotalStars] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  .grid {
-    grid-template-columns: 1fr;
-  }
+  const session = useMemo(
+    () =>
+      typeof window === "undefined"
+        ? { childProfileId: null, ageGroupCode: null, childName: null }
+        : getChildSession(),
+    [],
+  );
 
-  .card {
-    max-width: 350px;
-    padding-right: 20px;
-  }
-  .container {
-  margin: 0 auto;      /* центр */
-  padding-left: 10%;  /* рівні відступи */
-  padding-right: 20px;
-}
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
+  const childName = isHydrated ? (session.childName || "RocketMax") : "RocketMax";
+
+  useEffect(() => {
+    if (!session?.childProfileId) {
+      window.location.href = "/child/join";
+      return;
+    }
+
+    async function load() {
+      setError(null);
+      try {
+        const data = await getChildBadgesPublic(session.childProfileId);
+        setBadges(data.badges ?? []);
+        setFinishedAttempts(data.finishedAttempts ?? 0);
+        setTotalStars(data.totalStars ?? 0);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Error");
+      }
+    }
+
+    load().catch((e: unknown) => setError(e instanceof Error ? e.message : "Error"));
+  }, [session?.childProfileId]);
+
+  const earnedCount = useMemo(() => badges.filter((badge) => badge.isEarned).length, [badges]);
+  const totalCount = badges.length;
+  const progressPct = totalCount > 0 ? Math.round((earnedCount / totalCount) * 100) : 0;
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Досягнення</h1>
+          <Link className={styles.back} href="/child/subjects">
+            ← Назад
+          </Link>
+        </header>
+
+        <section className={styles.profile}>
+          <div>
+            <p className={styles.profileLabel}>Профіль гравця</p>
+            <h2 className={styles.name}>{childName}</h2>
+            <p className={styles.profileMeta}>
+              Пройдено ігор: {finishedAttempts} · Зірочок: {totalStars}
+            </p>
+          </div>
+
+          <div className={styles.progressBlock}>
+            <div className={styles.progressText}>
+              {earnedCount}/{totalCount || 0} отримано
+            </div>
+            <div className={styles.progressBar}>
+              <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
+            </div>
+            <div className={styles.progressPercent}>{progressPct}%</div>
+          </div>
+        </section>
+
+        {error && <div className={styles.error}>{error}</div>}
+
+        {badges.length === 0 ? (
+          <div className={styles.empty}>Поки що немає досягнень.</div>
+        ) : (
+          <section className={styles.grid}>
+            {badges.map((badge) => {
+              const progress = getBadgeProgress(badge);
+              const bgSrc = badge.isEarned ? "/Achievements_page/completed_achievements.png" : "/Achievements_page/locked_achievements.png";
+
+              return (
+                <article
+                  key={badge.id}
+                  className={`${styles.card} ${badge.isEarned ? styles.cardEarned : styles.cardLocked}`}
+                  title={badge.description || ""}
+                >
+                  <div className={styles.cardBg} aria-hidden="true">
+                    <Image
+                      src={bgSrc}
+                      alt=""
+                      fill
+                      className={styles.cardBgImg}
+                      priority={false}
+                    />
+                  </div>
+
+                  <div className={styles.cardContent}>
+                    <div className={styles.cardHead}>
+                      <span className={styles.badgeStatus}>
+                        {badge.isEarned ? "Отримано" : "Закрито"}
+                      </span>
+
+                      {!badge.isEarned && <span className={styles.chain} aria-hidden="true">⛓️</span>}
+                    </div>
+
+                    <h3 className={styles.cardTitle}>{badge.title}</h3>
+                    <p className={styles.cardDesc}>
+                      {badge.description || "Досягнення відкриється після виконання цілі."}
+                    </p>
+
+                    {badge.metricLabel && (
+                      <div className={styles.metricRow}>
+                        <span>{badge.metricLabel}</span>
+                        <strong>{getProgressText(badge)}</strong>
+                      </div>
+                    )}
+
+                    <div className={styles.progressLine}>
+                      <div className={styles.progressLineFill} style={{ width: `${progress}%` }} />
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        )}
+
+        <div className={styles.bottom}>
+          <Link className={styles.allBtn} href="/child/achievements/all">
+            Усі досягнення
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }
