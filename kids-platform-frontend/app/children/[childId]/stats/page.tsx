@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getChildBadges, getChildStats, type ChildBadgeItem, type ChildStats } from "@/lib/endpoints";
 import { isLoggedIn } from "@/lib/auth";
+import styles from "./page.module.css";
 
 export default function ChildStatsPage() {
   const params = useParams<{ childId: string }>();
@@ -40,100 +41,110 @@ export default function ChildStatsPage() {
         setStats(data);
         setBadges(badgeData.badges);
         setFinishedAttempts(badgeData.finishedAttempts);
-      } catch (e: any) {
-        setError(e.message ?? "Error");
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Error");
       } finally {
         setLoading(false);
       }
     }
 
-    load().catch((e: any) => setError(e.message ?? "Error"));
+    load().catch((e: unknown) => setError(e instanceof Error ? e.message : "Error"));
   }, [childId]);
 
   return (
-    <div style={{ padding: 16, maxWidth: 900 }}>
-      <h1>Статистика дитини</h1>
-      <div style={{ marginBottom: 12 }}>
-        <Link href="/parent">← Назад до кабінету</Link>
-      </div>
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <h1 className={styles.title}>Статистика дитини</h1>
+        <div className={styles.backWrap}>
+          <Link className={styles.backLink} href="/parent">
+            ← Назад до кабінету
+          </Link>
+        </div>
 
-      {loading && <p>Завантаження...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        {loading && <p className={styles.loading}>Завантаження...</p>}
+        {error && <p className={styles.error}>{error}</p>}
 
-      {stats && (
-        <>
-          <div style={{ border: "1px solid #333", borderRadius: 10, padding: 12, marginBottom: 16 }}>
-            <div style={{ fontWeight: 700 }}>{stats.child.name}</div>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Вік: {stats.child.ageGroupCode}</div>
-            <div style={{ marginTop: 8 }}>
-              <div>Спроб: {stats.summary.totalAttempts}</div>
-              <div>Завершено: {stats.summary.finishedAttempts}</div>
-              <div>Правильні відповіді: {stats.summary.totalCorrect}</div>
-              <div>Запитань: {stats.summary.totalQuestions}</div>
-              <div>Бали: {stats.summary.totalScore}</div>
+        {stats && (
+          <>
+            <div className={styles.panel}>
+              <div className={styles.childName}>{stats.child.name}</div>
+              <div className={styles.childAge}>Вік: {stats.child.ageGroupCode}</div>
+              <div className={styles.summaryGrid}>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Спроб</span>
+                  <span className={styles.summaryValue}>{stats.summary.totalAttempts}</span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Завершено</span>
+                  <span className={styles.summaryValue}>{stats.summary.finishedAttempts}</span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Правильні відповіді</span>
+                  <span className={styles.summaryValue}>{stats.summary.totalCorrect}</span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Запитань</span>
+                  <span className={styles.summaryValue}>{stats.summary.totalQuestions}</span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Бали</span>
+                  <span className={styles.summaryValue}>{stats.summary.totalScore}</span>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12, marginBottom: 16 }}>
-            <h2 style={{ marginTop: 0 }}>Досягнення</h2>
-            <p style={{ fontSize: 12, opacity: 0.8, marginTop: 0 }}>
-              Завершено ігор: {finishedAttempts}
-            </p>
-            {badges.length === 0 ? (
-              <p>Поки що немає досягнень.</p>
-            ) : (
-              <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 8 }}>
-                {badges.map((badge) => (
-                  <li
-                    key={badge.id}
-                    style={{
-                      border: "1px solid #ccc",
-                      borderRadius: 8,
-                      padding: 10,
-                      opacity: badge.isEarned ? 1 : 0.5,
-                    }}
-                  >
-                    <div style={{ fontWeight: 600 }}>
-                      {badge.icon ? `${badge.icon} ` : ""}{badge.title}
-                    </div>
-                    {badge.description && <div style={{ fontSize: 12 }}>{badge.description}</div>}
-                    {parseThreshold(badge.code) != null && (
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>
-                        Потрібно завершених ігор: {parseThreshold(badge.code)}
+            <section className={styles.panel}>
+              <h2 className={styles.sectionTitle}>Досягнення</h2>
+              <p className={styles.subInfo}>Завершено ігор: {finishedAttempts}</p>
+
+              {badges.length === 0 ? (
+                <p className={styles.empty}>Поки що немає досягнень.</p>
+              ) : (
+                <ul className={styles.badgesList}>
+                  {badges.map((badge) => (
+                    <li
+                      key={badge.id}
+                      className={`${styles.badgeItem} ${badge.isEarned ? "" : styles.badgeLocked}`}
+                    >
+                      <div className={styles.badgeTitle}>
+                        {badge.icon ? `${badge.icon} ` : ""}
+                        {badge.title}
                       </div>
-                    )}
-                    <div style={{ fontSize: 12, marginTop: 4 }}>
-                      {badge.isEarned ? "Отримано ✅" : "Ще не отримано"}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+                      {badge.description && <div className={styles.badgeDesc}>{badge.description}</div>}
+                      {parseThreshold(badge.code) != null && (
+                        <div className={styles.badgeMeta}>
+                          Потрібно завершених ігор: {parseThreshold(badge.code)}
+                        </div>
+                      )}
+                      <div className={styles.badgeState}>{badge.isEarned ? "Отримано ✅" : "Ще не отримано"}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
-          <h2>Останні ігри</h2>
-          {stats.attempts.length === 0 ? (
-            <p>Ще немає спроб.</p>
-          ) : (
-            <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 10 }}>
-              {stats.attempts.map((attempt) => (
-                <li key={attempt.id} style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-                  <div style={{ fontWeight: 600 }}>{attempt.game.title}</div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>
-                    module: {attempt.game.moduleCode}
-                  </div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>
-                    Результат: {attempt.correctCount}/{attempt.totalCount} | Бали: {attempt.score}
-                  </div>
-                  <div style={{ fontSize: 12, opacity: 0.8 }}>
-                    {attempt.isFinished ? "Завершено" : "У процесі"}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
+            <section className={styles.panel}>
+              <h2 className={styles.sectionTitle}>Останні ігри</h2>
+              {stats.attempts.length === 0 ? (
+                <p className={styles.empty}>Ще немає спроб.</p>
+              ) : (
+                <ul className={styles.attemptsList}>
+                  {stats.attempts.map((attempt) => (
+                    <li key={attempt.id} className={styles.attemptItem}>
+                      <div className={styles.attemptTitle}>{attempt.game.title}</div>
+                      <div className={styles.attemptModule}>module: {attempt.game.moduleCode}</div>
+                      <div className={styles.attemptResult}>
+                        Результат: {attempt.correctCount}/{attempt.totalCount} | Бали: {attempt.score}
+                      </div>
+                      <div className={styles.attemptStatus}>{attempt.isFinished ? "Завершено" : "У процесі"}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </div>
   );
 }
