@@ -444,6 +444,7 @@ export class AttemptsService {
         attemptId,
         isCorrect,
         finished: true,
+        explanation: tv.explanation,
         summary: {
           score: finished.score,
           correctCount: finished.correctCount,
@@ -459,6 +460,7 @@ export class AttemptsService {
       attemptId,
       isCorrect,
       finished: false,
+      explanation: tv.explanation,
       progress: {
         score: updated.score,
         correctCount: updated.correctCount,

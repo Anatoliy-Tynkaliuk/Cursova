@@ -101,6 +101,7 @@ export default function GamePage() {
   const [msg, setMsg] = useState<string>("");
   const [awaitExplanation, setAwaitExplanation] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [answerExplanationText, setAnswerExplanationText] = useState<string>("");
   const [pendingTransition, setPendingTransition] = useState<{
     finished: boolean;
     nextTask: StartAttemptResponse["task"] | null;
@@ -454,6 +455,7 @@ export default function GamePage() {
     setPendingTransition(null);
     setAwaitExplanation(false);
     setShowExplanation(false);
+    setAnswerExplanationText("");
     setPickedIdx(null);
     setPickedState(null);
     setLoading(false);
@@ -515,7 +517,8 @@ export default function GamePage() {
             }
           : null;
 
-      const hasExplanation = !!current.explanation?.trim();
+      const answerExplanation = res.explanation ?? current.explanation ?? null;
+      const hasExplanation = !!answerExplanation?.trim();
       if (hasExplanation) {
         setPendingTransition({
           finished,
@@ -526,6 +529,7 @@ export default function GamePage() {
         });
         setAwaitExplanation(true);
         setShowExplanation(false);
+        setAnswerExplanationText(answerExplanation?.trim() ?? "");
         setLoading(false);
         return;
       }
@@ -859,7 +863,7 @@ export default function GamePage() {
                 </div>
               )}
 
-              {awaitExplanation && !!current.explanation?.trim() && (
+              {awaitExplanation && !!answerExplanationText && (
                 <div className={styles.explanationWrap}>
                   <button
                     className={styles.secondaryBtn}
@@ -869,7 +873,7 @@ export default function GamePage() {
                     Пояснення
                   </button>
 
-                  {showExplanation && <div className={styles.explanationText}>{current.explanation}</div>}
+                  {showExplanation && <div className={styles.explanationText}>{answerExplanationText}</div>}
 
                   <button className={styles.primaryBtn} type="button" onClick={applyPendingTransition}>
                     Далі

@@ -499,12 +499,14 @@ export type AnswerResponse =
       attemptId: number;
       isCorrect: boolean;
       finished: true;
+      explanation?: string | null;
       summary: { score: number; correctCount: number; totalCount: number };
     }
   | {
       attemptId: number;
       isCorrect: boolean;
       finished: false;
+      explanation?: string | null;
       nextTask: {
         taskId: number;
         position: number;
