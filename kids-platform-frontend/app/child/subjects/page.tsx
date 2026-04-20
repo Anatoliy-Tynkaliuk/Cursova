@@ -156,6 +156,9 @@ export default function ChildSubjectsPage() {
               <Link href="/child/achievements" className={styles.smallBtn}>
                 Досягнення
               </Link>
+              <Link href="/child/activity" className={styles.smallBtn}>
+                Активність
+              </Link>
               <Link href="/child/profile" className={styles.smallBtn}>
                 Профіль
               </Link>
