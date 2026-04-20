@@ -8,11 +8,20 @@ import { getChildBadges, getChildStats, type ChildBadgeItem, type ChildStats } f
 import { isLoggedIn } from "@/lib/auth";
 import styles from "./page.module.css";
 
-type ActivityDay = ChildStats["summary"]["activity14Days"][number];
+type ActivityDay = ChildStats["summary"]["activityYearDays"][number];
+
+function toMonthKey(isoDate: string) {
+  return isoDate.slice(0, 7);
+}
 
 function formatDayLabel(isoDate: string) {
   const date = new Date(`${isoDate}T00:00:00Z`);
   return date.toLocaleDateString("uk-UA", { day: "2-digit", month: "2-digit" });
+}
+
+function formatMonthLabel(monthKey: string) {
+  const date = new Date(`${monthKey}-01T00:00:00Z`);
+  return date.toLocaleDateString("uk-UA", { month: "long", year: "numeric" });
 }
 
 function formatDuration(seconds: number) {
@@ -29,6 +38,7 @@ export default function ChildStatsPage() {
   const [stats, setStats] = useState<ChildStats | null>(null);
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,10 +69,14 @@ export default function ChildStatsPage() {
         setBadges(badgeData.badges);
         setFinishedAttempts(badgeData.finishedAttempts);
 
-        const latestPlayedDay = [...(data.summary.activity14Days ?? [])]
+        const availableMonths = [...new Set((data.summary.activityYearDays ?? []).map((d) => toMonthKey(d.date)))];
+        const lastMonth = availableMonths.at(-1) ?? null;
+        setSelectedMonth(lastMonth);
+
+        const latestPlayedDay = [...(data.summary.activityYearDays ?? [])]
           .reverse()
           .find((day) => day.didPlay)?.date;
-        setSelectedDay(latestPlayedDay ?? data.summary.activity14Days.at(-1)?.date ?? null);
+        setSelectedDay(latestPlayedDay ?? data.summary.activityYearDays.at(-1)?.date ?? null);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Error");
       } finally {
@@ -78,15 +92,37 @@ export default function ChildStatsPage() {
     return stats.summary.totalAttempts * 3;
   }, [stats]);
 
-  const activityDays = useMemo(() => stats?.summary.activity14Days ?? [], [stats]);
-  const selectedDayInfo = useMemo<ActivityDay | null>(() => {
-    if (!selectedDay || activityDays.length === 0) return null;
-    return activityDays.find((day) => day.date === selectedDay) ?? null;
-  }, [activityDays, selectedDay]);
+  const activityDays = useMemo(() => stats?.summary.activityYearDays ?? [], [stats]);
+  const monthKeys = useMemo(() => [...new Set(activityDays.map((day) => toMonthKey(day.date)))], [activityDays]);
 
-  const maxLevelsInDay = useMemo(
-    () => Math.max(1, ...activityDays.map((day) => day.levelsPassed)),
-    [activityDays],
+  const selectedMonthIndex = selectedMonth ? monthKeys.indexOf(selectedMonth) : -1;
+  const prevMonthKey = selectedMonthIndex > 0 ? monthKeys[selectedMonthIndex - 1] : null;
+  const nextMonthKey = selectedMonthIndex >= 0 && selectedMonthIndex < monthKeys.length - 1 ? monthKeys[selectedMonthIndex + 1] : null;
+
+  const monthDays = useMemo(() => {
+    if (!selectedMonth) return [] as ActivityDay[];
+    return activityDays.filter((day) => toMonthKey(day.date) === selectedMonth);
+  }, [activityDays, selectedMonth]);
+
+  const selectedDayInfo = useMemo<ActivityDay | null>(() => {
+    if (!selectedDay || monthDays.length === 0) return null;
+    return monthDays.find((day) => day.date === selectedDay) ?? null;
+  }, [monthDays, selectedDay]);
+
+  const monthTotals = useMemo(() => {
+    return monthDays.reduce(
+      (acc, day) => {
+        acc.levelsPassed += day.levelsPassed;
+        acc.durationSec += day.durationSec;
+        return acc;
+      },
+      { levelsPassed: 0, durationSec: 0 },
+    );
+  }, [monthDays]);
+
+  const maxLevelsInMonthDay = useMemo(
+    () => Math.max(1, ...monthDays.map((day) => day.levelsPassed)),
+    [monthDays],
   );
 
   return (
@@ -174,20 +210,43 @@ export default function ChildStatsPage() {
             </section>
 
             <section className={styles.panel}>
-              <h2 className={styles.sectionTitle}>Активність за 2 тижні</h2>
-              <p className={styles.subInfo}>
-                Зеленим підсвічені дні, коли дитина заходила в ігри. Наведи курсор або натисни на колонку.
-              </p>
+              <h2 className={styles.sectionTitle}>Календар активності (1 рік)</h2>
+              <p className={styles.subInfo}>Активні дні підсвічені зеленим. Можна переглядати різні місяці.</p>
 
-              {activityDays.length === 0 ? (
-                <p className={styles.empty}>Поки що немає активності за останні 14 днів.</p>
+              {monthKeys.length === 0 || !selectedMonth ? (
+                <p className={styles.empty}>Поки що немає активності за останній рік.</p>
               ) : (
                 <>
-                  <div className={styles.calendarGrid}>
-                    {activityDays.map((day) => {
+                  <div className={styles.monthNav}>
+                    <button
+                      type="button"
+                      className={styles.monthBtn}
+                      onClick={() => prevMonthKey && setSelectedMonth(prevMonthKey)}
+                      disabled={!prevMonthKey}
+                    >
+                      ← Попередній
+                    </button>
+                    <div className={styles.monthTitle}>{formatMonthLabel(selectedMonth)}</div>
+                    <button
+                      type="button"
+                      className={styles.monthBtn}
+                      onClick={() => nextMonthKey && setSelectedMonth(nextMonthKey)}
+                      disabled={!nextMonthKey}
+                    >
+                      Наступний →
+                    </button>
+                  </div>
+
+                  <div className={styles.monthSummary}>
+                    <div>Пройдено рівнів за місяць: {monthTotals.levelsPassed}</div>
+                    <div>Час активності за місяць: {formatDuration(monthTotals.durationSec)}</div>
+                  </div>
+
+                  <div className={styles.calendarGrid} style={{ gridTemplateColumns: `repeat(${monthDays.length}, minmax(0, 1fr))` }}>
+                    {monthDays.map((day) => {
                       const height = day.didPlay
-                        ? Math.max(36, Math.round((day.levelsPassed / maxLevelsInDay) * 96))
-                        : 18;
+                        ? Math.max(30, Math.round((day.levelsPassed / maxLevelsInMonthDay) * 98))
+                        : 16;
 
                       return (
                         <button
@@ -195,9 +254,9 @@ export default function ChildStatsPage() {
                           type="button"
                           onClick={() => setSelectedDay(day.date)}
                           className={`${styles.dayColumn} ${day.didPlay ? styles.dayActive : styles.dayInactive} ${selectedDay === day.date ? styles.daySelected : ""}`}
-                          title={`${formatDayLabel(day.date)} • Рівнів пройдено: ${day.levelsPassed} • Час: ${formatDuration(day.durationSec)}`}
+                          title={`${formatDayLabel(day.date)} • Рівнів: ${day.levelsPassed} • Час: ${formatDuration(day.durationSec)}`}
                           style={{ height }}
-                          aria-label={`День ${formatDayLabel(day.date)}. Пройдено рівнів: ${day.levelsPassed}. Час у грі: ${formatDuration(day.durationSec)}`}
+                          aria-label={`День ${formatDayLabel(day.date)}. Рівнів ${day.levelsPassed}. Час ${formatDuration(day.durationSec)}`}
                         >
                           <span className={styles.dayDot} />
                         </button>
@@ -205,10 +264,10 @@ export default function ChildStatsPage() {
                     })}
                   </div>
 
-                  <div className={styles.calendarLegend}>
-                    {activityDays.map((day) => (
+                  <div className={styles.calendarLegend} style={{ gridTemplateColumns: `repeat(${monthDays.length}, minmax(0, 1fr))` }}>
+                    {monthDays.map((day) => (
                       <span key={`label-${day.date}`} className={styles.dayLabel}>
-                        {formatDayLabel(day.date)}
+                        {new Date(`${day.date}T00:00:00Z`).getUTCDate()}
                       </span>
                     ))}
                   </div>
@@ -217,7 +276,7 @@ export default function ChildStatsPage() {
                     <div className={styles.dayDetails}>
                       <div className={styles.dayDetailsDate}>{formatDayLabel(selectedDayInfo.date)}</div>
                       <div>Пройдено рівнів: {selectedDayInfo.levelsPassed}</div>
-                      <div>Час на сайті: {formatDuration(selectedDayInfo.durationSec)}</div>
+                      <div>Час активності: {formatDuration(selectedDayInfo.durationSec)}</div>
                     </div>
                   )}
                 </>

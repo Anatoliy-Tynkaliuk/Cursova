@@ -174,10 +174,54 @@
   opacity: 1;
 }
 
+
+.monthNav {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.monthTitle {
+  text-align: center;
+  font-weight: 800;
+  font-size: 18px;
+  text-transform: capitalize;
+}
+
+.monthBtn {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.monthBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.monthSummary {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.monthSummary > div {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 10px;
+}
+
 .calendarGrid {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: repeat(14, minmax(0, 1fr));
   align-items: end;
   gap: 8px;
   min-height: 110px;
@@ -224,7 +268,6 @@
 .calendarLegend {
   margin-top: 8px;
   display: grid;
-  grid-template-columns: repeat(14, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -270,6 +313,18 @@
   .calendarGrid,
   .calendarLegend {
     gap: 4px;
+  }
+
+  .monthNav {
+    grid-template-columns: 1fr;
+  }
+
+  .monthTitle {
+    order: -1;
+  }
+
+  .monthSummary {
+    grid-template-columns: 1fr;
   }
 
   .dayLabel {

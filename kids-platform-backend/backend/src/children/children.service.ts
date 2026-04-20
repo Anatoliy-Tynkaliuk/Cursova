@@ -164,11 +164,11 @@ export class ChildrenService {
       take: 50,
     });
 
-    const activityDays = 14;
+    const activityWindowDays = 365;
     const todayUtc = new Date();
     todayUtc.setUTCHours(0, 0, 0, 0);
     const activityStartUtc = new Date(todayUtc);
-    activityStartUtc.setUTCDate(activityStartUtc.getUTCDate() - (activityDays - 1));
+    activityStartUtc.setUTCDate(activityStartUtc.getUTCDate() - (activityWindowDays - 1));
 
     const recentAttempts = await this.prisma.attempt.findMany({
       where: {
@@ -197,7 +197,7 @@ export class ChildrenService {
       activityByDate.set(dateKey, prev);
     }
 
-    const activity14Days = Array.from({ length: activityDays }, (_, idx) => {
+    const activityYearDays = Array.from({ length: activityWindowDays }, (_, idx) => {
       const day = new Date(activityStartUtc);
       day.setUTCDate(activityStartUtc.getUTCDate() + idx);
       const date = day.toISOString().slice(0, 10);
@@ -223,7 +223,7 @@ export class ChildrenService {
         totalScore,
         totalCorrect,
         totalQuestions,
-        activity14Days,
+        activityYearDays,
       },
       attempts: attempts.map((a) => ({
         id: Number(a.id),
