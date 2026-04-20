@@ -435,6 +435,14 @@
   background: rgba(10, 6, 20, 0.20);
 }
 
+.summaryActions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .actions {
   margin-top: 6px;
   display: flex;
@@ -685,10 +693,12 @@
 .explanationWrap {
   margin-top: 14px;
   display: grid;
+  justify-items: center;
   gap: 10px;
 }
 
 .explanationText {
+  width: min(560px, 100%);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.08);
@@ -696,4 +706,12 @@
   color: #f9fbff;
   font-size: 16px;
   line-height: 1.4;
+}
+
+.explanationToggleBtn {
+  width: 148px;
+}
+
+.explanationNextBtn {
+  width: 112px;
 }

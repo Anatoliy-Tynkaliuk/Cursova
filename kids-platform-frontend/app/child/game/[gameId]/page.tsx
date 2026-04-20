@@ -206,19 +206,19 @@ export default function GamePage() {
 
   // Timer
   useEffect(() => {
-    if (!attemptId || summary || timeoutOpen) return;
+    if (!attemptId || summary || timeoutOpen || awaitExplanation) return;
 
     const intervalId = window.setInterval(() => {
       setTimeLeft((prev) => Math.max(prev - 1, 0));
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [attemptId, summary, timeoutOpen]);
+  }, [attemptId, summary, timeoutOpen, awaitExplanation]);
 
   // Finish by timeout
   useEffect(() => {
     async function completeByTimeout() {
-      if (!attemptId || summary || timeLeft > 0 || timeoutOpen) return;
+      if (!attemptId || summary || timeLeft > 0 || timeoutOpen || awaitExplanation) return;
 
       setLoading(true);
       setMsg("");
@@ -244,7 +244,7 @@ export default function GamePage() {
     }
 
     completeByTimeout();
-  }, [attemptId, summary, timeLeft, timeoutOpen]);
+  }, [attemptId, summary, timeLeft, timeoutOpen, awaitExplanation]);
 
   // Current task state
   const current: TaskState | null = useMemo(() => {
@@ -866,7 +866,7 @@ export default function GamePage() {
               {awaitExplanation && !!answerExplanationText && (
                 <div className={styles.explanationWrap}>
                   <button
-                    className={styles.secondaryBtn}
+                    className={`${styles.secondaryBtn} ${styles.explanationToggleBtn}`}
                     type="button"
                     onClick={() => setShowExplanation((prev) => !prev)}
                   >
@@ -875,7 +875,11 @@ export default function GamePage() {
 
                   {showExplanation && <div className={styles.explanationText}>{answerExplanationText}</div>}
 
-                  <button className={styles.primaryBtn} type="button" onClick={applyPendingTransition}>
+                  <button
+                    className={`${styles.primaryBtn} ${styles.explanationNextBtn}`}
+                    type="button"
+                    onClick={applyPendingTransition}
+                  >
                     Далі
                   </button>
                 </div>
