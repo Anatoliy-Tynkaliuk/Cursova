@@ -99,6 +99,15 @@ export default function GamePage() {
 
   const [task, setTask] = useState<StartAttemptResponse["task"] | null>(null);
   const [msg, setMsg] = useState<string>("");
+  const [awaitExplanation, setAwaitExplanation] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [pendingTransition, setPendingTransition] = useState<{
+    finished: boolean;
+    nextTask: StartAttemptResponse["task"] | null;
+    nextCompleted: number;
+    nextTotal: number | null;
+    summary: Summary | null;
+  } | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -245,6 +254,7 @@ export default function GamePage() {
       taskVersionId: task.taskVersion.id,
       prompt: task.taskVersion.prompt,
       data: task.taskVersion.data as any,
+      explanation: task.taskVersion.explanation ?? null,
     };
   }, [task]);
 
@@ -418,6 +428,37 @@ export default function GamePage() {
     assignSequenceItem(firstEmptyIndex, item);
   }
 
+  function applyPendingTransition() {
+    if (!pendingTransition) return;
+
+    if (pendingTransition.finished) {
+      if (pendingTransition.summary) {
+        setSummary(pendingTransition.summary);
+      }
+      setCompletedTasks(pendingTransition.nextCompleted);
+      setTask(null);
+      setMsg("");
+    } else if (pendingTransition.nextTask) {
+      setTask(pendingTransition.nextTask);
+      setCompletedTasks(pendingTransition.nextCompleted);
+      setTotalTasks(pendingTransition.nextTotal ?? null);
+
+      setTextAnswer("");
+      setDragAssignments({});
+      setSelectedDragItem(null);
+      setDragHoverTarget(null);
+      setSelectedSequenceItem(null);
+      setMsg("");
+    }
+
+    setPendingTransition(null);
+    setAwaitExplanation(false);
+    setShowExplanation(false);
+    setPickedIdx(null);
+    setPickedState(null);
+    setLoading(false);
+  }
+
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
     if (pickedIdx !== null) return;
@@ -452,26 +493,53 @@ export default function GamePage() {
         ? res.summary?.totalCount ?? totalTasks ?? null
         : res.progress?.totalTasks ?? totalTasks;
 
-      window.setTimeout(() => {
-        if (finished) {
-          setSummary({
+      const summaryData: Summary | null = finished
+        ? {
             score: res.summary?.score ?? 0,
             correctCount: res.summary?.correctCount ?? 0,
             totalCount: res.summary?.totalCount ?? 0,
-          });
+          }
+        : null;
+
+      const nextTaskState: StartAttemptResponse["task"] | null =
+        !finished && nextTask
+          ? {
+              taskId: nextTask.taskId,
+              position: nextTask.position,
+              taskVersion: {
+                id: nextTask.taskVersion.id,
+                prompt: nextTask.taskVersion.prompt,
+                data: nextTask.taskVersion.data,
+                explanation: nextTask.taskVersion.explanation ?? null,
+              },
+            }
+          : null;
+
+      const hasExplanation = !!current.explanation?.trim();
+      if (hasExplanation) {
+        setPendingTransition({
+          finished,
+          nextTask: nextTaskState,
+          nextCompleted,
+          nextTotal: nextTotal ?? null,
+          summary: summaryData,
+        });
+        setAwaitExplanation(true);
+        setShowExplanation(false);
+        setLoading(false);
+        return;
+      }
+
+      window.setTimeout(() => {
+        if (finished) {
+          if (summaryData) {
+            setSummary(summaryData);
+          }
           setCompletedTasks(nextCompleted);
           setTask(null);
           setMsg("");
-        } else if (nextTask) {
-          setTask({
-            taskId: nextTask.taskId,
-            position: nextTask.position,
-            taskVersion: {
-              id: nextTask.taskVersion.id,
-              prompt: nextTask.taskVersion.prompt,
-              data: nextTask.taskVersion.data,
-            },
-          });
+        } else if (nextTaskState) {
+          setTask(nextTaskState);
           setCompletedTasks(nextCompleted);
           setTotalTasks(nextTotal ?? null);
 
@@ -791,7 +859,23 @@ export default function GamePage() {
                 </div>
               )}
 
-              
+              {awaitExplanation && !!current.explanation?.trim() && (
+                <div className={styles.explanationWrap}>
+                  <button
+                    className={styles.secondaryBtn}
+                    type="button"
+                    onClick={() => setShowExplanation((prev) => !prev)}
+                  >
+                    Пояснення
+                  </button>
+
+                  {showExplanation && <div className={styles.explanationText}>{current.explanation}</div>}
+
+                  <button className={styles.primaryBtn} type="button" onClick={applyPendingTransition}>
+                    Далі
+                  </button>
+                </div>
+              )}
             </>
           )}
         </section>

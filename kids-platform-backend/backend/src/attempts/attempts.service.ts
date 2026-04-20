@@ -338,6 +338,7 @@ export class AttemptsService {
           id: Number(tv.id),
           prompt: tv.prompt,
           data: tv.dataJson,
+          explanation: tv.explanation,
         },
       },
     };
@@ -471,6 +472,7 @@ export class AttemptsService {
           id: Number(nextTv.id),
           prompt: nextTv.prompt,
           data: nextTv.dataJson,
+          explanation: nextTv.explanation,
         },
       },
     };

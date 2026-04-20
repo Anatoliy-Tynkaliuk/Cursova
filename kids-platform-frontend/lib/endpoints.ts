@@ -480,7 +480,7 @@ export type StartAttemptResponse = {
   task: {
     taskId: number;
     position: number;
-    taskVersion: { id: number; prompt: string; data: any };
+    taskVersion: { id: number; prompt: string; data: any; explanation?: string | null };
   };
 };
 
@@ -495,12 +495,21 @@ export async function startAttempt(childProfileId: number, gameId: number, diffi
 }
 
 export type AnswerResponse =
-  | { attemptId: number; isCorrect: boolean; finished: true; summary: any }
+  | {
+      attemptId: number;
+      isCorrect: boolean;
+      finished: true;
+      summary: { score: number; correctCount: number; totalCount: number };
+    }
   | {
       attemptId: number;
       isCorrect: boolean;
       finished: false;
-      nextTask: any;
+      nextTask: {
+        taskId: number;
+        position: number;
+        taskVersion: { id: number; prompt: string; data: any; explanation?: string | null };
+      };
       progress?: { score: number; correctCount: number; totalCount: number; totalTasks?: number };
     };
 
