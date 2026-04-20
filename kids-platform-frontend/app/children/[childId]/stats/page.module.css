@@ -97,6 +97,7 @@
 .summaryValue {
   font-size: 24px;
   font-weight: 800;
+  line-height: 1.2;
 }
 
 .sectionTitle {
@@ -124,15 +125,38 @@
 }
 
 .badgeItem {
+  position: relative;
+  overflow: hidden;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.06);
-  padding: 12px;
+  min-height: 170px;
   transition: opacity 0.2s ease;
 }
 
+.badgeBg {
+  position: absolute;
+  inset: 0;
+}
+
+.badgeBgImg {
+  object-fit: contain;
+  opacity: 0.6;
+  filter: blur(0.2px) saturate(1.15) contrast(1.05);
+  transform: scale(1.15);
+}
+
+.badgeContent {
+  position: relative;
+  z-index: 1;
+  padding: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .badgeLocked {
-  opacity: 0.56;
+  opacity: 0.62;
 }
 
 .badgeTitle {
@@ -152,6 +176,7 @@
 }
 
 .badgeState {
+  margin-top: auto;
   font-weight: 700;
   opacity: 1;
 }

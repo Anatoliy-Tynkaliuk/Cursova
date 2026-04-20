@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getChildBadges, getChildStats, type ChildBadgeItem, type ChildStats } from "@/lib/endpoints";
@@ -51,6 +52,11 @@ export default function ChildStatsPage() {
     load().catch((e: unknown) => setError(e instanceof Error ? e.message : "Error"));
   }, [childId]);
 
+  const maxPossibleScore = useMemo(() => {
+    if (!stats) return 0;
+    return stats.summary.totalAttempts * 3;
+  }, [stats]);
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -80,15 +86,15 @@ export default function ChildStatsPage() {
                 </div>
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>Правильні відповіді</span>
-                  <span className={styles.summaryValue}>{stats.summary.totalCorrect}</span>
-                </div>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>Запитань</span>
-                  <span className={styles.summaryValue}>{stats.summary.totalQuestions}</span>
+                  <span className={styles.summaryValue}>
+                    {stats.summary.totalCorrect} з {stats.summary.totalQuestions}
+                  </span>
                 </div>
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>Бали</span>
-                  <span className={styles.summaryValue}>{stats.summary.totalScore}</span>
+                  <span className={styles.summaryValue}>
+                    {stats.summary.totalScore} з {maxPossibleScore}
+                  </span>
                 </div>
               </div>
             </div>
@@ -101,24 +107,36 @@ export default function ChildStatsPage() {
                 <p className={styles.empty}>Поки що немає досягнень.</p>
               ) : (
                 <ul className={styles.badgesList}>
-                  {badges.map((badge) => (
-                    <li
-                      key={badge.id}
-                      className={`${styles.badgeItem} ${badge.isEarned ? "" : styles.badgeLocked}`}
-                    >
-                      <div className={styles.badgeTitle}>
-                        {badge.icon ? `${badge.icon} ` : ""}
-                        {badge.title}
-                      </div>
-                      {badge.description && <div className={styles.badgeDesc}>{badge.description}</div>}
-                      {parseThreshold(badge.code) != null && (
-                        <div className={styles.badgeMeta}>
-                          Потрібно завершених ігор: {parseThreshold(badge.code)}
+                  {badges.map((badge) => {
+                    const bgSrc = badge.isEarned
+                      ? "/Achievements_page/completed_achievements.png"
+                      : "/Achievements_page/locked_achievements.png";
+
+                    return (
+                      <li
+                        key={badge.id}
+                        className={`${styles.badgeItem} ${badge.isEarned ? "" : styles.badgeLocked}`}
+                      >
+                        <div className={styles.badgeBg} aria-hidden="true">
+                          <Image src={bgSrc} alt="" fill className={styles.badgeBgImg} />
                         </div>
-                      )}
-                      <div className={styles.badgeState}>{badge.isEarned ? "Отримано ✅" : "Ще не отримано"}</div>
-                    </li>
-                  ))}
+
+                        <div className={styles.badgeContent}>
+                          <div className={styles.badgeTitle}>
+                            {badge.icon ? `${badge.icon} ` : ""}
+                            {badge.title}
+                          </div>
+                          {badge.description && <div className={styles.badgeDesc}>{badge.description}</div>}
+                          {parseThreshold(badge.code) != null && (
+                            <div className={styles.badgeMeta}>
+                              Потрібно завершених ігор: {parseThreshold(badge.code)}
+                            </div>
+                          )}
+                          <div className={styles.badgeState}>{badge.isEarned ? "Отримано ✅" : "Ще не отримано"}</div>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </section>
@@ -134,7 +152,7 @@ export default function ChildStatsPage() {
                       <div className={styles.attemptTitle}>{attempt.game.title}</div>
                       <div className={styles.attemptModule}>module: {attempt.game.moduleCode}</div>
                       <div className={styles.attemptResult}>
-                        Результат: {attempt.correctCount}/{attempt.totalCount} | Бали: {attempt.score}
+                        Результат: {attempt.correctCount}/{attempt.totalCount} | Бали: {attempt.score}/3
                       </div>
                       <div className={styles.attemptStatus}>{attempt.isFinished ? "Завершено" : "У процесі"}</div>
                     </li>
