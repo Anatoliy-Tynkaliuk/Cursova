@@ -16,4 +16,10 @@ export class ChildPublicController {
   badgesForChild(@Param("id") id: string) {
     return this.children.getBadges(null, Number(id));
   }
+
+  // child: stats без JWT
+  @Get(":id/stats")
+  statsForChild(@Param("id") id: string) {
+    return this.children.getStatsPublic(Number(id));
+  }
 }

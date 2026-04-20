@@ -308,6 +308,10 @@ export class ChildrenService {
     };
   }
 
+  async getStatsPublic(childId: number) {
+    return this.getStats({ role: "admin", sub: "0" }, childId);
+  }
+
   async getBadges(user: any, childId: number) {
     if (user && user.role !== "parent" && user.role !== "admin") {
       throw new ForbiddenException("Only parent/admin");
