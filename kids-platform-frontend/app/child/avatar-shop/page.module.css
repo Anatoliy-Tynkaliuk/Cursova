@@ -1,0 +1,78 @@
+.page {
+  min-height: 100vh;
+  padding: 22px;
+  background: radial-gradient(circle at top, #3c2070, #140b2b 60%);
+  color: #fff;
+}
+
+.card {
+  max-width: 980px;
+  margin: 0 auto;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+  padding: 16px;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.backBtn {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 700;
+}
+
+.stars {
+  margin: 10px 0 16px;
+}
+
+.error {
+  color: #ff9e9e;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.avatarCard {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  text-align: center;
+}
+
+.avatarIcon {
+  font-size: 54px;
+  line-height: 1;
+}
+
+.price {
+  opacity: 0.88;
+  font-size: 14px;
+}
+
+.actionBtn,
+.activeBtn {
+  min-width: 120px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.actionBtn {
+  background: #563ecf;
+  cursor: pointer;
+}
+
+.activeBtn {
+  background: #2d9f56;
+}

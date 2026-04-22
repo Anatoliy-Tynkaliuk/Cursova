@@ -20,7 +20,8 @@ export default function JoinPage() {
     setLoading(true);
     try {
       const data = await joinByCode(trimmed);
-      setChildSession(data.childProfileId, data.ageGroupCode, data.childName);
+
+      setChildSession(data.childProfileId, data.ageGroupCode, data.childName, data.avatar || undefined);
       window.location.href = "/child/subjects";
     } catch (e: any) {
       setMsg(e?.message ?? "Error");
@@ -101,3 +102,9 @@ export default function JoinPage() {
     </div>
   );
 }
+
+
+
+
+
+

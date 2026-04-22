@@ -7,6 +7,14 @@ import { getChildBadgesPublic, getGames, type ChildBadgeItem, type GameListItem 
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildSubjectsPage.module.css";
 
+const DEFAULT_AVATAR = "/avatars/astro-boy.png";
+
+function normalizeAvatarSrc(src: string | null | undefined) {
+  if (!src || src === "undefined" || src === "null") return DEFAULT_AVATAR;
+  if (src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://")) return src;
+  return DEFAULT_AVATAR;
+}
+
 type Subject = {
   key: "logic" | "math" | "english";
   title: string;
@@ -41,6 +49,7 @@ export default function ChildSubjectsPage() {
   const [finishedAttempts, setFinishedAttempts] = useState(0);
   const [totalStars, setTotalStars] = useState(0);
   const [childName, setChildName] = useState<string>("Друже");
+  const [childAvatar, setChildAvatar] = useState<string>(DEFAULT_AVATAR);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,7 +59,7 @@ export default function ChildSubjectsPage() {
       return;
     }
     setChildName(session.childName || "Друже");
-
+    setChildAvatar(normalizeAvatarSrc(session.childAvatar));
     async function load() {
       setError(null);
       try {
@@ -104,7 +113,9 @@ export default function ChildSubjectsPage() {
 
       <div className={styles.container}>
         <header className={styles.topBar}>
-          <div className={styles.topTitle}>Меню дитини</div>
+          <Link href="/child/avatar-shop" className={styles.avatarLink} title="Магазин аватарів">
+            <Image src={normalizeAvatarSrc(childAvatar)} alt="Аватар дитини" width={42} height={42} className={styles.avatarImage} />
+          </Link>
           <Link href="/child" className={styles.backBtn}>Назад</Link>
         </header>
 
