@@ -84,10 +84,9 @@ export async function getChildStats(childId: number) {
 export async function getChildStatsPublic(childId: number) {
   return api<ChildStats>(`/child/${childId}/stats`, "GET");
 }
-
 export type AvatarShopAvatar = {
   id: string;
-  icon: string;
+  image: string;
   name: string;
   price: number;
 };
@@ -114,6 +113,7 @@ export async function buyAvatar(childId: number, avatarId: string) {
 export async function setActiveAvatar(childId: number, avatarId: string) {
   return api<AvatarShopResponse>(`/child/${childId}/avatar`, "PATCH", { avatarId });
 }
+
 
 export type AdminModuleItem = {
   id: number;
@@ -423,7 +423,7 @@ export async function deleteAdminGame(gameId: number) {
 }
 
 export async function joinByCode(code: string) {
-  return api<{ childProfileId: number; childName: string; ageGroupCode: string }>(
+  return api<{ childProfileId: number; childName: string; ageGroupCode: string; avatar?: string | null }>(
     "/child/join",
     "POST",
     { code }
