@@ -50,9 +50,9 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
-.avatarEmoji {
-  font-size: 28px;
-  line-height: 1;
+.avatarImage {
+  border-radius: 999px;
+  object-fit: cover;
 }
 
 .backBtn {
