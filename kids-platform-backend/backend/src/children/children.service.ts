@@ -13,20 +13,20 @@ function randomCode(len = 6) {
 
 type AvatarItem = {
   id: string;
-  icon: string;
+  image: string;
   name: string;
   price: number;
 };
 
 const AVATAR_CATALOG: AvatarItem[] = [
-  { id: "astro-boy", icon: "👨‍🚀", name: "Астро Хлопчик", price: 0 },
-  { id: "astro-girl", icon: "👩‍🚀", name: "Астро Дівчинка", price: 20 },
-  { id: "rocket", icon: "🚀", name: "Ракета", price: 35 },
-  { id: "robot", icon: "🤖", name: "Робот", price: 40 },
-  { id: "alien", icon: "👽", name: "Прибулець", price: 55 },
-  { id: "super-cat", icon: "🐱", name: "Супер Кіт", price: 60 },
-  { id: "unicorn", icon: "🦄", name: "Космо Єдиноріг", price: 80 },
-  { id: "dragon", icon: "🐲", name: "Зоряний Дракон", price: 120 },
+  { id: "astro-boy", image: "/avatars/astro-boy.png", name: "Астро Хлопчик", price: 0 },
+  { id: "astro-girl", image: "/avatars/astro-girl.png", name: "Астро Дівчинка", price: 20 },
+  { id: "rocket", image: "/avatars/rocket.png", name: "Ракета", price: 35 },
+  { id: "robot", image: "/avatars/robot.png", name: "Робот", price: 40 },
+  { id: "alien", image: "/avatars/alien.png", name: "Прибулець", price: 55 },
+  { id: "super-cat", image: "/avatars/super-cat.png", name: "Супер Кіт", price: 60 },
+  { id: "unicorn", image: "/avatars/unicorn.png", name: "Космо Єдиноріг", price: 80 },
+  { id: "dragon", image: "/avatars/dragon.png", name: "Зоряний Дракон", price: 120 },
 ];
 
 type AvatarSettings = {
@@ -194,6 +194,7 @@ export class ChildrenService {
       childProfileId: Number(invite.child.id),
       childName: invite.child.name,
       ageGroupCode: invite.child.ageGroup.code,
+      avatar: invite.child.avatar ?? AVATAR_CATALOG[0].image,
     };
   }
 
@@ -497,7 +498,7 @@ export class ChildrenService {
     await this.prisma.childProfile.update({
       where: { id: child.id },
       data: {
-        avatar: avatar.icon,
+        avatar: avatar.image,
         settings: nextSettings,
       },
     });
@@ -524,7 +525,7 @@ export class ChildrenService {
     await this.prisma.childProfile.update({
       where: { id: child.id },
       data: {
-        avatar: avatar.icon,
+        avatar: avatar.image,
         settings: {
           ...settings,
           activeAvatarId: avatar.id,
@@ -534,6 +535,7 @@ export class ChildrenService {
 
     return this.getAvatarShop(childId);
   }
+
 
   async deleteChild(user: any, childId: number) {
     if (user.role !== "parent" && user.role !== "admin") {
