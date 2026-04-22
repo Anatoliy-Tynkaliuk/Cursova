@@ -41,6 +41,7 @@ export default function ChildSubjectsPage() {
   const [finishedAttempts, setFinishedAttempts] = useState(0);
   const [totalStars, setTotalStars] = useState(0);
   const [childName, setChildName] = useState<string>("Друже");
+  const [childAvatar, setChildAvatar] = useState<string>("👨‍🚀");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,6 +51,7 @@ export default function ChildSubjectsPage() {
       return;
     }
     setChildName(session.childName || "Друже");
+    setChildAvatar(session.childAvatar || "👨‍🚀");
 
     async function load() {
       setError(null);
@@ -104,7 +106,9 @@ export default function ChildSubjectsPage() {
 
       <div className={styles.container}>
         <header className={styles.topBar}>
-          <div className={styles.topTitle}>Меню дитини</div>
+          <Link href="/child/avatar-shop" className={styles.avatarLink} title="Магазин аватарів">
+            <span className={styles.avatarEmoji}>{childAvatar}</span>
+          </Link>
           <Link href="/child" className={styles.backBtn}>Назад</Link>
         </header>
 

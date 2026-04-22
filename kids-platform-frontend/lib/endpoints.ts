@@ -85,6 +85,36 @@ export async function getChildStatsPublic(childId: number) {
   return api<ChildStats>(`/child/${childId}/stats`, "GET");
 }
 
+export type AvatarShopAvatar = {
+  id: string;
+  icon: string;
+  name: string;
+  price: number;
+};
+
+export type AvatarShopResponse = {
+  stars: {
+    earned: number;
+    spent: number;
+    available: number;
+  };
+  activeAvatarId: string;
+  purchasedAvatarIds: string[];
+  avatars: AvatarShopAvatar[];
+};
+
+export async function getAvatarShop(childId: number) {
+  return api<AvatarShopResponse>(`/child/${childId}/avatar-shop`, "GET");
+}
+
+export async function buyAvatar(childId: number, avatarId: string) {
+  return api<AvatarShopResponse>(`/child/${childId}/avatar-shop/buy`, "POST", { avatarId });
+}
+
+export async function setActiveAvatar(childId: number, avatarId: string) {
+  return api<AvatarShopResponse>(`/child/${childId}/avatar`, "PATCH", { avatarId });
+}
+
 export type AdminModuleItem = {
   id: number;
   code: string;
