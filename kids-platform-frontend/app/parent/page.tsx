@@ -137,8 +137,8 @@ export default function ParentChildrenPage() {
                 className={styles.deleteBtn}
                 onClick={() => onDeleteChild(c.id, c.name)}
                 title="Видалити дитину"
+                aria-label="delete"
               >
-                ✕
               </button>
 
               <div className={styles.cardTop}>
@@ -197,7 +197,6 @@ export default function ParentChildrenPage() {
                 }}
                 aria-label="close"
               >
-                ✕
               </button>
             </div>
 
