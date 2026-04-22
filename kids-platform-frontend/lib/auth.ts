@@ -19,13 +19,19 @@ const AGE_CODE_KEY = "ageGroupCode";
 const CHILD_NAME_KEY = "childName";
 const CHILD_AVATAR_KEY = "childAvatar";
 
+function isValidAvatarPath(value: string | null | undefined) {
+  if (!value) return false;
+  if (value === "undefined" || value === "null") return false;
+  return value.startsWith("/") || value.startsWith("http://") || value.startsWith("https://");
+}
+
 export function setChildSession(childProfileId: number, ageGroupCode: string, childName?: string, childAvatar?: string) {
   localStorage.setItem(CHILD_ID_KEY, String(childProfileId));
   localStorage.setItem(AGE_CODE_KEY, ageGroupCode);
   if (childName) {
     localStorage.setItem(CHILD_NAME_KEY, childName);
   }
-  if (childAvatar) {
+  if (isValidAvatarPath(childAvatar)) {
     localStorage.setItem(CHILD_AVATAR_KEY, childAvatar);
   }
 }
@@ -39,12 +45,16 @@ export function getChildSession() {
     childProfileId: id ? Number(id) : null,
     ageGroupCode: ageGroupCode || null,
     childName: childName || null,
-    childAvatar: childAvatar || null,
+    childAvatar: isValidAvatarPath(childAvatar) ? childAvatar : null,
   };
 }
 
 export function setChildAvatar(avatar: string) {
-  localStorage.setItem(CHILD_AVATAR_KEY, avatar);
+  if (isValidAvatarPath(avatar)) {
+    localStorage.setItem(CHILD_AVATAR_KEY, avatar);
+    return;
+  }
+  localStorage.removeItem(CHILD_AVATAR_KEY);
 }
 
 export function clearChildSession() {
