@@ -2,9 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { buyAvatar, getAvatarShop, setActiveAvatar, type AvatarShopResponse } from "@/lib/endpoints";
 import { getChildSession, setChildAvatar } from "@/lib/auth";
 import styles from "./page.module.css";
+
+const DEFAULT_AVATAR = "/avatars/astro-boy.png";
+
+function normalizeAvatarSrc(src: string | null | undefined) {
+  if (!src || src === "undefined" || src === "null") return DEFAULT_AVATAR;
+  if (src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://")) return src;
+  return DEFAULT_AVATAR;
+}
 
 export default function AvatarShopPage() {
   const [childId, setChildId] = useState<number | null>(null);
@@ -30,7 +39,7 @@ export default function AvatarShopPage() {
         const data = await getAvatarShop(childId);
         setShop(data);
         const active = data.avatars.find((avatar) => avatar.id === data.activeAvatarId);
-        if (active) setChildAvatar(active.icon);
+        if (active) setChildAvatar(normalizeAvatarSrc(active.image));
       } catch (e: any) {
         setError(e.message ?? "Помилка");
       } finally {
@@ -51,7 +60,7 @@ export default function AvatarShopPage() {
       const data = await buyAvatar(childId, avatarId);
       setShop(data);
       const active = data.avatars.find((avatar) => avatar.id === data.activeAvatarId);
-      if (active) setChildAvatar(active.icon);
+      if (active) setChildAvatar(normalizeAvatarSrc(active.image));
     } catch (e: any) {
       setError(e.message ?? "Помилка");
     } finally {
@@ -67,7 +76,7 @@ export default function AvatarShopPage() {
       const data = await setActiveAvatar(childId, avatarId);
       setShop(data);
       const active = data.avatars.find((avatar) => avatar.id === data.activeAvatarId);
-      if (active) setChildAvatar(active.icon);
+      if (active) setChildAvatar(normalizeAvatarSrc(active.image));
     } catch (e: any) {
       setError(e.message ?? "Помилка");
     } finally {
@@ -98,7 +107,9 @@ export default function AvatarShopPage() {
 
             return (
               <article key={avatar.id} className={styles.avatarCard}>
-                <div className={styles.avatarIcon}>{avatar.icon}</div>
+                <div className={styles.avatarIcon}>
+                  <Image src={normalizeAvatarSrc(avatar.image)} alt={avatar.name} width={86} height={86} className={styles.avatarImage} />
+                </div>
                 <h3>{avatar.name}</h3>
                 <p className={styles.price}>Ціна: ⭐ {avatar.price}</p>
 
