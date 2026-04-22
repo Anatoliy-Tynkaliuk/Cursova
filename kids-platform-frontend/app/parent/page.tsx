@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "../parent/parent-dashboard.module.css";
-import { getChildren, createChild, createInvite, deleteChild } from "@/lib/endpoints";
+import { getChildren, createChild, createInvite, deleteChild, getMe } from "@/lib/endpoints";
 import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
 
 type Child = { id: number; name: string; ageGroupCode: string };
@@ -27,6 +27,7 @@ export default function ParentChildrenPage() {
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [parentName, setParentName] = useState("");
 
   async function load() {
     setErr("");
@@ -39,7 +40,9 @@ export default function ParentChildrenPage() {
       window.location.href = "/login";
       return;
     }
-    load().catch((e: any) => setErr(e.message ?? "Error"));
+    Promise.all([load(), getMe().then((me) => setParentName(me.username || me.email))]).catch((e: any) =>
+      setErr(e.message ?? "Error")
+    );
   }, []);
 
   async function onCreateChild() {
@@ -94,7 +97,7 @@ export default function ParentChildrenPage() {
     window.location.href = "/login";
   }
 
-  const parentName = useMemo(() => "Олено", []);
+  const parentDisplayName = useMemo(() => parentName || "Батьки", [parentName]);
 
   return (
     <div className={styles.page}>
@@ -110,7 +113,7 @@ export default function ParentChildrenPage() {
       </header>
 
       <main className={styles.main}>
-        <h1 className={styles.welcome}>Вітаємо, {parentName}!</h1>
+        <h1 className={styles.welcome}>Вітаємо, {parentDisplayName}!</h1>
 
         {(err || msg) && (
           <div className={styles.alerts}>
