@@ -123,17 +123,41 @@ export default function AvatarShopPage() {
             </Link>
           </div>
 
-          <p className={styles.stars}>
-            <Image
-              src="/star.png"
-              alt="Зірка"
-              width={22}
-              height={22}
-              className={styles.starIcon}
-            />
-            Доступно: <b>{shop?.stars.available ?? 0}</b> | Зароблено:{" "}
-            {shop?.stars.earned ?? 0} | Витрачено: {shop?.stars.spent ?? 0}
-          </p>
+          <div className={styles.stars}>
+            <div className={styles.starItem}>
+              <span className={styles.starLabel}>Доступно:</span>
+              <b>{shop?.stars.available ?? 0}</b>
+              <Image
+                src="/star.png"
+                alt="Зірка"
+                width={18}
+                height={18}
+                className={styles.starIcon}
+              />
+            </div>
+            <div className={styles.starItem}>
+              <span className={styles.starLabel}>Зароблено:</span>
+              <b>{shop?.stars.earned ?? 0}</b>
+              <Image
+                src="/star.png"
+                alt="Зірка"
+                width={18}
+                height={18}
+                className={styles.starIcon}
+              />
+            </div>
+            <div className={styles.starItem}>
+              <span className={styles.starLabel}>Витрачено:</span>
+              <b>{shop?.stars.spent ?? 0}</b>
+              <Image
+                src="/star.png"
+                alt="Зірка"
+                width={18}
+                height={18}
+                className={styles.starIcon}
+              />
+            </div>
+          </div>
 
           {error && <p className={styles.error}>{error}</p>}
           {loading && !shop && <p>Завантаження...</p>}
@@ -157,7 +181,7 @@ export default function AvatarShopPage() {
                   </div>
                   <h3>{avatar.name}</h3>
                   <p className={styles.price}>
-                    Ціна:
+                    Ціна: {avatar.price}
                     <Image
                       src="/star.png"
                       alt="Зірка"
@@ -165,7 +189,6 @@ export default function AvatarShopPage() {
                       height={16}
                       className={styles.priceStar}
                     />
-                    {avatar.price}
                   </p>
 
                   {isActive ? (
