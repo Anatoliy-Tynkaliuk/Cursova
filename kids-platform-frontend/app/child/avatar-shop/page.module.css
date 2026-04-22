@@ -1,16 +1,48 @@
 .page {
+  position: relative;
   min-height: 100vh;
-  padding: 22px;
-  background: radial-gradient(circle at top, #3c2070, #140b2b 60%);
+  overflow: hidden;
   color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+}
+
+.bgImg {
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      rgba(120, 82, 255, 0.25),
+      transparent 42%
+    ),
+    radial-gradient(circle at 85% 8%, rgba(75, 188, 255, 0.2), transparent 38%),
+    linear-gradient(180deg, rgba(10, 6, 22, 0.55), rgba(6, 5, 18, 0.78));
+}
+
+.container {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 22px 16px 36px;
 }
 
 .card {
-  max-width: 980px;
-  margin: 0 auto;
-  border-radius: 18px;
+  border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(24, 14, 45, 0.45);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
   padding: 16px;
 }
 
@@ -21,56 +53,124 @@
   gap: 12px;
 }
 
+.topBar h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 34px);
+  text-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+
 .backBtn {
   text-decoration: none;
-  color: #fff;
-  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.backBtn:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .stars {
-  margin: 10px 0 16px;
+  margin: 12px 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+}
+
+.starIcon {
+  object-fit: contain;
 }
 
 .error {
-  color: #ff9e9e;
+  margin: 0 0 12px;
+  color: #ffaaaa;
+  font-weight: 700;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 12px;
 }
 
 .avatarCard {
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.17);
-  background: rgba(0, 0, 0, 0.2);
-  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 14px;
   text-align: center;
 }
 
+.avatarCard h3 {
+  margin: 10px 0 6px;
+  font-size: 18px;
+}
+
 .avatarIcon {
-  font-size: 54px;
-  line-height: 1;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.avatarImage {
+  border-radius: 999px;
+  object-fit: cover;
 }
 
 .price {
-  opacity: 0.88;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.95;
   font-size: 14px;
+  font-weight: 700;
+}
+
+.priceStar {
+  object-fit: contain;
 }
 
 .actionBtn,
 .activeBtn {
+  margin-top: 8px;
   min-width: 120px;
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff;
+  font-weight: 800;
 }
 
 .actionBtn {
   background: #563ecf;
   cursor: pointer;
+}
+
+.actionBtn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.actionBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .activeBtn {
