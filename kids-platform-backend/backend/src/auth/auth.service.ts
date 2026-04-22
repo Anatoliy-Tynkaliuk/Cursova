@@ -48,4 +48,24 @@ export class AuthService {
       user: { id: Number(user.id), email: user.email, role: user.role },
     };
   }
+
+  async me(jwtUser: { sub?: string; email?: string; role?: string }) {
+    const userId = Number(jwtUser?.sub);
+    if (!Number.isFinite(userId)) {
+      throw new UnauthorizedException("Invalid token payload");
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { id: true, email: true, username: true, role: true },
+    });
+    if (!user) throw new UnauthorizedException("User not found");
+
+    return {
+      id: Number(user.id),
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    };
+  }
 }
