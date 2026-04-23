@@ -162,21 +162,6 @@
   font-weight: 800;
 }
 
-.avatarIcon {
-  width: 100px;
-  height: 100px;
-  margin: 0 auto;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: radial-gradient(
-    circle at 35% 35%,
-    rgba(255, 255, 255, 0.18),
-    rgba(255, 255, 255, 0.08)
-  );
-}
-
 .avatarImage {
   border-radius: 999px;
   object-fit: cover;
@@ -185,7 +170,6 @@
 .price {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   margin: 0 0 12px;
   opacity: 0.98;
   font-size: 14px;
