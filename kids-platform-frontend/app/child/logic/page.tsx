@@ -66,7 +66,8 @@ export default function LogicPlanetPage() {
           getGames(session.ageGroupCode!),
         ]);
 
-        const finishedAttempts = badgeData.finishedAttempts;
+        const moduleStats = badgeData.moduleStats?.logic;
+        const finishedAttempts = moduleStats?.finishedAttempts ?? 0;
         const earnedBadges = badgeData.badges.filter((badge: ChildBadgeItem) => badge.isEarned).length;
         const logicGames = gamesData.filter((game) => game.moduleCode === "logic");
         setGames(logicGames);
@@ -101,7 +102,7 @@ export default function LogicPlanetPage() {
 
         setStats({
           level: Math.max(1, Math.floor(finishedAttempts / 5) + 1),
-          stars: finishedAttempts,
+          stars: moduleStats?.totalStars ?? 0,
           achievements: earnedBadges,
         });
 

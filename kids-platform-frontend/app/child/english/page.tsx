@@ -91,9 +91,10 @@ export default function EnglishPlanetPage() {
         setGameProgressById(Object.fromEntries(progressEntries));
 
         const earnedBadges = badgeData.badges.filter((badge) => badge.isEarned).length;
+        const moduleStats = badgeData.moduleStats?.english;
         setStats({
-          level: Math.max(1, Math.floor(badgeData.finishedAttempts / 5) + 1),
-          stars: badgeData.finishedAttempts,
+          level: Math.max(1, Math.floor((moduleStats?.finishedAttempts ?? 0) / 5) + 1),
+          stars: moduleStats?.totalStars ?? 0,
           achievements: earnedBadges,
         });
       } catch (e: any) {

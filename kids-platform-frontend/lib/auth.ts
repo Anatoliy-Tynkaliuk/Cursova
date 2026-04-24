@@ -33,6 +33,8 @@ export function setChildSession(childProfileId: number, ageGroupCode: string, ch
   }
   if (isValidAvatarPath(childAvatar)) {
     localStorage.setItem(CHILD_AVATAR_KEY, childAvatar);
+  } else {
+    localStorage.removeItem(CHILD_AVATAR_KEY);
   }
 }
 

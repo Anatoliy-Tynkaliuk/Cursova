@@ -5,7 +5,7 @@ import styles from "../parent/parent-dashboard.module.css";
 import { getChildren, createChild, createInvite, deleteChild, getMe } from "@/lib/endpoints";
 import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
 
-type Child = { id: number; name: string; ageGroupCode: string };
+type Child = { id: number; name: string; ageGroupCode: string; avatar?: string | null };
 
 function ageLabel(code: string) {
   if (code === "4_5") return "4–5";
@@ -88,7 +88,7 @@ export default function ParentChildrenPage() {
   }
 
   function onSelectChild(c: Child) {
-    setChildSession(c.id, c.ageGroupCode, c.name);
+    setChildSession(c.id, c.ageGroupCode, c.name, c.avatar || undefined);
     window.location.href = "/child/subjects";
   }
 

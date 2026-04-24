@@ -84,7 +84,12 @@ export class ChildrenService {
         include: { ageGroup: true },
         orderBy: { id: "asc" },
       });
-      return all.map((c) => ({ id: Number(c.id), name: c.name, ageGroupCode: c.ageGroup.code }));
+      return all.map((c) => ({
+        id: Number(c.id),
+        name: c.name,
+        ageGroupCode: c.ageGroup.code,
+        avatar: c.avatar ?? AVATAR_CATALOG[0].image,
+      }));
     }
 
     if (user.role !== "parent") throw new ForbiddenException("Only parent/admin");
@@ -102,6 +107,7 @@ export class ChildrenService {
       id: Number(l.child.id),
       name: l.child.name,
       ageGroupCode: l.child.ageGroup.code,
+      avatar: l.child.avatar ?? AVATAR_CATALOG[0].image,
     }));
   }
 
@@ -396,6 +402,13 @@ export class ChildrenService {
           totalCount: true,
           score: true,
           levelId: true,
+          game: {
+            select: {
+              module: {
+                select: { code: true },
+              },
+            },
+          },
         },
       }),
       this.prisma.badge.findMany({ orderBy: { id: "asc" } }),
@@ -403,6 +416,17 @@ export class ChildrenService {
     ]);
 
     const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
+    const moduleMetrics = {
+      logic: calculateAchievementMetrics(
+        allAttempts.filter((attempt) => attempt.game?.module?.code === "logic")
+      ),
+      math: calculateAchievementMetrics(
+        allAttempts.filter((attempt) => attempt.game?.module?.code === "math")
+      ),
+      english: calculateAchievementMetrics(
+        allAttempts.filter((attempt) => attempt.game?.module?.code === "english")
+      ),
+    };
 
     const earnedSet = new Set(earned.map((b) => Number(b.badgeId)));
 
@@ -413,6 +437,20 @@ export class ChildrenService {
       totalAttempts: metrics.totalAttempts,
       correctAnswers: metrics.correctAnswers,
       perfectGames: metrics.perfectGames,
+      moduleStats: {
+        logic: {
+          finishedAttempts: moduleMetrics.logic.finishedAttempts,
+          totalStars: moduleMetrics.logic.totalStars,
+        },
+        math: {
+          finishedAttempts: moduleMetrics.math.finishedAttempts,
+          totalStars: moduleMetrics.math.totalStars,
+        },
+        english: {
+          finishedAttempts: moduleMetrics.english.finishedAttempts,
+          totalStars: moduleMetrics.english.totalStars,
+        },
+      },
       badges: badges.map((badge) => {
         const rule = buildAchievementRule(badge.code, metrics);
         return {
