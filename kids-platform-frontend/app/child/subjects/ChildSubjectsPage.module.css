@@ -32,10 +32,27 @@
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
 }
 
-.topTitle {
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  opacity: 0.95;
+.avatarLink {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.10);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.avatarLink:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.avatarImage {
+  border-radius: 999px;
+  object-fit: cover;
 }
 
 .backBtn {

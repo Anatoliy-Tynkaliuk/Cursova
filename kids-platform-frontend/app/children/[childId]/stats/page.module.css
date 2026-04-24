@@ -1,0 +1,351 @@
+.page {
+  min-height: 100vh;
+  padding: 24px 16px 56px;
+  color: #f4f1ff;
+  background:
+    radial-gradient(1200px 700px at 10% 0%, rgba(129, 95, 255, 0.26), transparent 65%),
+    radial-gradient(900px 500px at 85% 20%, rgba(39, 213, 255, 0.16), transparent 65%),
+    linear-gradient(180deg, #0f0a24 0%, #0c122d 100%);
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 44px);
+  letter-spacing: 0.02em;
+  text-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+.backWrap {
+  margin: 14px 0 18px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.backLink:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.loading,
+.error,
+.empty {
+  margin: 8px 0;
+}
+
+.error {
+  color: #ff8e9b;
+}
+
+.panel {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(25, 16, 55, 0.5);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.38);
+  padding: 18px;
+  margin-bottom: 18px;
+}
+
+.childName {
+  font-weight: 900;
+  font-size: clamp(24px, 3vw, 32px);
+}
+
+.childAge {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+.summaryGrid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.summaryItem {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 12px;
+}
+
+.summaryLabel {
+  display: block;
+  font-size: 12px;
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+
+.summaryValue {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 26px;
+}
+
+.subInfo {
+  margin: 8px 0 0;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.badgesList {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.badgeItem {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  min-height: 170px;
+  transition: opacity 0.2s ease;
+}
+
+.badgeBg {
+  position: absolute;
+  inset: 0;
+}
+
+.badgeBgImg {
+  object-fit: contain;
+  opacity: 0.6;
+  filter: blur(0.2px) saturate(1.15) contrast(1.05);
+  transform: scale(1.15);
+}
+
+.badgeContent {
+  position: relative;
+  z-index: 1;
+  padding: 12px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.badgeLocked {
+  opacity: 0.62;
+}
+
+.badgeTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.badgeDesc,
+.badgeMeta,
+.badgeState {
+  font-size: 13px;
+  margin-top: 6px;
+  opacity: 0.84;
+}
+
+.badgeState {
+  margin-top: auto;
+  font-weight: 700;
+  opacity: 1;
+}
+
+
+.monthTitle {
+  margin-top: 14px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 22px;
+  text-transform: capitalize;
+}
+
+.monthControlsRow {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.monthSummaryInline {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.monthSummaryInline > div {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 10px;
+}
+
+
+.monthBtn {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.monthBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.weekdaysRow {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weekdayCell {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(225, 232, 255, 0.85);
+}
+
+.monthCalendarGrid {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.emptyDayCell {
+  min-height: 78px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.dayCell {
+  min-height: 78px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dayCell:hover {
+  transform: translateY(-2px);
+}
+
+.dayNumber {
+  font-weight: 800;
+  font-size: 16px;
+  color: #f4f7ff;
+}
+
+.dayMeta {
+  font-size: 11px;
+  color: rgba(224, 255, 226, 0.95);
+  font-weight: 700;
+}
+
+.dayInactive {
+  opacity: 0.7;
+}
+
+.dayActive {
+  border-color: rgba(120, 255, 149, 0.7);
+  background: linear-gradient(165deg, rgba(133, 255, 142, 0.28), rgba(47, 217, 105, 0.2));
+  box-shadow: 0 8px 20px rgba(40, 200, 106, 0.25), 0 0 0 1px rgba(140, 255, 151, 0.35) inset;
+}
+
+.daySelected {
+  border-color: rgba(180, 225, 255, 1);
+  box-shadow: 0 0 0 2px rgba(180, 225, 255, 0.45), 0 10px 24px rgba(73, 164, 255, 0.25);
+}
+
+
+.dayDetails {
+  margin-top: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.dayDetailsDate {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 16px 12px 40px;
+  }
+
+  .panel {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .sectionTitle {
+    font-size: 22px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .weekdaysRow,
+  .monthCalendarGrid {
+    gap: 6px;
+  }
+
+  .monthControlsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .monthBtn {
+    width: 100%;
+  }
+
+  .dayCell,
+  .emptyDayCell {
+    min-height: 64px;
+    border-radius: 10px;
+  }
+
+  .dayNumber {
+    font-size: 14px;
+  }
+}

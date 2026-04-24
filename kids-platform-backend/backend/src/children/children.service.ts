@@ -11,9 +11,65 @@ function randomCode(len = 6) {
   return out;
 }
 
+type AvatarItem = {
+  id: string;
+  image: string;
+  name: string;
+  price: number;
+};
+
+const AVATAR_CATALOG: AvatarItem[] = [
+  { id: "astro-boy", image: "/avatars/astro-boy.png", name: "Астро Хлопчик", price: 0 },
+  { id: "astro-girl", image: "/avatars/astro-girl.png", name: "Астро Дівчинка", price: 20 },
+  { id: "rocket", image: "/avatars/rocket.png", name: "Ракета", price: 35 },
+  { id: "robot", image: "/avatars/robot.png", name: "Робот", price: 40 },
+  { id: "alien", image: "/avatars/alien.png", name: "Прибулець", price: 55 },
+  { id: "super-cat", image: "/avatars/super-cat.png", name: "Супер Кіт", price: 60 },
+  { id: "unicorn", image: "/avatars/unicorn.png", name: "Космо Єдиноріг", price: 80 },
+  { id: "dragon", image: "/avatars/dragon.png", name: "Зоряний Дракон", price: 120 },
+];
+
+type AvatarSettings = {
+  purchasedAvatarIds: string[];
+  activeAvatarId: string;
+};
+
 @Injectable()
 export class ChildrenService {
   constructor(private prisma: PrismaService) {}
+
+  private normalizeAvatarSettings(raw: unknown): AvatarSettings {
+    const fallbackId = AVATAR_CATALOG[0].id;
+    const defaults: AvatarSettings = {
+      purchasedAvatarIds: [fallbackId],
+      activeAvatarId: fallbackId,
+    };
+
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      return defaults;
+    }
+
+    const input = raw as Record<string, unknown>;
+    const purchasedSet = new Set<string>([fallbackId]);
+    const purchasedRaw = Array.isArray(input.purchasedAvatarIds) ? input.purchasedAvatarIds : [];
+    for (const item of purchasedRaw) {
+      if (typeof item !== "string") continue;
+      if (AVATAR_CATALOG.some((avatar) => avatar.id === item)) purchasedSet.add(item);
+    }
+
+    let activeAvatarId = fallbackId;
+    if (
+      typeof input.activeAvatarId === "string" &&
+      purchasedSet.has(input.activeAvatarId)
+    ) {
+      activeAvatarId = input.activeAvatarId;
+    }
+
+    return {
+      purchasedAvatarIds: [...purchasedSet],
+      activeAvatarId,
+    };
+  }
 
   private userIdFromJwt(user: any) {
     return BigInt(user.sub);
@@ -28,7 +84,12 @@ export class ChildrenService {
         include: { ageGroup: true },
         orderBy: { id: "asc" },
       });
-      return all.map((c) => ({ id: Number(c.id), name: c.name, ageGroupCode: c.ageGroup.code }));
+      return all.map((c) => ({
+        id: Number(c.id),
+        name: c.name,
+        ageGroupCode: c.ageGroup.code,
+        avatar: c.avatar ?? AVATAR_CATALOG[0].image,
+      }));
     }
 
     if (user.role !== "parent") throw new ForbiddenException("Only parent/admin");
@@ -46,6 +107,7 @@ export class ChildrenService {
       id: Number(l.child.id),
       name: l.child.name,
       ageGroupCode: l.child.ageGroup.code,
+      avatar: l.child.avatar ?? AVATAR_CATALOG[0].image,
     }));
   }
 
@@ -138,6 +200,7 @@ export class ChildrenService {
       childProfileId: Number(invite.child.id),
       childName: invite.child.name,
       ageGroupCode: invite.child.ageGroup.code,
+      avatar: invite.child.avatar ?? AVATAR_CATALOG[0].image,
     };
   }
 
@@ -164,11 +227,117 @@ export class ChildrenService {
       take: 50,
     });
 
-    const totalAttempts = attempts.length;
-    const finishedAttempts = attempts.filter((a) => a.isFinished).length;
-    const totalScore = attempts.reduce((acc, a) => acc + a.score, 0);
-    const totalCorrect = attempts.reduce((acc, a) => acc + a.correctCount, 0);
-    const totalQuestions = attempts.reduce((acc, a) => acc + a.totalCount, 0);
+    const allAttemptsForSummary = await this.prisma.attempt.findMany({
+      where: { childProfileId: child.id },
+      select: {
+        levelId: true,
+        isFinished: true,
+        score: true,
+        correctCount: true,
+        totalCount: true,
+      },
+    });
+
+    const activityWindowDays = 365;
+    const todayUtc = new Date();
+    todayUtc.setUTCHours(0, 0, 0, 0);
+    const activityStartUtc = new Date(todayUtc);
+    activityStartUtc.setUTCDate(activityStartUtc.getUTCDate() - (activityWindowDays - 1));
+
+    const recentAttempts = await this.prisma.attempt.findMany({
+      where: {
+        childProfileId: child.id,
+        createdAt: { gte: activityStartUtc },
+      },
+      select: {
+        createdAt: true,
+        finishedAt: true,
+        durationSec: true,
+        isFinished: true,
+        correctCount: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const activityByDate = new Map<string, { didPlay: boolean; levelsPassed: number; durationSec: number }>();
+
+    for (const attempt of recentAttempts) {
+      const dateKey = attempt.createdAt.toISOString().slice(0, 10);
+      const prev = activityByDate.get(dateKey) ?? { didPlay: false, levelsPassed: 0, durationSec: 0 };
+      prev.didPlay = true;
+      const fallbackDuration = attempt.finishedAt
+        ? Math.max(0, Math.floor((attempt.finishedAt.getTime() - attempt.createdAt.getTime()) / 1000))
+        : 0;
+      const effectiveDuration = Math.max(0, attempt.durationSec ?? fallbackDuration);
+      prev.durationSec += effectiveDuration;
+      if (attempt.isFinished && attempt.correctCount > 0) {
+        prev.levelsPassed += 1;
+      }
+      activityByDate.set(dateKey, prev);
+    }
+
+    const activityYearDays = Array.from({ length: activityWindowDays }, (_, idx) => {
+      const day = new Date(activityStartUtc);
+      day.setUTCDate(activityStartUtc.getUTCDate() + idx);
+      const date = day.toISOString().slice(0, 10);
+      const stats = activityByDate.get(date) ?? { didPlay: false, levelsPassed: 0, durationSec: 0 };
+      return { date, ...stats };
+    });
+
+    const bestFinishedByLevel = new Map<string, { score: number; correctCount: number; totalCount: number }>();
+    const finishedWithoutLevel: Array<{ score: number; correctCount: number; totalCount: number }> = [];
+    const uniqueLevelAttempts = new Set<string>();
+    let attemptsWithoutLevelCount = 0;
+
+    for (const attempt of allAttemptsForSummary) {
+      if (attempt.levelId) {
+        const levelKey = attempt.levelId.toString();
+        uniqueLevelAttempts.add(levelKey);
+
+        if (!attempt.isFinished) continue;
+
+        const prevBest = bestFinishedByLevel.get(levelKey);
+        if (
+          !prevBest ||
+          attempt.score > prevBest.score ||
+          (attempt.score === prevBest.score && attempt.correctCount > prevBest.correctCount)
+        ) {
+          bestFinishedByLevel.set(levelKey, {
+            score: attempt.score,
+            correctCount: attempt.correctCount,
+            totalCount: attempt.totalCount,
+          });
+        }
+      } else {
+        attemptsWithoutLevelCount += 1;
+        if (attempt.isFinished) {
+          finishedWithoutLevel.push({
+            score: attempt.score,
+            correctCount: attempt.correctCount,
+            totalCount: attempt.totalCount,
+          });
+        }
+      }
+    }
+
+    let totalScore = 0;
+    let totalCorrect = 0;
+    let totalQuestions = 0;
+
+    for (const best of bestFinishedByLevel.values()) {
+      totalScore += best.score;
+      totalCorrect += best.correctCount;
+      totalQuestions += best.totalCount;
+    }
+
+    for (const item of finishedWithoutLevel) {
+      totalScore += item.score;
+      totalCorrect += item.correctCount;
+      totalQuestions += item.totalCount;
+    }
+
+    const totalAttempts = uniqueLevelAttempts.size + attemptsWithoutLevelCount;
+    const finishedAttempts = bestFinishedByLevel.size + finishedWithoutLevel.length;
 
     return {
       child: {
@@ -182,6 +351,7 @@ export class ChildrenService {
         totalScore,
         totalCorrect,
         totalQuestions,
+        activityYearDays,
       },
       attempts: attempts.map((a) => ({
         id: Number(a.id),
@@ -194,10 +364,15 @@ export class ChildrenService {
         correctCount: a.correctCount,
         totalCount: a.totalCount,
         isFinished: a.isFinished,
+        durationSec: a.durationSec ?? (a.finishedAt ? Math.max(0, Math.floor((a.finishedAt.getTime() - a.createdAt.getTime()) / 1000)) : null),
         createdAt: a.createdAt,
         finishedAt: a.finishedAt,
       })),
     };
+  }
+
+  async getStatsPublic(childId: number) {
+    return this.getStats({ role: "admin", sub: "0" }, childId);
   }
 
   async getBadges(user: any, childId: number) {
@@ -227,6 +402,13 @@ export class ChildrenService {
           totalCount: true,
           score: true,
           levelId: true,
+          game: {
+            select: {
+              module: {
+                select: { code: true },
+              },
+            },
+          },
         },
       }),
       this.prisma.badge.findMany({ orderBy: { id: "asc" } }),
@@ -234,6 +416,17 @@ export class ChildrenService {
     ]);
 
     const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
+    const moduleMetrics = {
+      logic: calculateAchievementMetrics(
+        allAttempts.filter((attempt) => attempt.game?.module?.code === "logic")
+      ),
+      math: calculateAchievementMetrics(
+        allAttempts.filter((attempt) => attempt.game?.module?.code === "math")
+      ),
+      english: calculateAchievementMetrics(
+        allAttempts.filter((attempt) => attempt.game?.module?.code === "english")
+      ),
+    };
 
     const earnedSet = new Set(earned.map((b) => Number(b.badgeId)));
 
@@ -244,6 +437,20 @@ export class ChildrenService {
       totalAttempts: metrics.totalAttempts,
       correctAnswers: metrics.correctAnswers,
       perfectGames: metrics.perfectGames,
+      moduleStats: {
+        logic: {
+          finishedAttempts: moduleMetrics.logic.finishedAttempts,
+          totalStars: moduleMetrics.logic.totalStars,
+        },
+        math: {
+          finishedAttempts: moduleMetrics.math.finishedAttempts,
+          totalStars: moduleMetrics.math.totalStars,
+        },
+        english: {
+          finishedAttempts: moduleMetrics.english.finishedAttempts,
+          totalStars: moduleMetrics.english.totalStars,
+        },
+      },
       badges: badges.map((badge) => {
         const rule = buildAchievementRule(badge.code, metrics);
         return {
@@ -261,6 +468,112 @@ export class ChildrenService {
       }),
     };
   }
+
+  async getAvatarShop(childId: number) {
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
+      select: { id: true, settings: true },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    const [stats, settings] = await Promise.all([
+      this.getBadges(null, childId),
+      Promise.resolve(this.normalizeAvatarSettings(child.settings)),
+    ]);
+
+    const spentStars = settings.purchasedAvatarIds.reduce((sum, avatarId) => {
+      const avatar = AVATAR_CATALOG.find((a) => a.id === avatarId);
+      return sum + (avatar?.price ?? 0);
+    }, 0);
+
+    const availableStars = Math.max(0, stats.totalStars - spentStars);
+
+    return {
+      stars: {
+        earned: stats.totalStars,
+        spent: spentStars,
+        available: availableStars,
+      },
+      activeAvatarId: settings.activeAvatarId,
+      purchasedAvatarIds: settings.purchasedAvatarIds,
+      avatars: AVATAR_CATALOG,
+    };
+  }
+
+  async buyAvatar(childId: number, avatarIdRaw: string) {
+    const avatarId = (avatarIdRaw || "").trim();
+    const avatar = AVATAR_CATALOG.find((item) => item.id === avatarId);
+    if (!avatar) throw new BadRequestException("Avatar not found");
+
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
+      select: { id: true, settings: true },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    const settings = this.normalizeAvatarSettings(child.settings);
+    if (settings.purchasedAvatarIds.includes(avatar.id)) {
+      return this.getAvatarShop(childId);
+    }
+
+    const stats = await this.getBadges(null, childId);
+    const spentStars = settings.purchasedAvatarIds.reduce((sum, purchasedId) => {
+      const purchasedAvatar = AVATAR_CATALOG.find((item) => item.id === purchasedId);
+      return sum + (purchasedAvatar?.price ?? 0);
+    }, 0);
+    const availableStars = Math.max(0, stats.totalStars - spentStars);
+
+    if (availableStars < avatar.price) {
+      throw new BadRequestException("Not enough stars");
+    }
+
+    const nextSettings = {
+      ...settings,
+      purchasedAvatarIds: [...settings.purchasedAvatarIds, avatar.id],
+      activeAvatarId: avatar.id,
+    };
+
+    await this.prisma.childProfile.update({
+      where: { id: child.id },
+      data: {
+        avatar: avatar.image,
+        settings: nextSettings,
+      },
+    });
+
+    return this.getAvatarShop(childId);
+  }
+
+  async setActiveAvatar(childId: number, avatarIdRaw: string) {
+    const avatarId = (avatarIdRaw || "").trim();
+    const avatar = AVATAR_CATALOG.find((item) => item.id === avatarId);
+    if (!avatar) throw new BadRequestException("Avatar not found");
+
+    const child = await this.prisma.childProfile.findFirst({
+      where: { id: BigInt(childId), isActive: true },
+      select: { id: true, settings: true },
+    });
+    if (!child) throw new NotFoundException("Child not found");
+
+    const settings = this.normalizeAvatarSettings(child.settings);
+    if (!settings.purchasedAvatarIds.includes(avatar.id)) {
+      throw new BadRequestException("Avatar is not purchased");
+    }
+
+    await this.prisma.childProfile.update({
+      where: { id: child.id },
+      data: {
+        avatar: avatar.image,
+        settings: {
+          ...settings,
+          activeAvatarId: avatar.id,
+        },
+      },
+    });
+
+    return this.getAvatarShop(childId);
+  }
+
 
   async deleteChild(user: any, childId: number) {
     if (user.role !== "parent" && user.role !== "admin") {

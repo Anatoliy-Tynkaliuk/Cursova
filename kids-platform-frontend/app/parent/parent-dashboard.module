@@ -9,18 +9,11 @@
 .bg {
   position: absolute;
   inset: 0;
-  background-image: url("/bg/space.jpg"); /* поклади фон у /public/bg/space.jpg */
+  background-image: url("/background.png");
   background-size: cover;
   background-position: center;
   filter: saturate(1.1);
   transform: scale(1.02);
-}
-
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(60% 60% at 70% 20%, rgba(150, 110, 255, 0.25), transparent 60%),
-    linear-gradient(to bottom, rgba(10, 6, 20, 0.78), rgba(10, 6, 20, 0.82));
 }
 
 .header {
@@ -36,7 +29,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-
   padding: 14px 18px;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -46,6 +38,7 @@
 }
 
 .headerTitle {
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.3px;
   opacity: 0.95;
@@ -99,6 +92,16 @@
   border-color: rgba(120, 255, 180, 0.25);
 }
 
+.inviteStandalone {
+  max-width: 800px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.26);
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+}
+
 .panel {
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -143,11 +146,7 @@
 .avatarWrap {
   width: 72px;
   height: 72px;
-  border-radius: 999px;
-  padding: 4px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  overflow: hidden;
+  border-radius: 999999px;
 }
 .avatar {
   width: 100%;
@@ -158,6 +157,7 @@
 }
 
 .childName {
+  width: 50%;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: 0.2px;
@@ -317,14 +317,83 @@
 }
 
 .closeBtn {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
   cursor: pointer;
 }
-.closeBtn:hover {
-  background: rgba(255, 255, 255, 0.12);
+
+.closeBtn::before,
+.closeBtn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  background: white;
+}
+
+.closeBtn::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.closeBtn::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.card {
+  position: relative; 
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(40, 28, 80, 0.35);
+  padding: 14px;
+}
+
+.deleteBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+
+  border: 1px solid rgba(255, 120, 120, 0.35);
+  background: rgba(255, 80, 80, 0.15);
+  color: #ffb3b3;
+
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteBtn:hover {
+  background: rgba(255, 80, 80, 0.3);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.deleteBtn::before,
+.deleteBtn::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 2px;
+  background: white;
+}
+
+.deleteBtn::before {
+  transform: rotate(45deg);
+}
+
+.deleteBtn::after {
+  transform: rotate(-45deg);
 }

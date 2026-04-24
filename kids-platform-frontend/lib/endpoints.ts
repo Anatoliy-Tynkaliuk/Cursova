@@ -21,7 +21,7 @@ export async function getMe() {
 }
 
 export async function getChildren() {
-  return api<Array<{ id: number; name: string; ageGroupCode: string }>>("/children", "GET");
+  return api<Array<{ id: number; name: string; ageGroupCode: string; avatar?: string | null }>>("/children", "GET");
 }
 
 export async function createChild(name: string, ageGroupCode: string) {
@@ -51,6 +51,18 @@ export type ChildStats = {
     totalScore: number;
     totalCorrect: number;
     totalQuestions: number;
+    activityYearDays?: Array<{
+      date: string;
+      didPlay: boolean;
+      levelsPassed: number;
+      durationSec: number;
+    }>;
+    activity14Days?: Array<{
+      date: string;
+      didPlay: boolean;
+      levelsPassed: number;
+      durationSec: number;
+    }>;
   };
   attempts: Array<{
     id: number;
@@ -59,6 +71,7 @@ export type ChildStats = {
     correctCount: number;
     totalCount: number;
     isFinished: boolean;
+    durationSec?: number | null;
     createdAt: string;
     finishedAt: string | null;
   }>;
@@ -71,6 +84,36 @@ export async function getChildStats(childId: number) {
 export async function getChildStatsPublic(childId: number) {
   return api<ChildStats>(`/child/${childId}/stats`, "GET");
 }
+export type AvatarShopAvatar = {
+  id: string;
+  image: string;
+  name: string;
+  price: number;
+};
+
+export type AvatarShopResponse = {
+  stars: {
+    earned: number;
+    spent: number;
+    available: number;
+  };
+  activeAvatarId: string;
+  purchasedAvatarIds: string[];
+  avatars: AvatarShopAvatar[];
+};
+
+export async function getAvatarShop(childId: number) {
+  return api<AvatarShopResponse>(`/child/${childId}/avatar-shop`, "GET");
+}
+
+export async function buyAvatar(childId: number, avatarId: string) {
+  return api<AvatarShopResponse>(`/child/${childId}/avatar-shop/buy`, "POST", { avatarId });
+}
+
+export async function setActiveAvatar(childId: number, avatarId: string) {
+  return api<AvatarShopResponse>(`/child/${childId}/avatar`, "PATCH", { avatarId });
+}
+
 
 export type AdminModuleItem = {
   id: number;
@@ -380,7 +423,7 @@ export async function deleteAdminGame(gameId: number) {
 }
 
 export async function joinByCode(code: string) {
-  return api<{ childProfileId: number; childName: string; ageGroupCode: string }>(
+  return api<{ childProfileId: number; childName: string; ageGroupCode: string; avatar?: string | null }>(
     "/child/join",
     "POST",
     { code }
@@ -407,6 +450,11 @@ export type ChildBadgesResponse = {
   totalAttempts?: number;
   correctAnswers?: number;
   perfectGames?: number;
+  moduleStats?: {
+    logic: { finishedAttempts: number; totalStars: number };
+    math: { finishedAttempts: number; totalStars: number };
+    english: { finishedAttempts: number; totalStars: number };
+  };
   badges: ChildBadgeItem[];
 };
 
@@ -423,6 +471,8 @@ export type GameListItem = {
   id: number;
   title: string;
   moduleCode: string;
+  gameTypeCode: string;
+  gameTypeTitle: string;
   minAgeGroupCode: string;
   difficulty: number;
   difficultyLevels: number[];
@@ -467,7 +517,7 @@ export type StartAttemptResponse = {
   task: {
     taskId: number;
     position: number;
-    taskVersion: { id: number; prompt: string; data: any };
+    taskVersion: { id: number; prompt: string; data: any; explanation?: string | null };
   };
 };
 
@@ -482,12 +532,23 @@ export async function startAttempt(childProfileId: number, gameId: number, diffi
 }
 
 export type AnswerResponse =
-  | { attemptId: number; isCorrect: boolean; finished: true; summary: any }
+  | {
+      attemptId: number;
+      isCorrect: boolean;
+      finished: true;
+      explanation?: string | null;
+      summary: { score: number; correctCount: number; totalCount: number };
+    }
   | {
       attemptId: number;
       isCorrect: boolean;
       finished: false;
-      nextTask: any;
+      explanation?: string | null;
+      nextTask: {
+        taskId: number;
+        position: number;
+        taskVersion: { id: number; prompt: string; data: any; explanation?: string | null };
+      };
       progress?: { score: number; correctCount: number; totalCount: number; totalTasks?: number };
     };
 

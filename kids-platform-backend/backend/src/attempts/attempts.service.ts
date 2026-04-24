@@ -338,6 +338,7 @@ export class AttemptsService {
           id: Number(tv.id),
           prompt: tv.prompt,
           data: tv.dataJson,
+          explanation: tv.explanation,
         },
       },
     };
@@ -443,6 +444,7 @@ export class AttemptsService {
         attemptId,
         isCorrect,
         finished: true,
+        explanation: tv.explanation,
         summary: {
           score: finished.score,
           correctCount: finished.correctCount,
@@ -458,6 +460,7 @@ export class AttemptsService {
       attemptId,
       isCorrect,
       finished: false,
+      explanation: tv.explanation,
       progress: {
         score: updated.score,
         correctCount: updated.correctCount,
@@ -471,6 +474,7 @@ export class AttemptsService {
           id: Number(nextTv.id),
           prompt: nextTv.prompt,
           data: nextTv.dataJson,
+          explanation: nextTv.explanation,
         },
       },
     };

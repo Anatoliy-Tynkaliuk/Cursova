@@ -21,6 +21,7 @@ export class GamesService {
       },
       include: {
         module: true,
+        gameType: true,
         minAgeGroup: true,
         levels: {
           where: {
@@ -50,6 +51,8 @@ export class GamesService {
         id: Number(g.id),
         title: g.title,
         moduleCode: g.module.code,
+        gameTypeCode: g.gameType.code,
+        gameTypeTitle: g.gameType.title,
         minAgeGroupCode: g.minAgeGroup.code,
         difficulty: g.difficulty,
         difficultyLevels: [...DIFFICULTY_LEVELS],
