@@ -466,6 +466,8 @@ export type GameListItem = {
   id: number;
   title: string;
   moduleCode: string;
+  gameTypeCode: string;
+  gameTypeTitle: string;
   minAgeGroupCode: string;
   difficulty: number;
   difficultyLevels: number[];

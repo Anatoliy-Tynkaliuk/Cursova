@@ -24,11 +24,25 @@ type GameProgress = {
   completedLevels: number;
 };
 
-const cardImages = [
-  "/Planeta_logika/background_games_match.png",
-  "/Planeta_logika/background_games_test.png",
-  "/Planeta_logika/background_games_dragging.png",
-];
+const gameTypeImageMap: Record<string, string> = {
+  match: "/Planeta_logika/background_games_match.png",
+  test: "/Planeta_logika/background_games_test.png",
+  dragging: "/Planeta_logika/background_games_dragging.png",
+  dragdrop: "/Planeta_logika/background_games_dragging.png",
+  sequence: "/Planeta_logika/background_games_dragging.png",
+};
+
+function getGameCardImage(game: GameListItem, fallbackIndex: number) {
+  const key = (game.gameTypeCode || "").toLowerCase();
+  if (gameTypeImageMap[key]) return gameTypeImageMap[key];
+
+  const fallback = [
+    "/Planeta_logika/background_games_match.png",
+    "/Planeta_logika/background_games_test.png",
+    "/Planeta_logika/background_games_dragging.png",
+  ];
+  return fallback[fallbackIndex % fallback.length];
+}
 
 export default function LogicPlanetPage() {
   const [childName, setChildName] = useState("Друже");
@@ -142,7 +156,7 @@ export default function LogicPlanetPage() {
                 <div className={styles.cardInner}>
                   <div className={styles.cardArt}>
                     <Image
-                      src={cardImages[index % cardImages.length]}
+                      src={getGameCardImage(game, index)}
                       alt={game.title}
                       width={260}
                       height={200}
