@@ -435,8 +435,8 @@
   width: 120px;
   min-height: 66px;
   border: 0;
-  border-bottom: 4px solid rgba(255, 255, 255, 0.96);
-  border-radius: 10px;
+  border-bottom: 2px solid rgba(190, 190, 190, 0.45);
+  border-radius: 0;
   background: transparent;
   color: rgba(255, 255, 255, 0.95);
   display: flex;
@@ -448,12 +448,12 @@
 }
 
 .underlineSlot:hover {
-  border-bottom-color: rgba(255, 210, 120, 0.9);
+  border-bottom-color: rgba(210, 210, 210, 0.62);
   transform: translateY(-1px);
 }
 
 .underlineSlotFilled {
-  border-bottom-color: rgba(60, 255, 190, 0.95);
+  border-bottom-color: rgba(230, 230, 230, 0.72);
 }
 
 .slotText {
@@ -795,7 +795,7 @@
   .progressText { font-size: 22px; }
   .answerText { font-size: 34px; }
   .slotText { font-size: 34px; }
-  .underlineSlot { width: 100px; border-bottom-width: 3px; }
+  .underlineSlot { width: 100px; border-bottom-width: 2px; }
   .sequenceAnswerBtn { font-size: 36px; height: 68px; min-width: 160px; }
 }
 
@@ -814,7 +814,7 @@
   .underlineSlot {
     width: calc(50% - 8px);
     min-height: 56px;
-    border-bottom-width: 3px;
+    border-bottom-width: 2px;
   }
   .slotText { font-size: 28px; }
   .sequenceAnswerBtn {
