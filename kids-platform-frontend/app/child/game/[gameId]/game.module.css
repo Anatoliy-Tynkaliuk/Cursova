@@ -532,7 +532,17 @@
 }
 
 .sequenceBackBtn {
-  composes: secondaryBtn;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 6, 20, 0.24);
   cursor: pointer;
 }
 
