@@ -5,7 +5,13 @@ import Link from "next/link";
 import styles from "./logic.module.css";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
-import { getChildBadgesPublic, getGames, type ChildBadgeItem, type GameListItem } from "@/lib/endpoints";
+import {
+  getChildBadgesPublic,
+  getGameLevels,
+  getGames,
+  type ChildBadgeItem,
+  type GameListItem,
+} from "@/lib/endpoints";
 
 type ChildStats = {
   level: number;
@@ -13,11 +19,28 @@ type ChildStats = {
   achievements: number;
 };
 
-const cardImages = [
-  "/Planeta_logika/background_games_match.png",
-  "/Planeta_logika/background_games_test.png",
-  "/Planeta_logika/background_games_dragging.png",
-];
+type GameProgress = {
+  totalLevels: number;
+  completedLevels: number;
+};
+
+const gameTypeImageMap: Record<string, string> = {
+  test: "/background_games_images/background_games_test.png",
+  drag: "/background_games_images/background_games_drag.png",
+  sequence: "/background_games_images/background_games_sequence.png",
+};
+
+function getGameCardImage(game: GameListItem, fallbackIndex: number) {
+  const key = (game.gameTypeCode || "").toLowerCase();
+  if (gameTypeImageMap[key]) return gameTypeImageMap[key];
+
+  const fallback = [
+    "/Planeta_logika/background_games_match.png",
+    "/Planeta_logika/background_games_test.png",
+    "/Planeta_logika/background_games_dragging.png",
+  ];
+  return fallback[fallbackIndex % fallback.length];
+}
 
 export default function LogicPlanetPage() {
   const [childName, setChildName] = useState("Друже");
@@ -25,6 +48,7 @@ export default function LogicPlanetPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [games, setGames] = useState<GameListItem[]>([]);
+  const [gameProgressById, setGameProgressById] = useState<Record<number, GameProgress>>({});
 
   useEffect(() => {
     const session = getChildSession();
@@ -46,6 +70,34 @@ export default function LogicPlanetPage() {
         const earnedBadges = badgeData.badges.filter((badge: ChildBadgeItem) => badge.isEarned).length;
         const logicGames = gamesData.filter((game) => game.moduleCode === "logic");
         setGames(logicGames);
+
+        const progressEntries = await Promise.all(
+          logicGames.map(async (game) => {
+            const difficulties = game.availableDifficulties.length
+              ? game.availableDifficulties
+              : game.difficultyLevels;
+
+            const levelsByDifficulty = await Promise.all(
+              difficulties.map((difficulty) =>
+                getGameLevels(game.id, difficulty, session.childProfileId!).catch(() => null)
+              )
+            );
+
+            const totals = levelsByDifficulty.reduce(
+              (acc, levelsData) => {
+                if (!levelsData) return acc;
+                acc.totalLevels += levelsData.levels.length;
+                acc.completedLevels += levelsData.levels.filter((level) => level.isCompleted).length;
+                return acc;
+              },
+              { totalLevels: 0, completedLevels: 0 }
+            );
+
+            return [game.id, totals] as const;
+          })
+        );
+
+        setGameProgressById(Object.fromEntries(progressEntries));
 
         setStats({
           level: Math.max(1, Math.floor(finishedAttempts / 5) + 1),
@@ -94,31 +146,36 @@ export default function LogicPlanetPage() {
 
         {/* GAME CARDS */}
         <section className={styles.cardsWrap}>
-          {games.map((game, index) => (
-            <div key={game.id} className={styles.card}>
-              <div className={styles.cardInner}>
-                <div className={styles.cardArt}>
-                  <Image
-                    src={cardImages[index % cardImages.length]}
-                    alt={game.title}
-                    width={260}
-                    height={200}
-                    className={styles.cardImg}
-                    priority={index === 0}
-                  />
-                </div>
+          {games.map((game, index) => {
+            const progress = gameProgressById[game.id] ?? { totalLevels: 0, completedLevels: 0 };
 
-                <div className={styles.cardText}>
-                  <h3 className={styles.cardTitle}>{game.title}</h3>
-                  <p className={styles.cardSubtitle}>Натисни “Грати”, щоб обрати складність на наступному екрані.</p>
-                </div>
+            return (
+              <div key={game.id} className={styles.card}>
+                <div className={styles.cardInner}>
+                  <div className={styles.cardArt}>
+                    <Image
+                      src={getGameCardImage(game, index)}
+                      alt={game.title}
+                      width={260}
+                      height={200}
+                      className={styles.cardImg}
+                      sizes="(max-width: 520px) 72vw, (max-width: 1024px) 56vw, 260px"
+                      priority={index === 0}
+                    />
+                  </div>
 
-                <Link href={`/child/game/${game.id}/difficulty`} className={styles.playBtn}>
-                  Грати
-                </Link>
+                  <div className={styles.cardText}>
+                    <h3 className={styles.cardTitle}>{game.title}</h3>
+                    <p className={styles.cardSubtitle}>Всього рівнів: {progress.totalLevels}. Пройдено: {progress.completedLevels}.</p>
+                  </div>
+
+                  <Link href={`/child/game/${game.id}/difficulty`} className={styles.playBtn}>
+                    Грати
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </section>
 
         {emptyState && <p className={styles.subtitle}>Поки немає доступних ігор.</p>}

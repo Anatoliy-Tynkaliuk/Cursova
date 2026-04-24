@@ -4,19 +4,36 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./english.module.css";
-import { getChildBadgesPublic, getGames, type GameListItem } from "@/lib/endpoints";
+import { getChildBadgesPublic, getGameLevels, getGames, type GameListItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 
-const cardImages = [
-  "/Planeta_logika/background_games_match.png",
-  "/Planeta_logika/background_games_test.png",
-  "/Planeta_logika/background_games_dragging.png",
-];
+const gameTypeImageMap: Record<string, string> = {
+  test: "/background_games_images/background_games_test.png",
+  drag: "/background_games_images/background_games_drag.png",
+  sequence: "/background_games_images/background_games_sequence.png",
+};
+
+function getGameCardImage(game: GameListItem, fallbackIndex: number) {
+  const key = (game.gameTypeCode || "").toLowerCase();
+  if (gameTypeImageMap[key]) return gameTypeImageMap[key];
+
+  const fallback = [
+    "/Planeta_logika/background_games_match.png",
+    "/Planeta_logika/background_games_test.png",
+    "/Planeta_logika/background_games_dragging.png",
+  ];
+  return fallback[fallbackIndex % fallback.length];
+}
 
 type ChildStats = {
   level: number;
   stars: number;
   achievements: number;
+};
+
+type GameProgress = {
+  totalLevels: number;
+  completedLevels: number;
 };
 
 export default function EnglishPlanetPage() {
@@ -25,6 +42,7 @@ export default function EnglishPlanetPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [games, setGames] = useState<GameListItem[]>([]);
+  const [gameProgressById, setGameProgressById] = useState<Record<number, GameProgress>>({});
 
   useEffect(() => {
     const session = getChildSession();
@@ -43,6 +61,35 @@ export default function EnglishPlanetPage() {
         ]);
         const englishGames = gamesData.filter((game) => game.moduleCode === "english");
         setGames(englishGames);
+
+        const progressEntries = await Promise.all(
+          englishGames.map(async (game) => {
+            const difficulties = game.availableDifficulties.length
+              ? game.availableDifficulties
+              : game.difficultyLevels;
+
+            const levelsByDifficulty = await Promise.all(
+              difficulties.map((difficulty) =>
+                getGameLevels(game.id, difficulty, session.childProfileId!).catch(() => null)
+              )
+            );
+
+            const totals = levelsByDifficulty.reduce(
+              (acc, levelsData) => {
+                if (!levelsData) return acc;
+                acc.totalLevels += levelsData.levels.length;
+                acc.completedLevels += levelsData.levels.filter((level) => level.isCompleted).length;
+                return acc;
+              },
+              { totalLevels: 0, completedLevels: 0 }
+            );
+
+            return [game.id, totals] as const;
+          })
+        );
+
+        setGameProgressById(Object.fromEntries(progressEntries));
+
         const earnedBadges = badgeData.badges.filter((badge) => badge.isEarned).length;
         setStats({
           level: Math.max(1, Math.floor(badgeData.finishedAttempts / 5) + 1),
@@ -83,23 +130,27 @@ export default function EnglishPlanetPage() {
         </div>
 
         <section className={styles.cardsWrap}>
-          {games.map((game, index) => (
+          {games.map((game, index) => {
+            const progress = gameProgressById[game.id] ?? { totalLevels: 0, completedLevels: 0 };
+
+            return (
             <div key={game.id} className={styles.card}>
               <div className={styles.cardInner}>
                 <div className={styles.cardArt}>
                   <Image
-                    src={cardImages[index % cardImages.length]}
+                    src={getGameCardImage(game, index)}
                     alt={game.title}
                     width={260}
                     height={200}
                     className={styles.cardImg}
+                    sizes="(max-width: 520px) 72vw, (max-width: 1024px) 56vw, 260px"
                     priority={index === 0}
                   />
                 </div>
 
                 <div className={styles.cardText}>
                   <h3 className={styles.cardTitle}>{game.title}</h3>
-                  <p className={styles.cardSubtitle}>Натисни “Грати”, щоб обрати складність на наступному екрані.</p>
+                  <p className={styles.cardSubtitle}>Всього рівнів: {progress.totalLevels}. Пройдено: {progress.completedLevels}.</p>
                 </div>
 
                 <Link href={`/child/game/${game.id}/difficulty`} className={styles.playBtn}>
@@ -107,7 +158,8 @@ export default function EnglishPlanetPage() {
                 </Link>
               </div>
             </div>
-          ))}
+          );
+          })}
         </section>
 
         {emptyState && <p className={styles.subtitle}>Поки немає ігор з англійської для цієї вікової групи.</p>}
