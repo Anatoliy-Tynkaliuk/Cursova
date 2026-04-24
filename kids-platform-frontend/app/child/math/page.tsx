@@ -141,10 +141,9 @@ export default function MathPlanetPage() {
                   <Image
                     src={getGameCardImage(game, index)}
                     alt={game.title}
-                    width={260}
-                    height={200}
+                    fill
                     className={styles.cardImg}
-                    sizes="(max-width: 520px) 72vw, (max-width: 1024px) 56vw, 260px"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
                     priority={index === 0}
                   />
                 </div>

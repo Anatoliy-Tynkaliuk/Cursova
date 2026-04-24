@@ -133,27 +133,25 @@
   flex-direction: column;
   align-items: center;
   min-height: 360px;
+  position: relative;
 }
 
 .cardArt {
-  width: 100%;
-  display: grid;
-  place-items: center;
-  padding-top: 10px;
-  min-height: 170px;
+  position: absolute;
+  inset: 0;
 }
 
 .cardImg {
-  display: block;
-  width: min(270px, 92%);
-  max-width: 100%;
-  height: auto;
-  filter: drop-shadow(0 22px 30px rgba(0, 0, 0, 0.45));
+  object-fit: cover;
+  opacity: 0.5;
+  filter: saturate(1.05);
 }
 
 .cardText {
-  margin-top: 10px;
+  margin-top: 180px;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .cardTitle {
@@ -171,6 +169,8 @@
 
 .playBtn {
   margin-top: auto;
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -298,12 +298,6 @@
   }
   .subtitle {
     font-size: 15px;
-  }
-  .cardArt {
-    min-height: 150px;
-  }
-  .cardImg {
-    width: min(240px, 78vw);
   }
   .statsBar {
     flex-direction: column;
