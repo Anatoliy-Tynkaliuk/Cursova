@@ -8,11 +8,9 @@ import { getChildBadgesPublic, getGameLevels, getGames, type GameListItem } from
 import { getChildSession } from "@/lib/auth";
 
 const gameTypeImageMap: Record<string, string> = {
-  match: "/Planeta_logika/background_games_match.png",
-  test: "/Planeta_logika/background_games_test.png",
-  dragging: "/Planeta_logika/background_games_dragging.png",
-  dragdrop: "/Planeta_logika/background_games_dragging.png",
-  sequence: "/Planeta_logika/background_games_dragging.png",
+  test: "/background_games_images/background_games_test.png",
+  drag: "/background_games_images/background_games_drag.png",
+  sequence: "/background_games_images/background_games_sequence.png",
 };
 
 function getGameCardImage(game: GameListItem, fallbackIndex: number) {
