@@ -132,23 +132,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 360px;
+  min-height: 320px;
   position: relative;
 }
 
 .cardArt {
   position: absolute;
   inset: 0;
+  padding: 10px 12px 0;
 }
 
 .cardImg {
-  object-fit: cover;
-  opacity: 0.5;
+  object-fit: contain;
+  opacity: 0.42;
+  padding: 8px;
   filter: saturate(1.05);
 }
 
 .cardText {
-  margin-top: 180px;
+  margin-top: 152px;
   text-align: center;
   position: relative;
   z-index: 1;
@@ -276,7 +278,7 @@
     gap: 16px;
   }
   .cardInner {
-    min-height: 320px;
+    min-height: 290px;
   }
   .statsBar {
     width: 100%;
@@ -297,12 +299,12 @@
   }
 
   .cardInner {
-    min-height: 290px;
+    min-height: 265px;
     padding: 14px 12px;
   }
 
   .cardText {
-    margin-top: 150px;
+    margin-top: 130px;
   }
 
   .cardTitle {
@@ -330,11 +332,11 @@
     gap: 10px;
   }
   .cardInner {
-    min-height: 260px;
+    min-height: 240px;
     padding: 12px 10px;
   }
   .cardText {
-    margin-top: 130px;
+    margin-top: 114px;
   }
   .cardTitle {
     font-size: 17px;
