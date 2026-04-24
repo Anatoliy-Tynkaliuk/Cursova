@@ -418,96 +418,82 @@
 /* ===== SEQUENCE TASK ===== */
 
 .sequencePage {
-  margin-top: 16px;
+  margin-top: 22px;
   display: grid;
-  gap: 14px;
-}
-
-.sequenceHint {
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(10, 6, 20, 0.2);
-  padding: 10px 12px;
-  text-align: center;
-  font-size: 14px;
-  line-height: 1.35;
-  color: rgba(255, 255, 255, 0.85);
+  gap: 22px;
 }
 
 .sequenceSlots {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 22px;
 }
 
 .underlineSlot {
-  min-height: 84px;
-  border-radius: 16px;
-  border: 2px dashed rgba(255, 255, 255, 0.34);
-  background: rgba(10, 6, 20, 0.16);
+  width: 120px;
+  min-height: 66px;
+  border: 0;
+  border-bottom: 10px solid rgba(255, 255, 255, 0.96);
+  border-radius: 10px;
+  background: transparent;
   color: rgba(255, 255, 255, 0.95);
-  display: grid;
-  grid-template-rows: auto 1fr;
-  justify-items: center;
-  align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
   cursor: pointer;
-  padding: 8px 10px;
-  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+  padding: 0 8px 10px;
+  transition: border-color 150ms ease, transform 150ms ease, opacity 150ms ease;
 }
 
 .underlineSlot:hover {
-  border-color: rgba(255, 210, 120, 0.6);
-  background: rgba(20, 12, 35, 0.35);
+  border-bottom-color: rgba(255, 210, 120, 0.9);
   transform: translateY(-1px);
 }
 
 .underlineSlotFilled {
-  border-style: solid;
-  border-color: rgba(60, 255, 190, 0.62);
-  background: rgba(17, 49, 40, 0.38);
-}
-
-.slotIndex {
-  justify-self: start;
-  font-size: 12px;
-  font-weight: 900;
-  opacity: 0.72;
+  border-bottom-color: rgba(60, 255, 190, 0.95);
 }
 
 .slotText {
-  font-size: 30px;
+  font-size: 44px;
   font-weight: 1000;
   line-height: 1;
+  color: #8bb8ff;
+  text-shadow: 0 8px 20px rgba(50, 110, 255, 0.35);
 }
 
 .sequenceAnswers {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(92px, max-content));
-  justify-content: center;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .sequenceAnswerBtn {
-  min-width: 92px;
-  height: 52px;
+  min-width: 78px;
+  height: 62px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(10, 6, 20, 0.24);
-  color: rgba(255, 255, 255, 0.95);
-  font-size: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 6, 20, 0.12);
+  color: #8bb8ff;
+  font-size: 46px;
   font-weight: 1000;
   cursor: grab;
-  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, color 150ms ease;
 }
 
 .sequenceAnswerBtn:hover {
   transform: translateY(-1px);
-  border-color: rgba(255, 210, 120, 0.6);
+  border-color: rgba(255, 210, 120, 0.42);
+  background: rgba(10, 6, 20, 0.24);
 }
 
 .sequenceAnswerBtnSelected {
-  border-color: rgba(60, 255, 190, 0.62);
-  background: rgba(17, 49, 40, 0.38);
+  border-color: rgba(60, 255, 190, 0.7);
+  background: rgba(17, 49, 40, 0.32);
+  color: #c6ffef;
 }
 
 .answersHint {
@@ -807,7 +793,9 @@
   .question { font-size: 44px; }
   .progressText { font-size: 22px; }
   .answerText { font-size: 34px; }
-  .slotText { font-size: 24px; }
+  .slotText { font-size: 34px; }
+  .underlineSlot { width: 100px; border-bottom-width: 8px; }
+  .sequenceAnswerBtn { font-size: 38px; height: 56px; }
 }
 
 @media (max-width: 520px) {
@@ -818,13 +806,20 @@
   .dragLayout { grid-template-columns: 1fr; }
   .dragLeftColumn,
   .dragRightColumn { order: initial; }
-  .sequenceSlots { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
-  .underlineSlot { min-height: 74px; }
-  .slotText { font-size: 20px; }
+  .sequenceSlots {
+    gap: 14px;
+    justify-content: space-between;
+  }
+  .underlineSlot {
+    width: calc(50% - 8px);
+    min-height: 56px;
+    border-bottom-width: 7px;
+  }
+  .slotText { font-size: 28px; }
   .sequenceAnswerBtn {
-    min-width: 76px;
-    height: 46px;
-    font-size: 22px;
+    min-width: 64px;
+    height: 50px;
+    font-size: 32px;
   }
 }
 

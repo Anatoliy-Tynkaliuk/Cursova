@@ -748,11 +748,6 @@ export default function GamePage() {
                 </>
               ) : isSequenceTask ? (
                 <div className={styles.sequencePage}>
-                  <div className={styles.sequenceHint}>
-                    Перетягуй елементи у вільні комірки або клацай по картці та по комірці.
-                    Щоб зняти елемент — клацни по заповненій комірці.
-                  </div>
-
                   <div className={styles.sequenceSlots}>
                     {sequenceSlots.map((item, index) => (
                       <button
@@ -777,7 +772,6 @@ export default function GamePage() {
                           if (item) clearSequenceSlot(index);
                         }}
                       >
-                        <span className={styles.slotIndex}>{index + 1}</span>
                         <span className={styles.slotText}>{item ?? ""}</span>
                       </button>
                     ))}
