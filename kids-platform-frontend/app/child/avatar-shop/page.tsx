@@ -119,7 +119,7 @@ export default function AvatarShopPage() {
           <div className={styles.topBar}>
             <h1>Магазин аватарів</h1>
             <Link href="/child/subjects" className={styles.backBtn}>
-              Назад до меню
+              Назад
             </Link>
           </div>
 
@@ -130,8 +130,8 @@ export default function AvatarShopPage() {
               <Image
                 src="/star.png"
                 alt="Зірка"
-                width={18}
-                height={18}
+                width={29}
+                height={29}
                 className={styles.starIcon}
               />
             </div>
@@ -141,8 +141,8 @@ export default function AvatarShopPage() {
               <Image
                 src="/star.png"
                 alt="Зірка"
-                width={18}
-                height={18}
+                width={29}
+                height={29}
                 className={styles.starIcon}
               />
             </div>
@@ -152,8 +152,8 @@ export default function AvatarShopPage() {
               <Image
                 src="/star.png"
                 alt="Зірка"
-                width={18}
-                height={18}
+                width={29}
+                height={29}
                 className={styles.starIcon}
               />
             </div>
@@ -170,7 +170,6 @@ export default function AvatarShopPage() {
 
               return (
                 <article key={avatar.id} className={styles.avatarCard}>
-                  <div className={styles.avatarIcon}>
                     <Image
                       src={normalizeAvatarSrc(avatar.image)}
                       alt={avatar.name}
@@ -178,15 +177,14 @@ export default function AvatarShopPage() {
                       height={86}
                       className={styles.avatarImage}
                     />
-                  </div>
                   <h3>{avatar.name}</h3>
                   <p className={styles.price}>
                     Ціна: {avatar.price}
                     <Image
                       src="/star.png"
                       alt="Зірка"
-                      width={16}
-                      height={16}
+                      width={29}
+                      height={29}
                       className={styles.priceStar}
                     />
                   </p>
