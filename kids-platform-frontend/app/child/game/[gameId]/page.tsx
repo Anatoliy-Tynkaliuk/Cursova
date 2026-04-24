@@ -404,6 +404,12 @@ export default function GamePage() {
     setSelectedSequenceItem(item);
   }
 
+  function handleSequenceSlotDragStart(event: DragEvent<HTMLButtonElement>, item: string) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", item);
+    setSelectedSequenceItem(item);
+  }
+
   function handleSequenceDrop(event: DragEvent<HTMLButtonElement>, slotIndex: number) {
     event.preventDefault();
     const droppedItem = event.dataTransfer.getData("text/plain");
@@ -742,6 +748,11 @@ export default function GamePage() {
                 </>
               ) : isSequenceTask ? (
                 <div className={styles.sequencePage}>
+                  <div className={styles.sequenceHint}>
+                    Перетягуй елементи у вільні комірки або клацай по картці та по комірці.
+                    Щоб зняти елемент — клацни по заповненій комірці.
+                  </div>
+
                   <div className={styles.sequenceSlots}>
                     {sequenceSlots.map((item, index) => (
                       <button
@@ -751,8 +762,13 @@ export default function GamePage() {
                           item ? styles.underlineSlotFilled : ""
                         }`}
                         disabled={loading || pickedIdx !== null}
+                        draggable={!!item && !loading && pickedIdx === null}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => handleSequenceDrop(e, index)}
+                        onDragStart={(e) => {
+                          if (!item) return;
+                          handleSequenceSlotDragStart(e, item);
+                        }}
                         onClick={() => {
                           if (selectedSequenceItem) {
                             assignSequenceItem(index, selectedSequenceItem);
@@ -761,6 +777,7 @@ export default function GamePage() {
                           if (item) clearSequenceSlot(index);
                         }}
                       >
+                        <span className={styles.slotIndex}>{index + 1}</span>
                         <span className={styles.slotText}>{item ?? ""}</span>
                       </button>
                     ))}

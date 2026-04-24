@@ -415,6 +415,127 @@
   border-color: rgba(255, 90, 110, 0.55);
 }
 
+/* ===== SEQUENCE TASK ===== */
+
+.sequencePage {
+  margin-top: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.sequenceHint {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 6, 20, 0.2);
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.sequenceSlots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.underlineSlot {
+  min-height: 84px;
+  border-radius: 16px;
+  border: 2px dashed rgba(255, 255, 255, 0.34);
+  background: rgba(10, 6, 20, 0.16);
+  color: rgba(255, 255, 255, 0.95);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 8px 10px;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.underlineSlot:hover {
+  border-color: rgba(255, 210, 120, 0.6);
+  background: rgba(20, 12, 35, 0.35);
+  transform: translateY(-1px);
+}
+
+.underlineSlotFilled {
+  border-style: solid;
+  border-color: rgba(60, 255, 190, 0.62);
+  background: rgba(17, 49, 40, 0.38);
+}
+
+.slotIndex {
+  justify-self: start;
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0.72;
+}
+
+.slotText {
+  font-size: 30px;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.sequenceAnswers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, max-content));
+  justify-content: center;
+  gap: 10px;
+}
+
+.sequenceAnswerBtn {
+  min-width: 92px;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(10, 6, 20, 0.24);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 28px;
+  font-weight: 1000;
+  cursor: grab;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+
+.sequenceAnswerBtn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 210, 120, 0.6);
+}
+
+.sequenceAnswerBtnSelected {
+  border-color: rgba(60, 255, 190, 0.62);
+  background: rgba(17, 49, 40, 0.38);
+}
+
+.answersHint {
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.26);
+  background: rgba(10, 6, 20, 0.2);
+  padding: 10px 12px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+}
+
+.sequenceActions {
+  margin-top: 4px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sequenceSendBtn {
+  composes: sendBtn;
+}
+
+.sequenceBackBtn {
+  composes: secondaryBtn;
+  cursor: pointer;
+}
+
 /* ===== SUMMARY ===== */
 
 .summary {
@@ -676,6 +797,7 @@
   .question { font-size: 44px; }
   .progressText { font-size: 22px; }
   .answerText { font-size: 34px; }
+  .slotText { font-size: 24px; }
 }
 
 @media (max-width: 520px) {
@@ -686,6 +808,14 @@
   .dragLayout { grid-template-columns: 1fr; }
   .dragLeftColumn,
   .dragRightColumn { order: initial; }
+  .sequenceSlots { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+  .underlineSlot { min-height: 74px; }
+  .slotText { font-size: 20px; }
+  .sequenceAnswerBtn {
+    min-width: 76px;
+    height: 46px;
+    font-size: 22px;
+  }
 }
 
 
