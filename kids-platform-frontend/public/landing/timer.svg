@@ -1,0 +1,24 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rim" x1="16" y1="8" x2="112" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF4C4"/>
+      <stop offset="1" stop-color="#F4AE2B"/>
+    </linearGradient>
+    <linearGradient id="sandTop" x1="48" y1="30" x2="80" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE79A"/>
+      <stop offset="1" stop-color="#FFC44D"/>
+    </linearGradient>
+    <linearGradient id="sandBottom" x1="40" y1="72" x2="88" y2="102" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD977"/>
+      <stop offset="1" stop-color="#F5A623"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="30" y="8" width="68" height="14" rx="7" fill="url(#rim)"/>
+  <rect x="30" y="106" width="68" height="14" rx="7" fill="url(#rim)"/>
+  <path d="M40 20H88C87 33 79 41 71 48C79 55 87 63 88 106H40C41 63 49 55 57 48C49 41 41 33 40 20Z" fill="#2D214C" stroke="url(#rim)" stroke-width="6"/>
+  <path d="M50 32H78C76 38 71 42 64 47C57 42 52 38 50 32Z" fill="url(#sandTop)"/>
+  <path d="M63 48H65V70H63V48Z" fill="#FFC857"/>
+  <path d="M48 84C55 75 73 75 80 84V96H48V84Z" fill="url(#sandBottom)"/>
+  <circle cx="64" cy="48" r="3" fill="#FFD977"/>
+</svg>

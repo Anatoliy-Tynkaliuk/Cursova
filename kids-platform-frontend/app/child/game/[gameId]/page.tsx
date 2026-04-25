@@ -901,7 +901,9 @@ export default function GamePage() {
 
         <footer className={styles.hud}>
           <div className={styles.hudItem}>
-            <span className={styles.hudIcon}>⏳</span>
+            <span className={styles.hudIcon}>
+              <Image src="/landing/timer.svg" alt="Таймер" width={26} height={26} />
+            </span>
             <span className={`${styles.hudValue} ${timeLeft <= 10 ? styles.hudDanger : ""}`}>
               {minutes}:{seconds}
             </span>
@@ -912,7 +914,15 @@ export default function GamePage() {
       {timeoutOpen && (
         <div className={styles.modalOverlay} role="dialog" aria-modal="true">
           <div className={styles.modal}>
-            <div className={styles.modalIcon}>⏳</div>
+            <div className={styles.modalIcon}>
+            <Image
+              src="/landing/timer.svg"
+              alt="Таймер"
+              width={40}
+              height={40}
+              className={styles.modalIconImage}
+            />
+          </div>
             <h2 className={styles.modalTitle}>Час вийшов</h2>
             <p className={styles.modalText}>{timeoutReason}</p>
 

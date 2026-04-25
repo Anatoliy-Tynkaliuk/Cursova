@@ -634,7 +634,15 @@
   font-size: 28px;
 }
 
-.hudIcon { font-size: 26px; opacity: 0.95; }
+.hudIcon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.95;
+}
+
 .hudValue { opacity: 0.95; }
 
 .hudDanger {
@@ -733,6 +741,11 @@
   background:
     radial-gradient(420px 160px at 50% 50%, rgba(255, 210, 90, 0.18), rgba(0,0,0,0) 60%),
     rgba(10, 6, 20, 0.22);
+}
+
+.modalIconImage {
+  width: 40px;
+  height: 40px;
 }
 
 .modalTitle {
