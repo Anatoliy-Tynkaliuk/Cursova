@@ -206,7 +206,7 @@ transform: translateY(-30px); /* 🔥 піднімає іконку */
 /* різна прозорість під стани */
 .locked .levelBgIcon {
   opacity: 0.5;
-  transform: translateY(-18px);
+  transform: translateY(-24px);
 }
 
 .active .levelBgIcon {
