@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
 import { getGames, type GameListItem } from "@/lib/endpoints";
@@ -15,12 +15,12 @@ const difficultyLabels: Record<number, string> = {
 
 export default function GameDifficultyPage() {
   const params = useParams<{ gameId: string }>();
+  const router = useRouter();
   const gameId = Number(params.gameId);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [game, setGame] = useState<GameListItem | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<number>(1);
 
   useEffect(() => {
     const session = getChildSession();
@@ -41,13 +41,6 @@ export default function GameDifficultyPage() {
         }
 
         setGame(currentGame);
-
-        const defaultDifficulty =
-          currentGame.availableDifficulties?.[0] ??
-          currentGame.difficultyLevels?.[0] ??
-          currentGame.difficulty;
-
-        setSelectedDifficulty(defaultDifficulty ?? 1);
       } catch (e: any) {
         setError(e.message ?? "Сталася помилка");
       } finally {
@@ -72,10 +65,9 @@ export default function GameDifficultyPage() {
     return map;
   }, [game]);
 
-  const levelSelectLink = useMemo(
-    () => `/child/game/${gameId}/levels?difficulty=${selectedDifficulty}`,
-    [gameId, selectedDifficulty]
-  );
+  const handleDifficultySelect = (difficulty: number) => {
+    router.push(`/child/game/${gameId}/levels?difficulty=${difficulty}`);
+  };
 
   return (
     <div className={styles.page}>
@@ -83,12 +75,6 @@ export default function GameDifficultyPage() {
       <div className={styles.overlay} />
 
       <main className={styles.container}>
-        <header className={styles.topBar}>
-          <Link href="/child/subjects" className={styles.backBtn}>
-          Назад
-          </Link>
-        </header>
-
         <section className={styles.panel}>
           <h1 className={styles.title}>Обери складність</h1>
           <div className={styles.titleGlow} />
@@ -108,43 +94,35 @@ export default function GameDifficultyPage() {
                 Гра: <b>{game?.title ?? `#${gameId}`}</b>
               </p>
 
-              <div className={styles.list} role="radiogroup" aria-label="Вибір складності">
+              <div className={styles.list}>
                 {difficulties.map((difficulty) => {
                   const label = difficultyLabels[difficulty] ?? `Рівень ${difficulty}`;
                   const count = difficultyCounts.get(difficulty) ?? 0;
-                  const active = selectedDifficulty === difficulty;
 
                   const colorClass =
                     difficulty === 1
                       ? styles.diffEasy
                       : difficulty === 2
-                      ? styles.diffMid
-                      : styles.diffHard;
+                        ? styles.diffMid
+                        : styles.diffHard;
 
                   return (
                     <button
                       key={difficulty}
                       type="button"
-                      className={[styles.card, colorClass, active ? styles.active : ""].join(" ")}
-                      onClick={() => setSelectedDifficulty(difficulty)}
-                      role="radio"
-                      aria-checked={active}
+                      className={[styles.card, colorClass].join(" ")}
+                      onClick={() => handleDifficultySelect(difficulty)}
                     >
                       <div className={styles.cardInner}>
                         <div className={styles.bigText}>{label}</div>
                         <div className={styles.smallText}>Кількість рівнів: {count}</div>
                       </div>
-
-                      {active && <div className={styles.cornerTick}>✓</div>}
                     </button>
                   );
                 })}
               </div>
 
               <div className={styles.actions}>
-                <Link href={levelSelectLink} className={styles.primaryBtn}>
-                  Обрати рівень
-                </Link>
                 <Link href="/child/subjects" className={styles.secondaryBtn}>
                   Назад
                 </Link>
