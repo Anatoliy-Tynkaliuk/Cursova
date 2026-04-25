@@ -13,15 +13,6 @@ const difficultyLabels: Record<number, string> = {
   3: "Важкий",
 };
 
-const difficultyMeta: Record<
-  number,
-  { color: "green" | "yellow" | "red"; badge: string }
-> = {
-  1: { color: "green", badge: "✓" },
-  2: { color: "yellow", badge: "★" },
-  3: { color: "red", badge: "🔥" },
-};
-
 export default function GameDifficultyPage() {
   const params = useParams<{ gameId: string }>();
   const gameId = Number(params.gameId);
@@ -71,9 +62,7 @@ export default function GameDifficultyPage() {
   }, [gameId]);
 
   const difficulties = useMemo(() => {
-    // Якщо бек дає конкретні difficultyLevels — беремо їх, інакше дефолт 1..3
     const list = game?.difficultyLevels?.length ? game.difficultyLevels : [1, 2, 3];
-    // Відфільтруємо на випадок якщо десь прийде 0 або 4
     return list.filter((d) => d === 1 || d === 2 || d === 3);
   }, [game]);
 
@@ -96,7 +85,7 @@ export default function GameDifficultyPage() {
       <main className={styles.container}>
         <header className={styles.topBar}>
           <Link href="/child/subjects" className={styles.backBtn}>
-            ← Назад
+          Назад
           </Link>
         </header>
 
@@ -121,39 +110,31 @@ export default function GameDifficultyPage() {
 
               <div className={styles.list} role="radiogroup" aria-label="Вибір складності">
                 {difficulties.map((difficulty) => {
-                  const meta = difficultyMeta[difficulty] ?? difficultyMeta[1];
                   const label = difficultyLabels[difficulty] ?? `Рівень ${difficulty}`;
                   const count = difficultyCounts.get(difficulty) ?? 0;
                   const active = selectedDifficulty === difficulty;
+
+                  const colorClass =
+                    difficulty === 1
+                      ? styles.diffEasy
+                      : difficulty === 2
+                      ? styles.diffMid
+                      : styles.diffHard;
 
                   return (
                     <button
                       key={difficulty}
                       type="button"
-                      className={[
-                        styles.card,
-                        styles[`left_${meta.color}`],
-                        active ? styles.active : "",
-                      ].join(" ")}
+                      className={[styles.card, colorClass, active ? styles.active : ""].join(" ")}
                       onClick={() => setSelectedDifficulty(difficulty)}
                       role="radio"
                       aria-checked={active}
                     >
-                      <div className={styles.leftBar}>
-                        <div className={styles.badge}>
-                          <span className={styles.badgeText}>{label}</span>
-                          <span className={styles.badgeIcon}>{meta.badge}</span>
-                        </div>
-                      </div>
-
-                      <div className={styles.rightArea}>
+                      <div className={styles.cardInner}>
                         <div className={styles.bigText}>{label}</div>
-                        <div className={styles.smallText}>
-                          {count > 0 ? `${count} рівнів` : "Є рівні для проходження"}
-                        </div>
+                        <div className={styles.smallText}>Кількість рівнів: {count}</div>
                       </div>
 
-                      <div className={styles.glow} aria-hidden="true" />
                       {active && <div className={styles.cornerTick}>✓</div>}
                     </button>
                   );
