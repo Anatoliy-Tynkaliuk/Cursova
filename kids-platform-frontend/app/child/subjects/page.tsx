@@ -116,7 +116,7 @@ export default function ChildSubjectsPage() {
           <Link href="/child/avatar-shop" className={styles.avatarLink} title="Магазин аватарів">
             <Image src={normalizeAvatarSrc(childAvatar)} alt="Аватар дитини" width={42} height={42} className={styles.avatarImage} />
           </Link>
-          <Link href="/child" className={styles.backBtn}>Назад</Link>
+          <Link href="/" className={styles.backBtn}>Назад</Link>
         </header>
 
         <h1 className={styles.greeting}>Привіт, {childName}!</h1>

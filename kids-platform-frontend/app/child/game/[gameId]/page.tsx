@@ -598,7 +598,7 @@ export default function GamePage() {
 
       <div className={styles.container}>
         <header className={styles.header}>
-          <Link className={styles.headerBackBtn} href="/child/subjects">
+          <Link className={styles.backBtn} href="/child/subjects">
             <span className={styles.backArrow}>←</span>
             Назад
           </Link>
