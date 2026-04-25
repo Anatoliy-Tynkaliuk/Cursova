@@ -13,16 +13,9 @@ const gameTypeImageMap: Record<string, string> = {
   sequence: "/background_games_images/background_games_sequence.png",
 };
 
-function getGameCardImage(game: GameListItem, fallbackIndex: number) {
+function getGameCardImage(game: GameListItem) {
   const key = (game.gameTypeCode || "").toLowerCase();
-  if (gameTypeImageMap[key]) return gameTypeImageMap[key];
-
-  const fallback = [
-    "/Planeta_logika/background_games_match.png",
-    "/Planeta_logika/background_games_test.png",
-    "/Planeta_logika/background_games_dragging.png",
-  ];
-  return fallback[fallbackIndex % fallback.length];
+  return gameTypeImageMap[key] ?? null;
 }
 
 type ChildStats = {
@@ -133,19 +126,22 @@ export default function MathPlanetPage() {
         <section className={styles.cardsWrap}>
           {games.map((game, index) => {
             const progress = gameProgressById[game.id] ?? { totalLevels: 0, completedLevels: 0 };
+            const gameCardImage = getGameCardImage(game);
 
             return (
             <div key={game.id} className={styles.card}>
               <div className={styles.cardInner}>
                 <div className={styles.cardArt}>
-                  <Image
-                    src={getGameCardImage(game, index)}
-                    alt={game.title}
-                    fill
-                    className={styles.cardImg}
-                    sizes="(max-width: 1024px) 100vw, 33vw"
-                    priority={index === 0}
-                  />
+                  {gameCardImage ? (
+                    <Image
+                      src={gameCardImage}
+                      alt={game.title}
+                      fill
+                      className={styles.cardImg}
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      priority={index === 0}
+                    />
+                  ) : null}
                 </div>
 
                 <div className={styles.cardText}>
