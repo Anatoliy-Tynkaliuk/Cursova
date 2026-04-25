@@ -73,13 +73,12 @@ export default function ChildAchievementsPage() {
         <header className={styles.header}>
           <h1 className={styles.title}>Досягнення</h1>
           <Link className={styles.back} href="/child/subjects">
-            ← Назад
+            Назад
           </Link>
         </header>
 
         <section className={styles.profile}>
           <div>
-            <p className={styles.profileLabel}>Профіль гравця</p>
             <h2 className={styles.name}>{childName}</h2>
             <p className={styles.profileMeta}>
               Пройдено ігор: {finishedAttempts} · Зірочок: {totalStars}
@@ -126,10 +125,8 @@ export default function ChildAchievementsPage() {
                   <div className={styles.cardContent}>
                     <div className={styles.cardHead}>
                       <span className={styles.badgeStatus}>
-                        {badge.isEarned ? "Отримано" : "Закрито"}
+                        {badge.isEarned ? "ОТРИМАНО" : "ЗАБЛОКОВАНО"}
                       </span>
-
-                      {!badge.isEarned && <span className={styles.chain} aria-hidden="true">⛓️</span>}
                     </div>
 
                     <h3 className={styles.cardTitle}>{badge.title}</h3>
@@ -153,12 +150,6 @@ export default function ChildAchievementsPage() {
             })}
           </section>
         )}
-
-        <div className={styles.bottom}>
-          <Link className={styles.allBtn} href="/child/achievements/all">
-            Усі досягнення
-          </Link>
-        </div>
       </div>
     </div>
   );
