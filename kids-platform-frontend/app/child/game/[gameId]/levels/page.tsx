@@ -139,8 +139,13 @@ export default function GameLevelsPage() {
                     item.state === "completed"
                       ? `${styles.levelBtn} ${styles.completed}`
                       : item.state === "locked"
-                      ? `${styles.levelBtn} ${styles.locked}`
-                      : `${styles.levelBtn} ${styles.active}`;
+                        ? `${styles.levelBtn} ${styles.locked}`
+                        : `${styles.levelBtn} ${styles.active}`;
+
+                  const iconDimensions =
+                    item.state === "locked"
+                      ? { width: 70, height: 98 }
+                      : { width: 90, height: 126 };
 
                   const content = (
                     <span className={styles.levelContent}>
@@ -148,8 +153,8 @@ export default function GameLevelsPage() {
                         <Image
                           src={iconSrc}
                           alt={iconAlt}
-                          width={90}
-                          height={126}
+                          width={iconDimensions.width}
+                          height={iconDimensions.height}
                           className={styles.levelBgIconImg}
                         />
                       </span>
