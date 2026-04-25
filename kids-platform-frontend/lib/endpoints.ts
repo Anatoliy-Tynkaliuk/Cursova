@@ -21,7 +21,7 @@ export async function getMe() {
 }
 
 export async function getChildren() {
-  return api<Array<{ id: number; name: string; ageGroupCode: string }>>("/children", "GET");
+  return api<Array<{ id: number; name: string; ageGroupCode: string; avatar?: string | null }>>("/children", "GET");
 }
 
 export async function createChild(name: string, ageGroupCode: string) {
@@ -450,6 +450,11 @@ export type ChildBadgesResponse = {
   totalAttempts?: number;
   correctAnswers?: number;
   perfectGames?: number;
+  moduleStats?: {
+    logic: { finishedAttempts: number; totalStars: number };
+    math: { finishedAttempts: number; totalStars: number };
+    english: { finishedAttempts: number; totalStars: number };
+  };
   badges: ChildBadgeItem[];
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
 import { getGames, type GameListItem } from "@/lib/endpoints";
@@ -24,12 +24,12 @@ const difficultyMeta: Record<
 
 export default function GameDifficultyPage() {
   const params = useParams<{ gameId: string }>();
+  const router = useRouter();
   const gameId = Number(params.gameId);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [game, setGame] = useState<GameListItem | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<number>(1);
 
   useEffect(() => {
     const session = getChildSession();
@@ -51,12 +51,6 @@ export default function GameDifficultyPage() {
 
         setGame(currentGame);
 
-        const defaultDifficulty =
-          currentGame.availableDifficulties?.[0] ??
-          currentGame.difficultyLevels?.[0] ??
-          currentGame.difficulty;
-
-        setSelectedDifficulty(defaultDifficulty ?? 1);
       } catch (e: any) {
         setError(e.message ?? "Сталася помилка");
       } finally {
@@ -82,11 +76,6 @@ export default function GameDifficultyPage() {
     (game?.difficultyTaskCounts ?? []).forEach((x) => map.set(x.difficulty, x.count));
     return map;
   }, [game]);
-
-  const levelSelectLink = useMemo(
-    () => `/child/game/${gameId}/levels?difficulty=${selectedDifficulty}`,
-    [gameId, selectedDifficulty]
-  );
 
   return (
     <div className={styles.page}>
@@ -119,25 +108,18 @@ export default function GameDifficultyPage() {
                 Гра: <b>{game?.title ?? `#${gameId}`}</b>
               </p>
 
-              <div className={styles.list} role="radiogroup" aria-label="Вибір складності">
+              <div className={styles.list} aria-label="Вибір складності">
                 {difficulties.map((difficulty) => {
                   const meta = difficultyMeta[difficulty] ?? difficultyMeta[1];
                   const label = difficultyLabels[difficulty] ?? `Рівень ${difficulty}`;
                   const count = difficultyCounts.get(difficulty) ?? 0;
-                  const active = selectedDifficulty === difficulty;
 
                   return (
                     <button
                       key={difficulty}
                       type="button"
-                      className={[
-                        styles.card,
-                        styles[`left_${meta.color}`],
-                        active ? styles.active : "",
-                      ].join(" ")}
-                      onClick={() => setSelectedDifficulty(difficulty)}
-                      role="radio"
-                      aria-checked={active}
+                      className={[styles.card, styles[`left_${meta.color}`]].join(" ")}
+                      onClick={() => router.push(`/child/game/${gameId}/levels?difficulty=${difficulty}`)}
                     >
                       <div className={styles.leftBar}>
                         <div className={styles.badge}>
@@ -154,19 +136,9 @@ export default function GameDifficultyPage() {
                       </div>
 
                       <div className={styles.glow} aria-hidden="true" />
-                      {active && <div className={styles.cornerTick}>✓</div>}
                     </button>
                   );
                 })}
-              </div>
-
-              <div className={styles.actions}>
-                <Link href={levelSelectLink} className={styles.primaryBtn}>
-                  Обрати рівень
-                </Link>
-                <Link href="/child/subjects" className={styles.secondaryBtn}>
-                  Назад
-                </Link>
               </div>
             </>
           )}

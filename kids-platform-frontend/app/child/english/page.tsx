@@ -91,9 +91,10 @@ export default function EnglishPlanetPage() {
         setGameProgressById(Object.fromEntries(progressEntries));
 
         const earnedBadges = badgeData.badges.filter((badge) => badge.isEarned).length;
+        const moduleStats = badgeData.moduleStats?.english;
         setStats({
-          level: Math.max(1, Math.floor(badgeData.finishedAttempts / 5) + 1),
-          stars: badgeData.finishedAttempts,
+          level: Math.max(1, Math.floor((moduleStats?.finishedAttempts ?? 0) / 5) + 1),
+          stars: moduleStats?.totalStars ?? 0,
           achievements: earnedBadges,
         });
       } catch (e: any) {
@@ -140,10 +141,9 @@ export default function EnglishPlanetPage() {
                   <Image
                     src={getGameCardImage(game, index)}
                     alt={game.title}
-                    width={260}
-                    height={200}
+                    fill
                     className={styles.cardImg}
-                    sizes="(max-width: 520px) 72vw, (max-width: 1024px) 56vw, 260px"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
                     priority={index === 0}
                   />
                 </div>
