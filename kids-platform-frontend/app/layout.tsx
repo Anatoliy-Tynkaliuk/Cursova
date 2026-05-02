@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/layout.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

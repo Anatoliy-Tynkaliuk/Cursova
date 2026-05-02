@@ -1,4 +1,11 @@
-import type { AchievementMetrics } from "./achievement-rules";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/children/achievement-metrics.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
+import type { AchievementMetrics } from './achievement-rules';
 
 type AttemptMetricRow = {
   createdAt: Date;
@@ -9,12 +16,18 @@ type AttemptMetricRow = {
   levelId: bigint | null;
 };
 
+// Функція: getLevelKey. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function getLevelKey(levelId: bigint | null) {
   return levelId ? levelId.toString() : null;
 }
 
-export function calculateAchievementMetrics(attempts: AttemptMetricRow[]): AchievementMetrics {
-  const loginDays = new Set(attempts.map((attempt) => attempt.createdAt.toISOString().slice(0, 10))).size;
+// Функція: calculateAchievementMetrics. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+export function calculateAchievementMetrics(
+  attempts: AttemptMetricRow[],
+): AchievementMetrics {
+  const loginDays = new Set(
+    attempts.map((attempt) => attempt.createdAt.toISOString().slice(0, 10)),
+  ).size;
 
   const bestFinishedByLevel = new Map<string, AttemptMetricRow>();
   const finishedWithoutLevel: AttemptMetricRow[] = [];
@@ -43,7 +56,8 @@ export function calculateAchievementMetrics(attempts: AttemptMetricRow[]): Achie
     const isBetter =
       !previousBest ||
       attempt.score > previousBest.score ||
-      (attempt.score === previousBest.score && attempt.correctCount > previousBest.correctCount);
+      (attempt.score === previousBest.score &&
+        attempt.correctCount > previousBest.correctCount);
 
     if (isBetter) {
       bestFinishedByLevel.set(levelKey, attempt);

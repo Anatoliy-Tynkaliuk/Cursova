@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/login/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import { useState, type FormEvent } from "react";
@@ -12,6 +19,7 @@ export default function LoginPage() {
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
+// Функція: onSubmit. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErr("");
@@ -126,6 +134,7 @@ export default function LoginPage() {
   );
 }
 
+// Функція: EyeIcon. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function EyeIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -139,6 +148,7 @@ function EyeIcon() {
   );
 }
 
+// Функція: EyeOffIcon. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function EyeOffIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">

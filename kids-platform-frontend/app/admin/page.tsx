@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/admin/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -42,6 +49,7 @@ import { isLoggedIn } from "@/lib/auth";
 import styles from "./admin.module.css";
 
 export default function AdminPage() {
+// Функція: parseSelectNumber. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   const parseSelectNumber = (value: string): number | "" => (value === "" ? "" : Number(value));
 
   const [modules, setModules] = useState<AdminModuleItem[]>([]);
@@ -165,6 +173,7 @@ export default function AdminPage() {
   );
   const linkedTaskDifficulty = selectedTask?.difficulty ?? null;
 
+// Функція: selectedTaskTypeCode. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   const selectedTaskTypeCode = (selectedTaskGame?.gameTypeCode ?? "").toLowerCase();
   const isTestTaskType = selectedTaskTypeCode === "test";
   const isDragTaskType = selectedTaskTypeCode === "drag";
@@ -179,6 +188,7 @@ export default function AdminPage() {
       return;
     }
 
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function load() {
       setLoading(true);
       setError(null);
@@ -275,6 +285,7 @@ export default function AdminPage() {
     }
   }, [linkedTaskDifficulty]);
 
+// Функція: onCreateAgeGroup. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onCreateAgeGroup() {
     if (!ageGroupFormValid) return;
     setError(null);
@@ -302,6 +313,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onUpdateAgeGroup. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onUpdateAgeGroup(group: AdminAgeGroupItem) {
     setError(null);
     setMessage(null);
@@ -320,6 +332,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onDeleteAgeGroup. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onDeleteAgeGroup(groupId: number) {
     setError(null);
     setMessage(null);
@@ -333,6 +346,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onCreateGame. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onCreateGame() {
     if (!formValid || typeof moduleId !== "number" || typeof gameTypeId !== "number" || typeof minAgeGroupId !== "number") return;
     setError(null);
@@ -382,6 +396,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onUpdateGame. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onUpdateGame(game: AdminGameItem) {
     setError(null);
     setMessage(null);
@@ -398,6 +413,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onDeleteGame. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onDeleteGame(gameId: number) {
     setError(null);
     setMessage(null);
@@ -411,6 +427,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onCreateGameLevel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onCreateGameLevel() {
     if (!levelFormValid || typeof levelGameId !== "number") return;
 
@@ -452,6 +469,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onUpdateGameLevel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onUpdateGameLevel(level: AdminGameLevelItem) {
     setError(null);
     setMessage(null);
@@ -467,6 +485,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onDeleteGameLevel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onDeleteGameLevel(levelId: number) {
     const confirmed = window.confirm("Архівувати рівень? Його можна буде відновити.");
     if (!confirmed) return;
@@ -489,6 +508,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onCreateTask. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onCreateTask() {
     if (!taskFormValid || typeof taskGameId !== "number") return;
 
@@ -510,6 +530,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onUpdateTask. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onUpdateTask(task: AdminTaskItem) {
     setError(null);
     setMessage(null);
@@ -525,6 +546,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onDeleteTask. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onDeleteTask(taskIdToDelete: number) {
     setError(null);
     setMessage(null);
@@ -538,6 +560,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onCreateTaskVersion. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onCreateTaskVersion() {
     if (!taskVersionFormValid || typeof taskId !== "number") return;
     setError(null);
@@ -661,6 +684,7 @@ export default function AdminPage() {
   }
 
 
+// Функція: onUpdateTaskVersion. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onUpdateTaskVersion(version: AdminTaskVersionItem) {
     setError(null);
     setMessage(null);
@@ -679,6 +703,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onDeleteTaskVersion. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onDeleteTaskVersion(taskVersionId: number) {
     setError(null);
     setMessage(null);
@@ -691,6 +716,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onCreateBadge. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onCreateBadge() {
     if (!badgeFormValid) return;
     setError(null);
@@ -712,6 +738,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onUpdateBadge. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onUpdateBadge(badge: AdminBadgeItem) {
     setError(null);
     setMessage(null);
@@ -727,6 +754,7 @@ export default function AdminPage() {
     }
   }
 
+// Функція: onDeleteBadge. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onDeleteBadge(badgeId: number) {
     setError(null);
     setMessage(null);

@@ -1,9 +1,20 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/games/games.service.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
 const DIFFICULTY_LEVELS = [1, 2, 3] as const;
 
-type LevelState = "locked" | "unlocked" | "completed";
+type LevelState = 'locked' | 'unlocked' | 'completed';
 
 @Injectable()
 export class GamesService {
@@ -33,13 +44,14 @@ export class GamesService {
           },
         },
       },
-      orderBy: { id: "asc" },
+      orderBy: { id: 'asc' },
     });
 
     return games.map((g) => {
       const difficultyTaskCounts = DIFFICULTY_LEVELS.map((difficulty) => ({
         difficulty,
-        count: g.levels.filter((level) => level.difficulty === difficulty).length,
+        count: g.levels.filter((level) => level.difficulty === difficulty)
+          .length,
       }));
 
       const availableDifficulties = difficultyTaskCounts
@@ -61,15 +73,20 @@ export class GamesService {
 
   async levels(gameId: number, difficulty: number, childProfileId?: number) {
     if (!Number.isInteger(gameId) || gameId < 1) {
-      throw new BadRequestException("gameId must be a positive integer");
+      throw new BadRequestException('gameId must be a positive integer');
     }
 
     if (!Number.isInteger(difficulty) || difficulty < 1) {
-      throw new BadRequestException("difficulty must be a positive integer");
+      throw new BadRequestException('difficulty must be a positive integer');
     }
 
-    if (childProfileId !== undefined && (!Number.isInteger(childProfileId) || childProfileId < 1)) {
-      throw new BadRequestException("childProfileId must be a positive integer");
+    if (
+      childProfileId !== undefined &&
+      (!Number.isInteger(childProfileId) || childProfileId < 1)
+    ) {
+      throw new BadRequestException(
+        'childProfileId must be a positive integer',
+      );
     }
 
     const game = await this.prisma.game.findUnique({
@@ -78,7 +95,7 @@ export class GamesService {
     });
 
     if (!game || !game.isActive) {
-      throw new NotFoundException("Game not found or inactive");
+      throw new NotFoundException('Game not found or inactive');
     }
 
     const levels = await this.prisma.gameLevel.findMany({
@@ -88,7 +105,7 @@ export class GamesService {
         isActive: true,
         deletedAt: null,
       },
-      orderBy: { levelNumber: "asc" },
+      orderBy: { levelNumber: 'asc' },
     });
 
     if (levels.length === 0) {
@@ -145,12 +162,12 @@ export class GamesService {
 
     const responseLevels = levels.map((level) => {
       const isCompleted = completedLevelIds.has(level.id.toString());
-      let state: LevelState = "locked";
+      let state: LevelState = 'locked';
 
       if (isCompleted) {
-        state = "completed";
+        state = 'completed';
       } else if (level.levelNumber <= maxUnlockedLevel) {
-        state = "unlocked";
+        state = 'unlocked';
       }
 
       return {
@@ -158,7 +175,7 @@ export class GamesService {
         level: level.levelNumber,
         title: level.title,
         state,
-        isLocked: state === "locked",
+        isLocked: state === 'locked',
         isCompleted,
       };
     });

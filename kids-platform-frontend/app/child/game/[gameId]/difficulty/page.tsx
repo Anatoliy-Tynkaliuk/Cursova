@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/game/[gameId]/difficulty/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Link from "next/link";
@@ -38,6 +45,7 @@ export default function GameDifficultyPage() {
       return;
     }
 
+// Функція: loadGame. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function loadGame() {
       setError(null);
       try {

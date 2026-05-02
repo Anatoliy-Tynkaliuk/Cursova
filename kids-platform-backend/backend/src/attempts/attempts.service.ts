@@ -1,17 +1,33 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { AnswerDto } from "./dto/answer.dto";
-import { buildAchievementRule, type AchievementMetrics } from "../children/achievement-rules";
-import { calculateAchievementMetrics } from "../children/achievement-metrics";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/attempts/attempts.service.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
 
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { AnswerDto } from './dto/answer.dto';
+import {
+  buildAchievementRule,
+  type AchievementMetrics,
+} from '../children/achievement-rules';
+import { calculateAchievementMetrics } from '../children/achievement-metrics';
+
+// Функція: deepEqual. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
   if (typeof a !== typeof b) return false;
-  if (a && b && typeof a === "object") {
+  if (a && b && typeof a === 'object') {
     if (Array.isArray(a) !== Array.isArray(b)) return false;
     if (Array.isArray(a)) {
       if (a.length !== b.length) return false;
-      for (let i = 0; i < a.length; i++) if (!deepEqual(a[i], b[i])) return false;
+      for (let i = 0; i < a.length; i++)
+        if (!deepEqual(a[i], b[i])) return false;
       return true;
     }
     const ak = Object.keys(a).sort();
@@ -25,21 +41,24 @@ function deepEqual(a: any, b: any): boolean {
 
 type DragPair = { item: string; target: string };
 
+// Функція: normalizeDragPairsValue. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function normalizeDragPairsValue(value: unknown): DragPair[] | null {
-  if (!value || typeof value !== "object") return null;
+  if (!value || typeof value !== 'object') return null;
 
+  // Функція: pairs. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   const pairs = (value as { pairs?: unknown }).pairs;
   if (!Array.isArray(pairs)) return null;
 
   const normalized: DragPair[] = [];
 
   for (const pair of pairs) {
-    if (!pair || typeof pair !== "object") return null;
+    if (!pair || typeof pair !== 'object') return null;
 
+    // Функція: item. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     const item = (pair as { item?: unknown }).item;
     const target = (pair as { target?: unknown }).target;
 
-    if (typeof item !== "string" || typeof target !== "string") return null;
+    if (typeof item !== 'string' || typeof target !== 'string') return null;
 
     normalized.push({ item: item.trim(), target: target.trim() });
   }
@@ -55,7 +74,11 @@ function normalizeDragPairsValue(value: unknown): DragPair[] | null {
   return normalized;
 }
 
-export function answersAreEquivalent(userAnswer: unknown, correctAnswer: unknown): boolean {
+// Функція: answersAreEquivalent. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+export function answersAreEquivalent(
+  userAnswer: unknown,
+  correctAnswer: unknown,
+): boolean {
   const normalizedUserPairs = normalizeDragPairsValue(userAnswer);
   const normalizedCorrectPairs = normalizeDragPairsValue(correctAnswer);
 
@@ -86,7 +109,8 @@ export class AttemptsService {
       this.prisma.badge.findMany(),
     ]);
 
-    const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
+    const metrics: AchievementMetrics =
+      calculateAchievementMetrics(allAttempts);
 
     const eligibleBadges = badges.filter((badge) => {
       const rule = buildAchievementRule(badge.code, metrics);
@@ -104,7 +128,6 @@ export class AttemptsService {
     });
   }
 
-
   private calculateStars(correctCount: number, totalTasks: number) {
     if (correctCount <= 0) return 0;
     if (totalTasks <= 0) return Math.min(3, correctCount);
@@ -112,7 +135,11 @@ export class AttemptsService {
     return Math.min(3, Math.max(1, Math.ceil((correctCount / totalTasks) * 3)));
   }
 
-  private async getOrCreateLevelProgress(childProfileId: bigint, gameId: bigint, difficulty: number) {
+  private async getOrCreateLevelProgress(
+    childProfileId: bigint,
+    gameId: bigint,
+    difficulty: number,
+  ) {
     let progress = await this.prisma.childLevelProgress.findUnique({
       where: {
         childProfileId_gameId_difficulty: {
@@ -185,25 +212,31 @@ export class AttemptsService {
   }
 
   // ---------- START ----------
-  async start(childProfileId: number, gameId: number, difficulty: number, level?: number, levelId?: number) {
+  async start(
+    childProfileId: number,
+    gameId: number,
+    difficulty: number,
+    level?: number,
+    levelId?: number,
+  ) {
     if (!childProfileId || !gameId) {
-      throw new BadRequestException("childProfileId and gameId are required");
+      throw new BadRequestException('childProfileId and gameId are required');
     }
 
     if (!Number.isInteger(difficulty) || difficulty < 1) {
-      throw new BadRequestException("difficulty must be a positive integer");
+      throw new BadRequestException('difficulty must be a positive integer');
     }
 
     if (level !== undefined && (!Number.isInteger(level) || level < 1)) {
-      throw new BadRequestException("level must be a positive integer");
+      throw new BadRequestException('level must be a positive integer');
     }
 
     if (levelId !== undefined && (!Number.isInteger(levelId) || levelId < 1)) {
-      throw new BadRequestException("levelId must be a positive integer");
+      throw new BadRequestException('levelId must be a positive integer');
     }
 
     if (level !== undefined && levelId !== undefined) {
-      throw new BadRequestException("Use either level or levelId, not both");
+      throw new BadRequestException('Use either level or levelId, not both');
     }
 
     const game = await this.prisma.game.findUnique({
@@ -214,7 +247,7 @@ export class AttemptsService {
     });
 
     if (!game || !game.isActive) {
-      throw new NotFoundException("Game not found or inactive");
+      throw new NotFoundException('Game not found or inactive');
     }
 
     let selectedLevel = null as null | {
@@ -236,7 +269,9 @@ export class AttemptsService {
       });
 
       if (!selectedLevel) {
-        throw new NotFoundException("Level not found or inactive for this game/difficulty");
+        throw new NotFoundException(
+          'Level not found or inactive for this game/difficulty',
+        );
       }
     } else {
       selectedLevel = await this.prisma.gameLevel.findFirst({
@@ -247,21 +282,29 @@ export class AttemptsService {
           deletedAt: null,
           ...(level !== undefined ? { levelNumber: level } : {}),
         },
-        orderBy: { levelNumber: "asc" },
+        orderBy: { levelNumber: 'asc' },
         select: { id: true, levelNumber: true, title: true },
       });
 
       if (!selectedLevel) {
         if (level !== undefined) {
-          throw new NotFoundException(`Level ${level} is not available for this game and difficulty`);
+          throw new NotFoundException(
+            `Level ${level} is not available for this game and difficulty`,
+          );
         }
-        throw new NotFoundException("No active levels for this game and difficulty");
+        throw new NotFoundException(
+          'No active levels for this game and difficulty',
+        );
       }
     }
 
-    const progress = await this.getOrCreateLevelProgress(BigInt(childProfileId), BigInt(gameId), difficulty);
+    const progress = await this.getOrCreateLevelProgress(
+      BigInt(childProfileId),
+      BigInt(gameId),
+      difficulty,
+    );
     if (selectedLevel.levelNumber > progress.maxUnlockedLevel) {
-      throw new BadRequestException("Selected level is locked for this child");
+      throw new BadRequestException('Selected level is locked for this child');
     }
 
     const task = await this.prisma.task.findFirst({
@@ -270,10 +313,10 @@ export class AttemptsService {
         levelId: selectedLevel.id,
         isActive: true,
       },
-      orderBy: { position: "asc" },
+      orderBy: { position: 'asc' },
     });
 
-    if (!task) throw new NotFoundException("No tasks for selected level");
+    if (!task) throw new NotFoundException('No tasks for selected level');
 
     let tv = await this.prisma.taskVersion.findFirst({
       where: {
@@ -281,7 +324,7 @@ export class AttemptsService {
         isCurrent: true,
         difficulty,
       },
-      orderBy: [{ version: "desc" }],
+      orderBy: [{ version: 'desc' }],
     });
 
     if (!tv) {
@@ -290,12 +333,14 @@ export class AttemptsService {
           taskId: task.id,
           isCurrent: true,
         },
-        orderBy: [{ version: "desc" }],
+        orderBy: [{ version: 'desc' }],
       });
     }
 
     if (!tv) {
-      throw new NotFoundException(`No current task version for difficulty ${difficulty}`);
+      throw new NotFoundException(
+        `No current task version for difficulty ${difficulty}`,
+      );
     }
 
     const totalTasks = await this.prisma.task.count({
@@ -346,25 +391,26 @@ export class AttemptsService {
 
   // ---------- ANSWER ----------
   async answer(attemptId: number, dto: AnswerDto) {
-    if (!attemptId) throw new BadRequestException("attemptId required");
+    if (!attemptId) throw new BadRequestException('attemptId required');
     if (!dto?.taskId || !dto?.taskVersionId) {
-      throw new BadRequestException("taskId and taskVersionId required");
+      throw new BadRequestException('taskId and taskVersionId required');
     }
 
     const attempt = await this.prisma.attempt.findUnique({
       where: { id: BigInt(attemptId) },
     });
 
-    if (!attempt) throw new NotFoundException("Attempt not found");
-    if (attempt.isFinished) throw new BadRequestException("Attempt already finished");
+    if (!attempt) throw new NotFoundException('Attempt not found');
+    if (attempt.isFinished)
+      throw new BadRequestException('Attempt already finished');
 
     const tv = await this.prisma.taskVersion.findUnique({
       where: { id: BigInt(dto.taskVersionId) },
     });
 
-    if (!tv) throw new NotFoundException("Task version not found");
+    if (!tv) throw new NotFoundException('Task version not found');
     if (Number(tv.taskId) !== dto.taskId) {
-      throw new BadRequestException("taskId does not match taskVersionId");
+      throw new BadRequestException('taskId does not match taskVersionId');
     }
 
     const isCorrect = answersAreEquivalent(dto.userAnswer, tv.correctJson);
@@ -392,7 +438,7 @@ export class AttemptsService {
       where: { id: BigInt(dto.taskId) },
       select: { position: true, gameId: true, levelId: true },
     });
-    if (!currentTask) throw new BadRequestException("Task not found");
+    if (!currentTask) throw new BadRequestException('Task not found');
 
     const nextTask = await this.prisma.task.findFirst({
       where: {
@@ -407,14 +453,14 @@ export class AttemptsService {
           },
         },
       },
-      orderBy: { position: "asc" },
+      orderBy: { position: 'asc' },
       include: {
         versions: {
           where: {
             isCurrent: true,
             difficulty: tv.difficulty,
           },
-          orderBy: { version: "desc" },
+          orderBy: { version: 'desc' },
           take: 1,
         },
       },
@@ -454,7 +500,8 @@ export class AttemptsService {
     }
 
     const nextTv = nextTask.versions[0];
-    if (!nextTv) throw new NotFoundException("No current task version for next task");
+    if (!nextTv)
+      throw new NotFoundException('No current task version for next task');
 
     return {
       attemptId,

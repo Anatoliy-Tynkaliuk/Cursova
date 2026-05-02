@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/children/[childId]/stats/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Image from "next/image";
@@ -15,20 +22,24 @@ type ActivityDay = {
   durationSec: number;
 };
 
+// Функція: toMonthKey. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function toMonthKey(isoDate: string) {
   return isoDate.slice(0, 7);
 }
 
+// Функція: formatDayLabel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function formatDayLabel(isoDate: string) {
   const date = new Date(`${isoDate}T00:00:00Z`);
   return date.toLocaleDateString("uk-UA", { day: "2-digit", month: "2-digit" });
 }
 
+// Функція: formatMonthLabel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function formatMonthLabel(monthKey: string) {
   const date = new Date(`${monthKey}-01T00:00:00Z`);
   return date.toLocaleDateString("uk-UA", { month: "long", year: "numeric" });
 }
 
+// Функція: formatDuration. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function formatDuration(seconds: number) {
   const safeSeconds = Math.max(0, seconds);
   const hrs = Math.floor(safeSeconds / 3600);
@@ -40,12 +51,14 @@ function formatDuration(seconds: number) {
 
 const WEEKDAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
 
+// Функція: getMondayFirstWeekday. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function getMondayFirstWeekday(isoDate: string) {
   const weekday = new Date(`${isoDate}T00:00:00Z`).getUTCDay();
   return weekday === 0 ? 6 : weekday - 1;
 }
 
 
+// Функція: getAttemptDurationSec. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function getAttemptDurationSec(attempt: ChildStats["attempts"][number]) {
   if (attempt.durationSec != null) return Math.max(0, attempt.durationSec);
   if (!attempt.finishedAt) return 0;
@@ -56,6 +69,7 @@ function getAttemptDurationSec(attempt: ChildStats["attempts"][number]) {
   return Math.max(0, Math.floor((finished - created) / 1000));
 }
 
+// Функція: normalizeActivityDays. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
   const rawYear = stats.summary.activityYearDays ?? [];
   const raw14 = stats.summary.activity14Days ?? [];
@@ -97,6 +111,7 @@ export default function ChildStatsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+// Функція: parseThreshold. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function parseThreshold(code: string) {
     const match = code.match(/^FINISHED_(\d+)$/i);
     if (!match) return null;
@@ -114,6 +129,7 @@ export default function ChildStatsPage() {
       return;
     }
 
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function load() {
       setLoading(true);
       setError(null);

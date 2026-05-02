@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/components/game/GameEngine.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -30,6 +37,7 @@ export default function GameEngine({ gameId }: { gameId: number }) {
 
   const title = useMemo(() => attempt?.game.title ?? "Гра", [attempt]);
 
+// Функція: handleAnswer. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function handleAnswer(answer: any) {
     if (!attempt || !task) return;
 

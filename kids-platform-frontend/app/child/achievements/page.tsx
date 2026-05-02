@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/achievements/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Image from "next/image";
@@ -7,12 +14,14 @@ import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildAchievementsPage.module.css";
 
+// Функція: getBadgeProgress. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function getBadgeProgress(badge: ChildBadgeItem) {
   if (badge.progressPercent != null) return badge.progressPercent;
   if (badge.isEarned) return 100;
   return 0;
 }
 
+// Функція: getProgressText. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function getProgressText(badge: ChildBadgeItem) {
   if (badge.currentValue != null && badge.targetValue != null) {
     return `${badge.currentValue}/${badge.targetValue}`;
@@ -48,6 +57,7 @@ export default function ChildAchievementsPage() {
       return;
     }
 
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function load() {
       setError(null);
       try {

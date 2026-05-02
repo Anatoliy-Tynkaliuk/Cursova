@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -15,6 +22,7 @@ export default function ChildHomePage() {
   const [finishedAttempts, setFinishedAttempts] = useState(0);
   const [totalStars, setTotalStars] = useState(0);
 
+// Функція: parseThreshold. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function parseThreshold(code: string) {
     const match = code.match(/^FINISHED_(\d+)$/i);
     if (!match) return null;
@@ -33,6 +41,7 @@ export default function ChildHomePage() {
   }, []);
 
   useEffect(() => {
+// Функція: loadBadges. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function loadBadges(id: number) {
       try {
         const data = await getChildBadgesPublic(id);
@@ -49,6 +58,7 @@ export default function ChildHomePage() {
     }
   }, [childProfileId]);
 
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function load(code: string) {
     setLoading(true);
     setError(null);
@@ -68,11 +78,13 @@ export default function ChildHomePage() {
     }
   }, [ageGroupCode]);
 
+// Функція: onStart. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function onStart(gameId: number) {
     if (!childProfileId) return;
     window.location.href = `/child/game/${gameId}`;
   }
 
+// Функція: onExit. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function onExit() {
     clearChildSession();
     window.location.href = "/child/join";

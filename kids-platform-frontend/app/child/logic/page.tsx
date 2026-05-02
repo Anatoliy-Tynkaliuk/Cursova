@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/logic/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Image from "next/image";
@@ -35,6 +42,7 @@ export default function LogicPlanetPage() {
 
     setChildName(session.childName || "Друже");
 
+// Функція: loadData. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     const loadData = async () => {
       try {
         const [badgeData, gamesData] = await Promise.all([

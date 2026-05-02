@@ -1,7 +1,24 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
-import { AdminService } from "./admin.service";
-import { JwtGuard } from "../auth/jwt.guard";
-import { AdminGuard } from "../auth/admin.guard";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/admin/admin.controller.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { AdminService } from './admin.service';
+import { JwtGuard } from '../auth/jwt.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import type {
   CreateAgeGroupDto,
   CreateGameDto,
@@ -19,170 +36,173 @@ import type {
   UpdateTaskVersionDto,
   CreateGameLevelDto,
   UpdateGameLevelDto,
-} from "./dto";
+} from './dto';
 
-@Controller("admin")
+@Controller('admin')
 @UseGuards(JwtGuard, AdminGuard)
 export class AdminController {
   constructor(private readonly service: AdminService) {}
 
-  @Get("age-groups")
+  @Get('age-groups')
   listAgeGroups() {
     return this.service.listAgeGroups();
   }
 
-  @Post("age-groups")
+  @Post('age-groups')
   createAgeGroup(@Body() body: CreateAgeGroupDto) {
     return this.service.createAgeGroup(body);
   }
 
-  @Patch("age-groups/:id")
-  updateAgeGroup(@Param("id") id: string, @Body() body: UpdateAgeGroupDto) {
+  @Patch('age-groups/:id')
+  updateAgeGroup(@Param('id') id: string, @Body() body: UpdateAgeGroupDto) {
     return this.service.updateAgeGroup(Number(id), body);
   }
 
-  @Delete("age-groups/:id")
-  deleteAgeGroup(@Param("id") id: string) {
+  @Delete('age-groups/:id')
+  deleteAgeGroup(@Param('id') id: string) {
     return this.service.deleteAgeGroup(Number(id));
   }
 
-  @Get("modules")
+  @Get('modules')
   listModules() {
     return this.service.listModules();
   }
 
-  @Post("modules")
+  @Post('modules')
   createModule(@Body() body: CreateModuleDto) {
     return this.service.createModule(body);
   }
 
-  @Patch("modules/:id")
-  updateModule(@Param("id") id: string, @Body() body: UpdateModuleDto) {
+  @Patch('modules/:id')
+  updateModule(@Param('id') id: string, @Body() body: UpdateModuleDto) {
     return this.service.updateModule(Number(id), body);
   }
 
-  @Delete("modules/:id")
-  deleteModule(@Param("id") id: string) {
+  @Delete('modules/:id')
+  deleteModule(@Param('id') id: string) {
     return this.service.deleteModule(Number(id));
   }
 
-  @Get("game-types")
+  @Get('game-types')
   listGameTypes() {
     return this.service.listGameTypes();
   }
 
-  @Post("game-types")
+  @Post('game-types')
   createGameType(@Body() body: CreateGameTypeDto) {
     return this.service.createGameType(body);
   }
 
-  @Patch("game-types/:id")
-  updateGameType(@Param("id") id: string, @Body() body: UpdateGameTypeDto) {
+  @Patch('game-types/:id')
+  updateGameType(@Param('id') id: string, @Body() body: UpdateGameTypeDto) {
     return this.service.updateGameType(Number(id), body);
   }
 
-  @Delete("game-types/:id")
-  deleteGameType(@Param("id") id: string) {
+  @Delete('game-types/:id')
+  deleteGameType(@Param('id') id: string) {
     return this.service.deleteGameType(Number(id));
   }
 
-  @Get("games")
+  @Get('games')
   listGames() {
     return this.service.listGames();
   }
 
-  @Post("games")
+  @Post('games')
   createGame(@Body() body: CreateGameDto) {
     return this.service.createGame(body);
   }
 
-  @Patch("games/:id")
-  updateGame(@Param("id") id: string, @Body() body: UpdateGameDto) {
+  @Patch('games/:id')
+  updateGame(@Param('id') id: string, @Body() body: UpdateGameDto) {
     return this.service.updateGame(Number(id), body);
   }
 
-  @Delete("games/:id")
-  deleteGame(@Param("id") id: string) {
+  @Delete('games/:id')
+  deleteGame(@Param('id') id: string) {
     return this.service.deleteGame(Number(id));
   }
 
-  @Get("game-levels")
-  listGameLevels(@Query("gameId") gameId?: string) {
+  @Get('game-levels')
+  listGameLevels(@Query('gameId') gameId?: string) {
     return this.service.listGameLevels(gameId ? Number(gameId) : undefined);
   }
 
-  @Post("game-levels")
+  @Post('game-levels')
   createGameLevel(@Body() body: CreateGameLevelDto) {
     return this.service.createGameLevel(body);
   }
 
-  @Patch("game-levels/:id")
-  updateGameLevel(@Param("id") id: string, @Body() body: UpdateGameLevelDto) {
+  @Patch('game-levels/:id')
+  updateGameLevel(@Param('id') id: string, @Body() body: UpdateGameLevelDto) {
     return this.service.updateGameLevel(Number(id), body);
   }
 
-  @Delete("game-levels/:id")
-  deleteGameLevel(@Param("id") id: string) {
+  @Delete('game-levels/:id')
+  deleteGameLevel(@Param('id') id: string) {
     return this.service.deleteGameLevel(Number(id));
   }
 
-  @Get("tasks")
+  @Get('tasks')
   listTasks() {
     return this.service.listTasks();
   }
 
-  @Post("tasks")
+  @Post('tasks')
   createTask(@Body() body: CreateTaskDto) {
     return this.service.createTask(body);
   }
 
-  @Patch("tasks/:id")
-  updateTask(@Param("id") id: string, @Body() body: UpdateTaskDto) {
+  @Patch('tasks/:id')
+  updateTask(@Param('id') id: string, @Body() body: UpdateTaskDto) {
     return this.service.updateTask(Number(id), body);
   }
 
-  @Delete("tasks/:id")
-  deleteTask(@Param("id") id: string) {
+  @Delete('tasks/:id')
+  deleteTask(@Param('id') id: string) {
     return this.service.deleteTask(Number(id));
   }
 
-  @Get("task-versions")
+  @Get('task-versions')
   listTaskVersions() {
     return this.service.listTaskVersions();
   }
 
-  @Post("task-versions")
+  @Post('task-versions')
   createTaskVersion(@Body() body: CreateTaskVersionDto) {
     return this.service.createTaskVersion(body);
   }
 
-  @Patch("task-versions/:id")
-  updateTaskVersion(@Param("id") id: string, @Body() body: UpdateTaskVersionDto) {
+  @Patch('task-versions/:id')
+  updateTaskVersion(
+    @Param('id') id: string,
+    @Body() body: UpdateTaskVersionDto,
+  ) {
     return this.service.updateTaskVersion(Number(id), body);
   }
 
-  @Delete("task-versions/:id")
-  deleteTaskVersion(@Param("id") id: string) {
+  @Delete('task-versions/:id')
+  deleteTaskVersion(@Param('id') id: string) {
     return this.service.deleteTaskVersion(Number(id));
   }
 
-  @Get("badges")
+  @Get('badges')
   listBadges() {
     return this.service.listBadges();
   }
 
-  @Post("badges")
+  @Post('badges')
   createBadge(@Body() body: CreateBadgeDto) {
     return this.service.createBadge(body);
   }
 
-  @Patch("badges/:id")
-  updateBadge(@Param("id") id: string, @Body() body: UpdateBadgeDto) {
+  @Patch('badges/:id')
+  updateBadge(@Param('id') id: string, @Body() body: UpdateBadgeDto) {
     return this.service.updateBadge(Number(id), body);
   }
 
-  @Delete("badges/:id")
-  deleteBadge(@Param("id") id: string) {
+  @Delete('badges/:id')
+  deleteBadge(@Param('id') id: string) {
     return this.service.deleteBadge(Number(id));
   }
 }

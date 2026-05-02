@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/parent/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -7,6 +14,7 @@ import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
 
 type Child = { id: number; name: string; ageGroupCode: string };
 
+// Функція: ageLabel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function ageLabel(code: string) {
   if (code === "4_5") return "4–5";
   if (code === "6_8") return "6–8";
@@ -14,6 +22,7 @@ function ageLabel(code: string) {
   return code;
 }
 
+// Функція: avatarFor. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function avatarFor(index: number) {
   const arr = [  "/Parent_dashboard/child_avatar_1.png"];
   return arr[index % arr.length];
@@ -29,6 +38,7 @@ export default function ParentChildrenPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [parentName, setParentName] = useState("");
 
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function load() {
     setErr("");
     const data = await getChildren();
@@ -45,6 +55,7 @@ export default function ParentChildrenPage() {
     );
   }, []);
 
+// Функція: onCreateChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onCreateChild() {
     setErr("");
     setMsg("");
@@ -60,6 +71,7 @@ export default function ParentChildrenPage() {
     }
   }
 
+// Функція: onInvite. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onInvite(childId: number) {
     setErr("");
     setMsg("");
@@ -72,6 +84,7 @@ export default function ParentChildrenPage() {
     }
   }
 
+// Функція: onDeleteChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onDeleteChild(childId: number, childName: string) {
     const confirmed = window.confirm(`Видалити профіль дитини "${childName}"? Це дію не можна скасувати.`);
     if (!confirmed) return;
@@ -87,11 +100,13 @@ export default function ParentChildrenPage() {
     }
   }
 
+// Функція: onSelectChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function onSelectChild(c: Child) {
     setChildSession(c.id, c.ageGroupCode, c.name);
     window.location.href = "/child/subjects";
   }
 
+// Функція: onLogout. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function onLogout() {
     logout();
     window.location.href = "/login";

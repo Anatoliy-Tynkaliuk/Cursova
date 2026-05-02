@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/achievements/all/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Link from "next/link";
@@ -7,6 +14,7 @@ import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
 import { getChildSession } from "@/lib/auth";
 import styles from "./AllAchievementsPage.module.css";
 
+// Функція: parseThreshold. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function parseThreshold(code: string) {
   const match = code.match(/^FINISHED_(\d+)$/i);
   if (!match) return null;
@@ -14,6 +22,7 @@ function parseThreshold(code: string) {
   return Number.isFinite(value) ? value : null;
 }
 
+// Функція: clamp. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
@@ -30,6 +39,7 @@ export default function AllAchievementsPage() {
       return;
     }
 
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function load() {
       setError(null);
       try {

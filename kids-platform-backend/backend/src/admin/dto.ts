@@ -1,4 +1,11 @@
-import type { Prisma } from "@prisma/client";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/admin/dto.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
+import type { Prisma } from '@prisma/client';
 
 export type CreateAgeGroupDto = {
   code: string;
@@ -72,7 +79,6 @@ export type CreateBadgeDto = {
 };
 
 export type UpdateBadgeDto = Partial<CreateBadgeDto>;
-
 
 export type CreateGameLevelDto = {
   gameId: number;

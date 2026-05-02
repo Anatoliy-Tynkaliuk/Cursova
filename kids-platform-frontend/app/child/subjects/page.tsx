@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/subjects/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Image from "next/image";
@@ -9,6 +16,7 @@ import styles from "./ChildSubjectsPage.module.css";
 
 const DEFAULT_AVATAR = "/avatars/astro-boy.png";
 
+// Функція: normalizeAvatarSrc. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function normalizeAvatarSrc(src: string | null | undefined) {
   if (!src || src === "undefined" || src === "null") return DEFAULT_AVATAR;
   if (src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://")) return src;
@@ -60,6 +68,7 @@ export default function ChildSubjectsPage() {
     }
     setChildName(session.childName || "Друже");
     setChildAvatar(normalizeAvatarSrc(session.childAvatar));
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function load() {
       setError(null);
       try {

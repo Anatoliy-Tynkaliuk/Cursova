@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/register/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Link from "next/link";
@@ -15,6 +22,7 @@ type FieldErrors = {
   form?: string;
 };
 
+// Функція: isValidEmail. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
@@ -57,11 +65,13 @@ export default function RegisterPage() {
     return { nextErrors: next, hasAnyError, canGlow };
   }, [email, username, password, confirmPassword, loading]);
 
+// Функція: validateAndSetErrors. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function validateAndSetErrors(): boolean {
     setFieldErrs(computed.nextErrors);
     return !computed.hasAnyError;
   }
 
+// Функція: onSubmit. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmittedOnce(true);
@@ -88,6 +98,7 @@ export default function RegisterPage() {
     }
   }
 
+// Функція: touchValidate. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function touchValidate() {
     if (!submittedOnce) return;
     setFieldErrs(computed.nextErrors);

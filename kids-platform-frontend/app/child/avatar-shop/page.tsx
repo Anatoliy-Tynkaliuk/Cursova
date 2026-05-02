@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/avatar-shop/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -14,6 +21,7 @@ import styles from "./page.module.css";
 
 const DEFAULT_AVATAR = "/avatars/astro-boy.png";
 
+// Функція: normalizeAvatarSrc. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function normalizeAvatarSrc(src: string | null | undefined) {
   if (!src || src === "undefined" || src === "null") return DEFAULT_AVATAR;
   if (
@@ -41,6 +49,7 @@ export default function AvatarShopPage() {
   }, []);
 
   useEffect(() => {
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function load() {
       if (!childId) return;
       setLoading(true);
@@ -67,6 +76,7 @@ export default function AvatarShopPage() {
     [shop],
   );
 
+// Функція: onBuy. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onBuy(avatarId: string) {
     if (!childId) return;
     setLoading(true);
@@ -85,6 +95,7 @@ export default function AvatarShopPage() {
     }
   }
 
+// Функція: onSetActive. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   async function onSetActive(avatarId: string) {
     if (!childId) return;
     setLoading(true);
@@ -166,6 +177,7 @@ export default function AvatarShopPage() {
             {shop?.avatars.map((avatar) => {
               const isPurchased = purchasedSet.has(avatar.id);
               const isActive = shop.activeAvatarId === avatar.id;
+// Функція: canBuy. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
               const canBuy = (shop.stars.available ?? 0) >= avatar.price;
 
               return (

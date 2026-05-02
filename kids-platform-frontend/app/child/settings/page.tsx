@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/settings/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Link from "next/link";
@@ -19,6 +26,7 @@ export default function ChildSettingsPage() {
     }
     setChildName(session.childName || "Друже");
 
+// Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function load() {
       setError(null);
       try {
@@ -33,6 +41,7 @@ export default function ChildSettingsPage() {
     load().catch((e: any) => setError(e.message ?? "Error"));
   }, []);
 
+// Функція: onExit. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function onExit() {
     clearChildSession();
     window.location.href = "/child/join";

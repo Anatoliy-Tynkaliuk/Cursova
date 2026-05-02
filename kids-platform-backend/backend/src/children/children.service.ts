@@ -1,13 +1,30 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
-import { CreateChildDto } from "./dto";
-import { buildAchievementRule, type AchievementMetrics } from "./achievement-rules";
-import { calculateAchievementMetrics } from "./achievement-metrics";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/children/children.service.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
 
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateChildDto } from './dto';
+import {
+  buildAchievementRule,
+  type AchievementMetrics,
+} from './achievement-rules';
+import { calculateAchievementMetrics } from './achievement-metrics';
+
+// Функція: randomCode. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function randomCode(len = 6) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < len; i++)
+    out += chars[Math.floor(Math.random() * chars.length)];
   return out;
 }
 
@@ -19,14 +36,39 @@ type AvatarItem = {
 };
 
 const AVATAR_CATALOG: AvatarItem[] = [
-  { id: "astro-boy", image: "/avatars/astro-boy.png", name: "Астро Хлопчик", price: 0 },
-  { id: "astro-girl", image: "/avatars/astro-girl.png", name: "Астро Дівчинка", price: 20 },
-  { id: "rocket", image: "/avatars/rocket.png", name: "Ракета", price: 35 },
-  { id: "robot", image: "/avatars/robot.png", name: "Робот", price: 40 },
-  { id: "alien", image: "/avatars/alien.png", name: "Прибулець", price: 55 },
-  { id: "super-cat", image: "/avatars/super-cat.png", name: "Супер Кіт", price: 60 },
-  { id: "unicorn", image: "/avatars/unicorn.png", name: "Космо Єдиноріг", price: 80 },
-  { id: "dragon", image: "/avatars/dragon.png", name: "Зоряний Дракон", price: 120 },
+  {
+    id: 'astro-boy',
+    image: '/avatars/astro-boy.png',
+    name: 'Астро Хлопчик',
+    price: 0,
+  },
+  {
+    id: 'astro-girl',
+    image: '/avatars/astro-girl.png',
+    name: 'Астро Дівчинка',
+    price: 20,
+  },
+  { id: 'rocket', image: '/avatars/rocket.png', name: 'Ракета', price: 35 },
+  { id: 'robot', image: '/avatars/robot.png', name: 'Робот', price: 40 },
+  { id: 'alien', image: '/avatars/alien.png', name: 'Прибулець', price: 55 },
+  {
+    id: 'super-cat',
+    image: '/avatars/super-cat.png',
+    name: 'Супер Кіт',
+    price: 60,
+  },
+  {
+    id: 'unicorn',
+    image: '/avatars/unicorn.png',
+    name: 'Космо Єдиноріг',
+    price: 80,
+  },
+  {
+    id: 'dragon',
+    image: '/avatars/dragon.png',
+    name: 'Зоряний Дракон',
+    price: 120,
+  },
 ];
 
 type AvatarSettings = {
@@ -45,21 +87,24 @@ export class ChildrenService {
       activeAvatarId: fallbackId,
     };
 
-    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
       return defaults;
     }
 
     const input = raw as Record<string, unknown>;
     const purchasedSet = new Set<string>([fallbackId]);
-    const purchasedRaw = Array.isArray(input.purchasedAvatarIds) ? input.purchasedAvatarIds : [];
+    const purchasedRaw = Array.isArray(input.purchasedAvatarIds)
+      ? input.purchasedAvatarIds
+      : [];
     for (const item of purchasedRaw) {
-      if (typeof item !== "string") continue;
-      if (AVATAR_CATALOG.some((avatar) => avatar.id === item)) purchasedSet.add(item);
+      if (typeof item !== 'string') continue;
+      if (AVATAR_CATALOG.some((avatar) => avatar.id === item))
+        purchasedSet.add(item);
     }
 
     let activeAvatarId = fallbackId;
     if (
-      typeof input.activeAvatarId === "string" &&
+      typeof input.activeAvatarId === 'string' &&
       purchasedSet.has(input.activeAvatarId)
     ) {
       activeAvatarId = input.activeAvatarId;
@@ -78,16 +123,21 @@ export class ChildrenService {
   async listForUser(user: any) {
     const userId = this.userIdFromJwt(user);
 
-    if (user.role === "admin") {
+    if (user.role === 'admin') {
       const all = await this.prisma.childProfile.findMany({
         where: { isActive: true },
         include: { ageGroup: true },
-        orderBy: { id: "asc" },
+        orderBy: { id: 'asc' },
       });
-      return all.map((c) => ({ id: Number(c.id), name: c.name, ageGroupCode: c.ageGroup.code }));
+      return all.map((c) => ({
+        id: Number(c.id),
+        name: c.name,
+        ageGroupCode: c.ageGroup.code,
+      }));
     }
 
-    if (user.role !== "parent") throw new ForbiddenException("Only parent/admin");
+    if (user.role !== 'parent')
+      throw new ForbiddenException('Only parent/admin');
 
     const links = await this.prisma.parentChild.findMany({
       where: {
@@ -95,7 +145,7 @@ export class ChildrenService {
         child: { isActive: true },
       },
       include: { child: { include: { ageGroup: true } } },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: 'asc' },
     });
 
     return links.map((l) => ({
@@ -106,10 +156,13 @@ export class ChildrenService {
   }
 
   async createChild(user: any, dto: CreateChildDto) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    if (user.role !== 'parent' && user.role !== 'admin')
+      throw new ForbiddenException('Only parent/admin');
 
-    const age = await this.prisma.ageGroup.findUnique({ where: { code: dto.ageGroupCode } });
-    if (!age) throw new BadRequestException("Invalid ageGroupCode");
+    const age = await this.prisma.ageGroup.findUnique({
+      where: { code: dto.ageGroupCode },
+    });
+    if (!age) throw new BadRequestException('Invalid ageGroupCode');
 
     const child = await this.prisma.childProfile.create({
       data: {
@@ -119,9 +172,12 @@ export class ChildrenService {
     });
 
     // якщо parent — одразу зв’язуємо
-    if (user.role === "parent") {
+    if (user.role === 'parent') {
       await this.prisma.parentChild.create({
-        data: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id },
+        data: {
+          parentUserId: this.userIdFromJwt(user),
+          childProfileId: child.id,
+        },
       });
     }
 
@@ -129,20 +185,27 @@ export class ChildrenService {
   }
 
   async createInvite(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    if (user.role !== 'parent' && user.role !== 'admin')
+      throw new ForbiddenException('Only parent/admin');
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
       include: { ageGroup: true },
     });
-    if (!child || !child.isActive) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive)
+      throw new NotFoundException('Child not found');
 
     // parent може робити invite тільки для своєї дитини
-    if (user.role === "parent") {
+    if (user.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+        where: {
+          parentUserId_childProfileId: {
+            parentUserId: this.userIdFromJwt(user),
+            childProfileId: child.id,
+          },
+        },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) throw new ForbiddenException('Not your child');
     }
 
     // робимо код на 30 днів
@@ -151,7 +214,9 @@ export class ChildrenService {
     // генеруємо унікальний code
     let code = randomCode(6);
     for (let i = 0; i < 5; i++) {
-      const exists = await this.prisma.linkInvite.findUnique({ where: { code } });
+      const exists = await this.prisma.linkInvite.findUnique({
+        where: { code },
+      });
       if (!exists) break;
       code = randomCode(6);
     }
@@ -168,7 +233,11 @@ export class ChildrenService {
     return {
       code: invite.code,
       expiresAt: invite.expiresAt,
-      child: { id: Number(child.id), name: child.name, ageGroupCode: child.ageGroup.code },
+      child: {
+        id: Number(child.id),
+        name: child.name,
+        ageGroupCode: child.ageGroup.code,
+      },
     };
   }
 
@@ -180,10 +249,12 @@ export class ChildrenService {
       include: { child: { include: { ageGroup: true } } },
     });
 
-    if (!invite) throw new NotFoundException("Code not found");
-    if (!invite.child.isActive) throw new BadRequestException("Child profile is inactive");
-    if (invite.isRevoked) throw new BadRequestException("Code revoked");
-    if (invite.expiresAt.getTime() < Date.now()) throw new BadRequestException("Code expired");
+    if (!invite) throw new NotFoundException('Code not found');
+    if (!invite.child.isActive)
+      throw new BadRequestException('Child profile is inactive');
+    if (invite.isRevoked) throw new BadRequestException('Code revoked');
+    if (invite.expiresAt.getTime() < Date.now())
+      throw new BadRequestException('Code expired');
 
     await this.prisma.linkInvite.update({
       where: { code },
@@ -199,25 +270,32 @@ export class ChildrenService {
   }
 
   async getStats(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    if (user.role !== 'parent' && user.role !== 'admin')
+      throw new ForbiddenException('Only parent/admin');
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
       include: { ageGroup: true },
     });
-    if (!child || !child.isActive) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive)
+      throw new NotFoundException('Child not found');
 
-    if (user.role === "parent") {
+    if (user.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+        where: {
+          parentUserId_childProfileId: {
+            parentUserId: this.userIdFromJwt(user),
+            childProfileId: child.id,
+          },
+        },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) throw new ForbiddenException('Not your child');
     }
 
     const attempts = await this.prisma.attempt.findMany({
       where: { childProfileId: child.id },
       include: { game: { include: { module: true, gameType: true } } },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 50,
     });
 
@@ -236,7 +314,9 @@ export class ChildrenService {
     const todayUtc = new Date();
     todayUtc.setUTCHours(0, 0, 0, 0);
     const activityStartUtc = new Date(todayUtc);
-    activityStartUtc.setUTCDate(activityStartUtc.getUTCDate() - (activityWindowDays - 1));
+    activityStartUtc.setUTCDate(
+      activityStartUtc.getUTCDate() - (activityWindowDays - 1),
+    );
 
     const recentAttempts = await this.prisma.attempt.findMany({
       where: {
@@ -250,19 +330,35 @@ export class ChildrenService {
         isFinished: true,
         correctCount: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: 'asc' },
     });
 
-    const activityByDate = new Map<string, { didPlay: boolean; levelsPassed: number; durationSec: number }>();
+    const activityByDate = new Map<
+      string,
+      { didPlay: boolean; levelsPassed: number; durationSec: number }
+    >();
 
     for (const attempt of recentAttempts) {
       const dateKey = attempt.createdAt.toISOString().slice(0, 10);
-      const prev = activityByDate.get(dateKey) ?? { didPlay: false, levelsPassed: 0, durationSec: 0 };
+      const prev = activityByDate.get(dateKey) ?? {
+        didPlay: false,
+        levelsPassed: 0,
+        durationSec: 0,
+      };
       prev.didPlay = true;
       const fallbackDuration = attempt.finishedAt
-        ? Math.max(0, Math.floor((attempt.finishedAt.getTime() - attempt.createdAt.getTime()) / 1000))
+        ? Math.max(
+            0,
+            Math.floor(
+              (attempt.finishedAt.getTime() - attempt.createdAt.getTime()) /
+                1000,
+            ),
+          )
         : 0;
-      const effectiveDuration = Math.max(0, attempt.durationSec ?? fallbackDuration);
+      const effectiveDuration = Math.max(
+        0,
+        attempt.durationSec ?? fallbackDuration,
+      );
       prev.durationSec += effectiveDuration;
       if (attempt.isFinished && attempt.correctCount > 0) {
         prev.levelsPassed += 1;
@@ -270,16 +366,30 @@ export class ChildrenService {
       activityByDate.set(dateKey, prev);
     }
 
-    const activityYearDays = Array.from({ length: activityWindowDays }, (_, idx) => {
-      const day = new Date(activityStartUtc);
-      day.setUTCDate(activityStartUtc.getUTCDate() + idx);
-      const date = day.toISOString().slice(0, 10);
-      const stats = activityByDate.get(date) ?? { didPlay: false, levelsPassed: 0, durationSec: 0 };
-      return { date, ...stats };
-    });
+    const activityYearDays = Array.from(
+      { length: activityWindowDays },
+      (_, idx) => {
+        const day = new Date(activityStartUtc);
+        day.setUTCDate(activityStartUtc.getUTCDate() + idx);
+        const date = day.toISOString().slice(0, 10);
+        const stats = activityByDate.get(date) ?? {
+          didPlay: false,
+          levelsPassed: 0,
+          durationSec: 0,
+        };
+        return { date, ...stats };
+      },
+    );
 
-    const bestFinishedByLevel = new Map<string, { score: number; correctCount: number; totalCount: number }>();
-    const finishedWithoutLevel: Array<{ score: number; correctCount: number; totalCount: number }> = [];
+    const bestFinishedByLevel = new Map<
+      string,
+      { score: number; correctCount: number; totalCount: number }
+    >();
+    const finishedWithoutLevel: Array<{
+      score: number;
+      correctCount: number;
+      totalCount: number;
+    }> = [];
     const uniqueLevelAttempts = new Set<string>();
     let attemptsWithoutLevelCount = 0;
 
@@ -294,7 +404,8 @@ export class ChildrenService {
         if (
           !prevBest ||
           attempt.score > prevBest.score ||
-          (attempt.score === prevBest.score && attempt.correctCount > prevBest.correctCount)
+          (attempt.score === prevBest.score &&
+            attempt.correctCount > prevBest.correctCount)
         ) {
           bestFinishedByLevel.set(levelKey, {
             score: attempt.score,
@@ -331,7 +442,8 @@ export class ChildrenService {
     }
 
     const totalAttempts = uniqueLevelAttempts.size + attemptsWithoutLevelCount;
-    const finishedAttempts = bestFinishedByLevel.size + finishedWithoutLevel.length;
+    const finishedAttempts =
+      bestFinishedByLevel.size + finishedWithoutLevel.length;
 
     return {
       child: {
@@ -358,7 +470,16 @@ export class ChildrenService {
         correctCount: a.correctCount,
         totalCount: a.totalCount,
         isFinished: a.isFinished,
-        durationSec: a.durationSec ?? (a.finishedAt ? Math.max(0, Math.floor((a.finishedAt.getTime() - a.createdAt.getTime()) / 1000)) : null),
+        durationSec:
+          a.durationSec ??
+          (a.finishedAt
+            ? Math.max(
+                0,
+                Math.floor(
+                  (a.finishedAt.getTime() - a.createdAt.getTime()) / 1000,
+                ),
+              )
+            : null),
         createdAt: a.createdAt,
         finishedAt: a.finishedAt,
       })),
@@ -366,24 +487,30 @@ export class ChildrenService {
   }
 
   async getStatsPublic(childId: number) {
-    return this.getStats({ role: "admin", sub: "0" }, childId);
+    return this.getStats({ role: 'admin', sub: '0' }, childId);
   }
 
   async getBadges(user: any, childId: number) {
-    if (user && user.role !== "parent" && user.role !== "admin") {
-      throw new ForbiddenException("Only parent/admin");
+    if (user && user.role !== 'parent' && user.role !== 'admin') {
+      throw new ForbiddenException('Only parent/admin');
     }
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
     });
-    if (!child || !child.isActive) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive)
+      throw new NotFoundException('Child not found');
 
-    if (user?.role === "parent") {
+    if (user?.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+        where: {
+          parentUserId_childProfileId: {
+            parentUserId: this.userIdFromJwt(user),
+            childProfileId: child.id,
+          },
+        },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) throw new ForbiddenException('Not your child');
     }
 
     const [allAttempts, badges, earned] = await Promise.all([
@@ -398,11 +525,12 @@ export class ChildrenService {
           levelId: true,
         },
       }),
-      this.prisma.badge.findMany({ orderBy: { id: "asc" } }),
+      this.prisma.badge.findMany({ orderBy: { id: 'asc' } }),
       this.prisma.childBadge.findMany({ where: { childProfileId: child.id } }),
     ]);
 
-    const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
+    const metrics: AchievementMetrics =
+      calculateAchievementMetrics(allAttempts);
 
     const earnedSet = new Set(earned.map((b) => Number(b.badgeId)));
 
@@ -436,7 +564,7 @@ export class ChildrenService {
       where: { id: BigInt(childId), isActive: true },
       select: { id: true, settings: true },
     });
-    if (!child) throw new NotFoundException("Child not found");
+    if (!child) throw new NotFoundException('Child not found');
 
     const [stats, settings] = await Promise.all([
       this.getBadges(null, childId),
@@ -463,15 +591,16 @@ export class ChildrenService {
   }
 
   async buyAvatar(childId: number, avatarIdRaw: string) {
-    const avatarId = (avatarIdRaw || "").trim();
+    // Функція: avatarId. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+    const avatarId = (avatarIdRaw || '').trim();
     const avatar = AVATAR_CATALOG.find((item) => item.id === avatarId);
-    if (!avatar) throw new BadRequestException("Avatar not found");
+    if (!avatar) throw new BadRequestException('Avatar not found');
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
       select: { id: true, settings: true },
     });
-    if (!child) throw new NotFoundException("Child not found");
+    if (!child) throw new NotFoundException('Child not found');
 
     const settings = this.normalizeAvatarSettings(child.settings);
     if (settings.purchasedAvatarIds.includes(avatar.id)) {
@@ -479,14 +608,19 @@ export class ChildrenService {
     }
 
     const stats = await this.getBadges(null, childId);
-    const spentStars = settings.purchasedAvatarIds.reduce((sum, purchasedId) => {
-      const purchasedAvatar = AVATAR_CATALOG.find((item) => item.id === purchasedId);
-      return sum + (purchasedAvatar?.price ?? 0);
-    }, 0);
+    const spentStars = settings.purchasedAvatarIds.reduce(
+      (sum, purchasedId) => {
+        const purchasedAvatar = AVATAR_CATALOG.find(
+          (item) => item.id === purchasedId,
+        );
+        return sum + (purchasedAvatar?.price ?? 0);
+      },
+      0,
+    );
     const availableStars = Math.max(0, stats.totalStars - spentStars);
 
     if (availableStars < avatar.price) {
-      throw new BadRequestException("Not enough stars");
+      throw new BadRequestException('Not enough stars');
     }
 
     const nextSettings = {
@@ -507,19 +641,20 @@ export class ChildrenService {
   }
 
   async setActiveAvatar(childId: number, avatarIdRaw: string) {
-    const avatarId = (avatarIdRaw || "").trim();
+    // Функція: avatarId. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+    const avatarId = (avatarIdRaw || '').trim();
     const avatar = AVATAR_CATALOG.find((item) => item.id === avatarId);
-    if (!avatar) throw new BadRequestException("Avatar not found");
+    if (!avatar) throw new BadRequestException('Avatar not found');
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
       select: { id: true, settings: true },
     });
-    if (!child) throw new NotFoundException("Child not found");
+    if (!child) throw new NotFoundException('Child not found');
 
     const settings = this.normalizeAvatarSettings(child.settings);
     if (!settings.purchasedAvatarIds.includes(avatar.id)) {
-      throw new BadRequestException("Avatar is not purchased");
+      throw new BadRequestException('Avatar is not purchased');
     }
 
     await this.prisma.childProfile.update({
@@ -536,22 +671,27 @@ export class ChildrenService {
     return this.getAvatarShop(childId);
   }
 
-
   async deleteChild(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") {
-      throw new ForbiddenException("Only parent/admin");
+    if (user.role !== 'parent' && user.role !== 'admin') {
+      throw new ForbiddenException('Only parent/admin');
     }
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
     });
-    if (!child || !child.isActive) throw new NotFoundException("Child not found");
+    if (!child || !child.isActive)
+      throw new NotFoundException('Child not found');
 
-    if (user.role === "parent") {
+    if (user.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
+        where: {
+          parentUserId_childProfileId: {
+            parentUserId: this.userIdFromJwt(user),
+            childProfileId: child.id,
+          },
+        },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) throw new ForbiddenException('Not your child');
     }
 
     await this.prisma.$transaction([

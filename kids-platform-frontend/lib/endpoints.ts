@@ -1,5 +1,13 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/lib/endpoints.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 import { api } from "./api";
 
+// Функція: register. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function register(email: string, username: string, password: string) {
   return api<{ accessToken: string; user: { id: number; email: string; role: string } }>(
     "/auth/register",
@@ -8,6 +16,7 @@ export async function register(email: string, username: string, password: string
   );
 }
 
+// Функція: login. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function login(email: string, password: string) {
   return api<{ accessToken: string; user: { id: number; email: string; role: string } }>(
     "/auth/login",
@@ -16,14 +25,17 @@ export async function login(email: string, password: string) {
   );
 }
 
+// Функція: getMe. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getMe() {
   return api<{ id: number; email: string; username: string; role: string }>("/auth/me", "GET");
 }
 
+// Функція: getChildren. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getChildren() {
   return api<Array<{ id: number; name: string; ageGroupCode: string }>>("/children", "GET");
 }
 
+// Функція: createChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createChild(name: string, ageGroupCode: string) {
   return api<{ id: number; name: string; ageGroupCode: string }>(
     "/children",
@@ -32,6 +44,7 @@ export async function createChild(name: string, ageGroupCode: string) {
   );
 }
 
+// Функція: createInvite. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createInvite(childId: number) {
   return api<{ code: string; expiresAt: string; child: { id: number; name: string; ageGroupCode: string } }>(
     `/children/${childId}/invite`,
@@ -39,6 +52,7 @@ export async function createInvite(childId: number) {
   );
 }
 
+// Функція: deleteChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteChild(childId: number) {
   return api<{ ok: true }>(`/children/${childId}`, "DELETE");
 }
@@ -77,10 +91,12 @@ export type ChildStats = {
   }>;
 };
 
+// Функція: getChildStats. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getChildStats(childId: number) {
   return api<ChildStats>(`/children/${childId}/stats`, "GET");
 }
 
+// Функція: getChildStatsPublic. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getChildStatsPublic(childId: number) {
   return api<ChildStats>(`/child/${childId}/stats`, "GET");
 }
@@ -102,14 +118,17 @@ export type AvatarShopResponse = {
   avatars: AvatarShopAvatar[];
 };
 
+// Функція: getAvatarShop. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAvatarShop(childId: number) {
   return api<AvatarShopResponse>(`/child/${childId}/avatar-shop`, "GET");
 }
 
+// Функція: buyAvatar. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function buyAvatar(childId: number, avatarId: string) {
   return api<AvatarShopResponse>(`/child/${childId}/avatar-shop/buy`, "POST", { avatarId });
 }
 
+// Функція: setActiveAvatar. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function setActiveAvatar(childId: number, avatarId: string) {
   return api<AvatarShopResponse>(`/child/${childId}/avatar`, "PATCH", { avatarId });
 }
@@ -188,18 +207,22 @@ export type AdminBadgeItem = {
   description?: string | null;
 };
 
+// Функція: getAdminModules. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminModules() {
   return api<AdminModuleItem[]>("/admin/modules", "GET");
 }
 
+// Функція: getAdminGameTypes. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminGameTypes() {
   return api<AdminGameTypeItem[]>("/admin/game-types", "GET");
 }
 
+// Функція: getAdminAgeGroups. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminAgeGroups() {
   return api<AdminAgeGroupItem[]>("/admin/age-groups", "GET");
 }
 
+// Функція: getAdminGames. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminGames() {
   return api<AdminGameItem[]>("/admin/games", "GET");
 }
@@ -218,11 +241,13 @@ export type AdminGameLevelItem = {
   updatedAt: string;
 };
 
+// Функція: getAdminGameLevels. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminGameLevels(gameId?: number) {
   const query = gameId ? `?gameId=${encodeURIComponent(String(gameId))}` : "";
   return api<AdminGameLevelItem[]>(`/admin/game-levels${query}`, "GET");
 }
 
+// Функція: createAdminGameLevel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createAdminGameLevel(payload: {
   gameId: number;
   difficulty: number;
@@ -233,6 +258,7 @@ export async function createAdminGameLevel(payload: {
   return api<{ id: number }>("/admin/game-levels", "POST", payload);
 }
 
+// Функція: updateAdminGameLevel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function updateAdminGameLevel(
   levelId: number,
   payload: {
@@ -244,10 +270,12 @@ export async function updateAdminGameLevel(
   return api<{ id: number }>(`/admin/game-levels/${levelId}`, "PATCH", payload);
 }
 
+// Функція: deleteAdminGameLevel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteAdminGameLevel(levelId: number) {
   return api<{ ok: true }>(`/admin/game-levels/${levelId}`, "DELETE");
 }
 
+// Функція: createAdminAgeGroup. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createAdminAgeGroup(payload: {
   code: string;
   title: string;
@@ -259,6 +287,7 @@ export async function createAdminAgeGroup(payload: {
   return api<{ id: number }>("/admin/age-groups", "POST", payload);
 }
 
+// Функція: updateAdminAgeGroup. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function updateAdminAgeGroup(
   ageGroupId: number,
   payload: {
@@ -273,10 +302,12 @@ export async function updateAdminAgeGroup(
   return api<{ id: number }>(`/admin/age-groups/${ageGroupId}`, "PATCH", payload);
 }
 
+// Функція: deleteAdminAgeGroup. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteAdminAgeGroup(ageGroupId: number) {
   return api<{ ok: true }>(`/admin/age-groups/${ageGroupId}`, "DELETE");
 }
 
+// Функція: createAdminGameType. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createAdminGameType(payload: {
   code: string;
   title: string;
@@ -287,6 +318,7 @@ export async function createAdminGameType(payload: {
   return api<{ id: number }>("/admin/game-types", "POST", payload);
 }
 
+// Функція: updateAdminGameType. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function updateAdminGameType(
   gameTypeId: number,
   payload: {
@@ -300,22 +332,27 @@ export async function updateAdminGameType(
   return api<{ id: number }>(`/admin/game-types/${gameTypeId}`, "PATCH", payload);
 }
 
+// Функція: deleteAdminGameType. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteAdminGameType(gameTypeId: number) {
   return api<{ ok: true }>(`/admin/game-types/${gameTypeId}`, "DELETE");
 }
 
+// Функція: getAdminTasks. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminTasks() {
   return api<AdminTaskItem[]>("/admin/tasks", "GET");
 }
 
+// Функція: getAdminTaskVersions. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminTaskVersions() {
   return api<AdminTaskVersionItem[]>("/admin/task-versions", "GET");
 }
 
+// Функція: getAdminBadges. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getAdminBadges() {
   return api<AdminBadgeItem[]>("/admin/badges", "GET");
 }
 
+// Функція: createAdminGame. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createAdminGame(payload: {
   moduleId: number;
   gameTypeId: number;
@@ -328,6 +365,7 @@ export async function createAdminGame(payload: {
   return api<{ id: number }>("/admin/games", "POST", payload);
 }
 
+// Функція: createAdminTask. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createAdminTask(payload: {
   gameId: number;
   levelId?: number;
@@ -337,6 +375,7 @@ export async function createAdminTask(payload: {
   return api<{ id: number }>("/admin/tasks", "POST", payload);
 }
 
+// Функція: updateAdminTask. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function updateAdminTask(
   taskId: number,
   payload: {
@@ -348,10 +387,12 @@ export async function updateAdminTask(
   return api<{ id: number }>(`/admin/tasks/${taskId}`, "PATCH", payload);
 }
 
+// Функція: deleteAdminTask. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteAdminTask(taskId: number) {
   return api<{ ok: true }>(`/admin/tasks/${taskId}`, "DELETE");
 }
 
+// Функція: createAdminTaskVersion. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createAdminTaskVersion(payload: {
   taskId: number;
   version: number;
@@ -365,6 +406,7 @@ export async function createAdminTaskVersion(payload: {
   return api<{ id: number }>("/admin/task-versions", "POST", payload);
 }
 
+// Функція: updateAdminTaskVersion. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function updateAdminTaskVersion(
   taskVersionId: number,
   payload: {
@@ -379,10 +421,12 @@ export async function updateAdminTaskVersion(
   return api<{ id: number }>(`/admin/task-versions/${taskVersionId}`, "PATCH", payload);
 }
 
+// Функція: deleteAdminTaskVersion. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteAdminTaskVersion(taskVersionId: number) {
   return api<{ ok: true }>(`/admin/task-versions/${taskVersionId}`, "DELETE");
 }
 
+// Функція: createAdminBadge. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function createAdminBadge(payload: {
   code: string;
   title: string;
@@ -391,6 +435,7 @@ export async function createAdminBadge(payload: {
   return api<{ id: number }>("/admin/badges", "POST", payload);
 }
 
+// Функція: updateAdminBadge. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function updateAdminBadge(
   badgeId: number,
   payload: {
@@ -402,10 +447,12 @@ export async function updateAdminBadge(
   return api<{ id: number }>(`/admin/badges/${badgeId}`, "PATCH", payload);
 }
 
+// Функція: deleteAdminBadge. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteAdminBadge(badgeId: number) {
   return api<{ ok: true }>(`/admin/badges/${badgeId}`, "DELETE");
 }
 
+// Функція: updateAdminGame. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function updateAdminGame(
   gameId: number,
   payload: {
@@ -418,10 +465,12 @@ export async function updateAdminGame(
   return api<{ id: number }>(`/admin/games/${gameId}`, "PATCH", payload);
 }
 
+// Функція: deleteAdminGame. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function deleteAdminGame(gameId: number) {
   return api<{ ok: true }>(`/admin/games/${gameId}`, "DELETE");
 }
 
+// Функція: joinByCode. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function joinByCode(code: string) {
   return api<{ childProfileId: number; childName: string; ageGroupCode: string; avatar?: string | null }>(
     "/child/join",
@@ -453,10 +502,12 @@ export type ChildBadgesResponse = {
   badges: ChildBadgeItem[];
 };
 
+// Функція: getChildBadges. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getChildBadges(childId: number) {
   return api<ChildBadgesResponse>(`/children/${childId}/badges`, "GET");
 }
 
+// Функція: getChildBadgesPublic. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getChildBadgesPublic(childId: number) {
   return api<ChildBadgesResponse>(`/child/${childId}/badges`, "GET");
 }
@@ -473,6 +524,7 @@ export type GameListItem = {
   difficultyTaskCounts: Array<{ difficulty: number; count: number }>;
 };
 
+// Функція: getGames. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getGames(ageGroupCode: string) {
   return api<GameListItem[]>(`/games?ageGroupCode=${encodeURIComponent(ageGroupCode)}`, "GET");
 }
@@ -493,6 +545,7 @@ export type GameLevelsResponse = {
   }>;
 };
 
+// Функція: getGameLevels. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function getGameLevels(gameId: number, difficulty: number, childProfileId?: number) {
   const query = new URLSearchParams({ difficulty: String(difficulty) });
   if (childProfileId !== undefined) {
@@ -514,6 +567,7 @@ export type StartAttemptResponse = {
   };
 };
 
+// Функція: startAttempt. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function startAttempt(childProfileId: number, gameId: number, difficulty: number, level?: number, levelId?: number) {
   return api<StartAttemptResponse>("/attempts/start", "POST", {
     childProfileId,
@@ -545,6 +599,7 @@ export type AnswerResponse =
       progress?: { score: number; correctCount: number; totalCount: number; totalTasks?: number };
     };
 
+// Функція: submitAnswer. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function submitAnswer(
   attemptId: number,
   payload: { taskId: number; taskVersionId: number; userAnswer: any }
@@ -552,6 +607,7 @@ export async function submitAnswer(
   return api<AnswerResponse>(`/attempts/${attemptId}/answer`, "POST", payload);
 }
 
+// Функція: finishAttempt. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 export async function finishAttempt(attemptId: number, durationSec?: number) {
   return api<{ attemptId: number; finished: true; summary: { score: number; correctCount: number; totalCount: number } }>(
     `/attempts/${attemptId}/finish`,

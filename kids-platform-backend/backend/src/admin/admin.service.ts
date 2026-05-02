@@ -1,5 +1,12 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
-import { PrismaService } from "../prisma/prisma.service";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/admin/admin.service.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateAgeGroupDto,
   CreateGameDto,
@@ -17,14 +24,16 @@ import {
   UpdateBadgeDto,
   CreateGameLevelDto,
   UpdateGameLevelDto,
-} from "./dto";
+} from './dto';
 
 @Injectable()
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
   async listAgeGroups() {
-    const groups = await this.prisma.ageGroup.findMany({ orderBy: { id: "asc" } });
+    const groups = await this.prisma.ageGroup.findMany({
+      orderBy: { id: 'asc' },
+    });
     return groups.map((g) => ({
       id: Number(g.id),
       code: g.code,
@@ -74,7 +83,9 @@ export class AdminService {
   }
 
   async listModules() {
-    const modules = await this.prisma.module.findMany({ orderBy: { id: "asc" } });
+    const modules = await this.prisma.module.findMany({
+      orderBy: { id: 'asc' },
+    });
     return modules.map((m) => ({
       id: Number(m.id),
       code: m.code,
@@ -119,7 +130,9 @@ export class AdminService {
   }
 
   async listGameTypes() {
-    const types = await this.prisma.gameType.findMany({ orderBy: { id: "asc" } });
+    const types = await this.prisma.gameType.findMany({
+      orderBy: { id: 'asc' },
+    });
     return types.map((t) => ({
       id: Number(t.id),
       code: t.code,
@@ -165,7 +178,7 @@ export class AdminService {
 
   async listGames() {
     const games = await this.prisma.game.findMany({
-      orderBy: { id: "asc" },
+      orderBy: { id: 'asc' },
       include: { module: true, gameType: true, minAgeGroup: true },
     });
     return games.map((g) => ({
@@ -204,7 +217,9 @@ export class AdminService {
       data: {
         moduleId: dto.moduleId ? BigInt(dto.moduleId) : undefined,
         gameTypeId: dto.gameTypeId ? BigInt(dto.gameTypeId) : undefined,
-        minAgeGroupId: dto.minAgeGroupId ? BigInt(dto.minAgeGroupId) : undefined,
+        minAgeGroupId: dto.minAgeGroupId
+          ? BigInt(dto.minAgeGroupId)
+          : undefined,
         title: dto.title,
         description: dto.description,
         difficulty: dto.difficulty,
@@ -228,7 +243,11 @@ export class AdminService {
         ...(gameId ? { gameId: BigInt(gameId) } : {}),
       },
       include: { game: true },
-      orderBy: [{ gameId: "asc" }, { difficulty: "asc" }, { levelNumber: "asc" }],
+      orderBy: [
+        { gameId: 'asc' },
+        { difficulty: 'asc' },
+        { levelNumber: 'asc' },
+      ],
     });
 
     return levels.map((level) => ({
@@ -247,7 +266,7 @@ export class AdminService {
 
   async createGameLevel(dto: CreateGameLevelDto) {
     if (![1, 2, 3].includes(dto.difficulty)) {
-      throw new BadRequestException("difficulty must be one of 1, 2, 3");
+      throw new BadRequestException('difficulty must be one of 1, 2, 3');
     }
 
     const level = await this.prisma.$transaction(async (tx) => {
@@ -286,7 +305,12 @@ export class AdminService {
         title: dto.title,
         levelNumber: dto.levelNumber,
         isActive: dto.isActive,
-        deletedAt: dto.isActive === true ? null : dto.isActive === false ? new Date() : undefined,
+        deletedAt:
+          dto.isActive === true
+            ? null
+            : dto.isActive === false
+              ? new Date()
+              : undefined,
       },
     });
     return { id: Number(level.id) };
@@ -305,12 +329,16 @@ export class AdminService {
 
   async listTasks() {
     const tasks = await this.prisma.task.findMany({
-      orderBy: { id: "asc" },
+      orderBy: { id: 'asc' },
       include: { game: true },
     });
 
     const levelIds = Array.from(
-      new Set(tasks.filter((task) => task.levelId !== null).map((task) => task.levelId!.toString())),
+      new Set(
+        tasks
+          .filter((task) => task.levelId !== null)
+          .map((task) => task.levelId!.toString()),
+      ),
     );
 
     const levels = levelIds.length
@@ -328,7 +356,9 @@ export class AdminService {
         })
       : [];
 
-    const levelById = new Map(levels.map((level) => [level.id.toString(), level]));
+    const levelById = new Map(
+      levels.map((level) => [level.id.toString(), level]),
+    );
 
     return tasks.map((t) => {
       const level = t.levelId ? levelById.get(t.levelId.toString()) : undefined;
@@ -381,7 +411,7 @@ export class AdminService {
 
   async listTaskVersions() {
     const versions = await this.prisma.taskVersion.findMany({
-      orderBy: { id: "asc" },
+      orderBy: { id: 'asc' },
       include: { task: true },
     });
     return versions.map((v) => ({
@@ -439,7 +469,7 @@ export class AdminService {
   }
 
   async listBadges() {
-    const badges = await this.prisma.badge.findMany({ orderBy: { id: "asc" } });
+    const badges = await this.prisma.badge.findMany({ orderBy: { id: 'asc' } });
     return badges.map((b) => ({
       id: Number(b.id),
       code: b.code,

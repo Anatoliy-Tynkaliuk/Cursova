@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/app/child/game/[gameId]/levels/page.tsx`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 "use client";
 
 import Link from "next/link";
@@ -14,6 +21,7 @@ const difficultyLabels: Record<number, string> = {
   3: "Складно",
 };
 
+// Функція: normalizeDifficulty. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
 function normalizeDifficulty(value: string | null): number | null {
   if (!value) return null;
   const numeric = Number(value);
@@ -55,6 +63,7 @@ export default function GameLevelsPage() {
 
     let cancelled = false;
 
+// Функція: loadData. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
     async function loadData() {
       setLoading(true);
       setError(null);
@@ -142,6 +151,7 @@ export default function GameLevelsPage() {
                       ? `${styles.levelBtn} ${styles.locked}`
                       : `${styles.levelBtn} ${styles.active}`;
 
+// Функція: content. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
                   const content = (
                     <span className={styles.levelContent}>
                       <span className={styles.levelBgIcon}>

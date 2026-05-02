@@ -1,3 +1,10 @@
+/**
+ * Огляд файлу: `kids-platform-frontend/lib/types.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 export type GameTypeCode = "choose_answer" | "match_pairs" | "sequence";
 
 export type Game = {

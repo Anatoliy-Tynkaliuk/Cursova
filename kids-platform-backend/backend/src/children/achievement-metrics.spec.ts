@@ -1,10 +1,17 @@
-import { calculateAchievementMetrics } from "./achievement-metrics";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/children/achievement-metrics.spec.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
 
-describe("calculateAchievementMetrics", () => {
-  it("counts each finished level once using best score", () => {
+import { calculateAchievementMetrics } from './achievement-metrics';
+
+describe('calculateAchievementMetrics', () => {
+  it('counts each finished level once using best score', () => {
     const metrics = calculateAchievementMetrics([
       {
-        createdAt: new Date("2026-01-01T10:00:00Z"),
+        createdAt: new Date('2026-01-01T10:00:00Z'),
         isFinished: true,
         correctCount: 1,
         totalCount: 3,
@@ -12,7 +19,7 @@ describe("calculateAchievementMetrics", () => {
         levelId: BigInt(10),
       },
       {
-        createdAt: new Date("2026-01-01T11:00:00Z"),
+        createdAt: new Date('2026-01-01T11:00:00Z'),
         isFinished: true,
         correctCount: 3,
         totalCount: 3,
@@ -29,10 +36,10 @@ describe("calculateAchievementMetrics", () => {
     expect(metrics.loginDays).toBe(1);
   });
 
-  it("includes attempts without levelId as separate attempts", () => {
+  it('includes attempts without levelId as separate attempts', () => {
     const metrics = calculateAchievementMetrics([
       {
-        createdAt: new Date("2026-01-01T10:00:00Z"),
+        createdAt: new Date('2026-01-01T10:00:00Z'),
         isFinished: false,
         correctCount: 0,
         totalCount: 0,
@@ -40,7 +47,7 @@ describe("calculateAchievementMetrics", () => {
         levelId: null,
       },
       {
-        createdAt: new Date("2026-01-02T10:00:00Z"),
+        createdAt: new Date('2026-01-02T10:00:00Z'),
         isFinished: true,
         correctCount: 2,
         totalCount: 2,

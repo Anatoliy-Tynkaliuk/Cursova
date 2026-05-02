@@ -1,10 +1,17 @@
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/children/achievement-rules.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
+
 export type AchievementMetricKey =
-  | "finished_games"
-  | "total_stars"
-  | "login_days"
-  | "correct_answers"
-  | "total_attempts"
-  | "perfect_games";
+  | 'finished_games'
+  | 'total_stars'
+  | 'login_days'
+  | 'correct_answers'
+  | 'total_attempts'
+  | 'perfect_games';
 
 export type AchievementMetrics = {
   finishedAttempts: number;
@@ -23,31 +30,44 @@ export type AchievementRule = {
   progressPercent: number;
 };
 
-const METRIC_META: Record<AchievementMetricKey, { label: string; getter: (m: AchievementMetrics) => number }> = {
-  finished_games: { label: "Пройдено ігор", getter: (m) => m.finishedAttempts },
-  total_stars: { label: "Зароблено зірок", getter: (m) => m.totalStars },
-  login_days: { label: "Днів активності", getter: (m) => m.loginDays },
-  correct_answers: { label: "Правильних відповідей", getter: (m) => m.correctAnswers },
-  total_attempts: { label: "Усього спроб", getter: (m) => m.totalAttempts },
-  perfect_games: { label: "Ідеальних ігор", getter: (m) => m.perfectGames },
+const METRIC_META: Record<
+  AchievementMetricKey,
+  { label: string; getter: (m: AchievementMetrics) => number }
+> = {
+  finished_games: { label: 'Пройдено ігор', getter: (m) => m.finishedAttempts },
+  total_stars: { label: 'Зароблено зірок', getter: (m) => m.totalStars },
+  login_days: { label: 'Днів активності', getter: (m) => m.loginDays },
+  correct_answers: {
+    label: 'Правильних відповідей',
+    getter: (m) => m.correctAnswers,
+  },
+  total_attempts: { label: 'Усього спроб', getter: (m) => m.totalAttempts },
+  perfect_games: { label: 'Ідеальних ігор', getter: (m) => m.perfectGames },
 };
 
 const CODE_ALIASES: Record<string, AchievementMetricKey> = {
-  FINISHED: "finished_games",
-  FINISHED_GAMES: "finished_games",
-  GAMES_COMPLETED: "finished_games",
-  STARS: "total_stars",
-  TOTAL_STARS: "total_stars",
-  LOGIN_DAYS: "login_days",
-  DAILY_LOGINS: "login_days",
-  CORRECT_ANSWERS: "correct_answers",
-  ATTEMPTS: "total_attempts",
-  TOTAL_ATTEMPTS: "total_attempts",
-  PERFECT_GAMES: "perfect_games",
+  FINISHED: 'finished_games',
+  FINISHED_GAMES: 'finished_games',
+  GAMES_COMPLETED: 'finished_games',
+  STARS: 'total_stars',
+  TOTAL_STARS: 'total_stars',
+  LOGIN_DAYS: 'login_days',
+  DAILY_LOGINS: 'login_days',
+  CORRECT_ANSWERS: 'correct_answers',
+  ATTEMPTS: 'total_attempts',
+  TOTAL_ATTEMPTS: 'total_attempts',
+  PERFECT_GAMES: 'perfect_games',
 };
 
-export function buildAchievementRule(code: string, metrics: AchievementMetrics): AchievementRule | null {
-  const match = code.trim().toUpperCase().match(/^([A-Z_]+)_(\d+)$/);
+// Функція: buildAchievementRule. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+export function buildAchievementRule(
+  code: string,
+  metrics: AchievementMetrics,
+): AchievementRule | null {
+  const match = code
+    .trim()
+    .toUpperCase()
+    .match(/^([A-Z_]+)_(\d+)$/);
   if (!match) return null;
 
   const codeMetric = match[1];
@@ -59,7 +79,10 @@ export function buildAchievementRule(code: string, metrics: AchievementMetrics):
 
   const metricMeta = METRIC_META[metricKey];
   const currentValue = metricMeta.getter(metrics);
-  const progressPercent = Math.max(0, Math.min(100, Math.round((currentValue / targetValue) * 100)));
+  const progressPercent = Math.max(
+    0,
+    Math.min(100, Math.round((currentValue / targetValue) * 100)),
+  );
 
   return {
     metricKey,

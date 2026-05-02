@@ -1,11 +1,19 @@
-import { AttemptsService } from "./attempts.service";
+/**
+ * Огляд файлу: `kids-platform-backend/backend/src/attempts/attempts.service.spec.ts`.
+ * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
+ * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
+ * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ */
 
-describe("AttemptsService unlockNextLevelIfNeeded", () => {
+import { AttemptsService } from './attempts.service';
+
+describe('AttemptsService unlockNextLevelIfNeeded', () => {
+  // Функція: createService. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
   function createService(prisma: any) {
     return new AttemptsService(prisma);
   }
 
-  it("does nothing when attempt is missing", async () => {
+  it('does nothing when attempt is missing', async () => {
     const prisma = {
       attempt: {
         findUnique: jest.fn().mockResolvedValue(null),
@@ -25,7 +33,7 @@ describe("AttemptsService unlockNextLevelIfNeeded", () => {
     expect(prisma.childLevelProgress.update).not.toHaveBeenCalled();
   });
 
-  it("does not unlock next level for unsuccessful attempts", async () => {
+  it('does not unlock next level for unsuccessful attempts', async () => {
     const prisma = {
       attempt: {
         findUnique: jest.fn().mockResolvedValue({
@@ -54,7 +62,7 @@ describe("AttemptsService unlockNextLevelIfNeeded", () => {
     expect(prisma.childLevelProgress.update).not.toHaveBeenCalled();
   });
 
-  it("does not update progress when next level is already unlocked", async () => {
+  it('does not update progress when next level is already unlocked', async () => {
     const prisma = {
       attempt: {
         findUnique: jest.fn().mockResolvedValue({
@@ -88,7 +96,7 @@ describe("AttemptsService unlockNextLevelIfNeeded", () => {
     expect(prisma.childLevelProgress.create).not.toHaveBeenCalled();
   });
 
-  it("updates maxUnlockedLevel for successful attempts", async () => {
+  it('updates maxUnlockedLevel for successful attempts', async () => {
     const prisma = {
       attempt: {
         findUnique: jest.fn().mockResolvedValue({
