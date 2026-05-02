@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/children/[childId]/stats/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/children/[childId]/stats/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -23,23 +32,27 @@ type ActivityDay = {
 };
 
 // Функція: toMonthKey. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: toMonthKey. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function toMonthKey(isoDate: string) {
   return isoDate.slice(0, 7);
 }
 
 // Функція: formatDayLabel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: formatDayLabel. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function formatDayLabel(isoDate: string) {
   const date = new Date(`${isoDate}T00:00:00Z`);
   return date.toLocaleDateString("uk-UA", { day: "2-digit", month: "2-digit" });
 }
 
 // Функція: formatMonthLabel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: formatMonthLabel. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function formatMonthLabel(monthKey: string) {
   const date = new Date(`${monthKey}-01T00:00:00Z`);
   return date.toLocaleDateString("uk-UA", { month: "long", year: "numeric" });
 }
 
 // Функція: formatDuration. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: formatDuration. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function formatDuration(seconds: number) {
   const safeSeconds = Math.max(0, seconds);
   const hrs = Math.floor(safeSeconds / 3600);
@@ -52,6 +65,7 @@ function formatDuration(seconds: number) {
 const WEEKDAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
 
 // Функція: getMondayFirstWeekday. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: getMondayFirstWeekday. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function getMondayFirstWeekday(isoDate: string) {
   const weekday = new Date(`${isoDate}T00:00:00Z`).getUTCDay();
   return weekday === 0 ? 6 : weekday - 1;
@@ -59,6 +73,7 @@ function getMondayFirstWeekday(isoDate: string) {
 
 
 // Функція: getAttemptDurationSec. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: getAttemptDurationSec. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function getAttemptDurationSec(attempt: ChildStats["attempts"][number]) {
   if (attempt.durationSec != null) return Math.max(0, attempt.durationSec);
   if (!attempt.finishedAt) return 0;
@@ -70,6 +85,7 @@ function getAttemptDurationSec(attempt: ChildStats["attempts"][number]) {
 }
 
 // Функція: normalizeActivityDays. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: normalizeActivityDays. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
   const rawYear = stats.summary.activityYearDays ?? [];
   const raw14 = stats.summary.activity14Days ?? [];
@@ -100,6 +116,7 @@ function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
   });
 }
 
+// Функція: ChildStatsPage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function ChildStatsPage() {
   const params = useParams<{ childId: string }>();
   const childId = Number(params.childId);
@@ -112,6 +129,7 @@ export default function ChildStatsPage() {
   const [loading, setLoading] = useState(false);
 
 // Функція: parseThreshold. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: parseThreshold. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function parseThreshold(code: string) {
     const match = code.match(/^FINISHED_(\d+)$/i);
     if (!match) return null;
@@ -130,6 +148,7 @@ export default function ChildStatsPage() {
     }
 
 // Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: load. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
     async function load() {
       setLoading(true);
       setError(null);

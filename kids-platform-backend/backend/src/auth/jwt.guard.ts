@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-backend/backend/src/auth/jwt.guard.ts`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-backend/backend/src/auth/jwt.guard.ts`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 import {
   CanActivate,
@@ -14,6 +23,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
+// Клас: JwtGuard. Об'єднує пов'язану логіку та методи в одному модулі для зрозумілого керування поведінкою.
 export class JwtGuard implements CanActivate {
   constructor(private jwt: JwtService) {}
 
@@ -21,11 +31,13 @@ export class JwtGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     const authHeader = req.headers['authorization'];
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (!authHeader) {
       throw new UnauthorizedException('No authorization header');
     }
 
     const [type, token] = authHeader.split(' ');
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (type !== 'Bearer' || !token) {
       throw new UnauthorizedException('Invalid authorization format');
     }

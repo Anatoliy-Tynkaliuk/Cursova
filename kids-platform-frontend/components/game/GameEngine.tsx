@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/components/game/GameEngine.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/components/game/GameEngine.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -12,6 +21,7 @@ import { startAttempt, submitAnswer } from "@/lib/api";
 import { AttemptStartResponse, TaskDTO } from "@/lib/types";
 import ChooseAnswer from "./task-types/ChooseAnswer";
 
+// Функція: GameEngine. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function GameEngine({ gameId }: { gameId: number }) {
   const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState<AttemptStartResponse | null>(null);
@@ -38,6 +48,7 @@ export default function GameEngine({ gameId }: { gameId: number }) {
   const title = useMemo(() => attempt?.game.title ?? "Гра", [attempt]);
 
 // Функція: handleAnswer. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: handleAnswer. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   async function handleAnswer(answer: any) {
     if (!attempt || !task) return;
 

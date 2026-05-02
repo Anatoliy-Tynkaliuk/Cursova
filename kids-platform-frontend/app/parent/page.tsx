@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/parent/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/parent/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -15,6 +24,7 @@ import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
 type Child = { id: number; name: string; ageGroupCode: string };
 
 // Функція: ageLabel. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: ageLabel. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function ageLabel(code: string) {
   if (code === "4_5") return "4–5";
   if (code === "6_8") return "6–8";
@@ -23,11 +33,13 @@ function ageLabel(code: string) {
 }
 
 // Функція: avatarFor. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: avatarFor. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function avatarFor(index: number) {
   const arr = [  "/Parent_dashboard/child_avatar_1.png"];
   return arr[index % arr.length];
 }
 
+// Функція: ParentChildrenPage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function ParentChildrenPage() {
   const [children, setChildren] = useState<Child[]>([]);
   const [name, setName] = useState("");
@@ -39,6 +51,7 @@ export default function ParentChildrenPage() {
   const [parentName, setParentName] = useState("");
 
 // Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: load. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   async function load() {
     setErr("");
     const data = await getChildren();
@@ -56,6 +69,7 @@ export default function ParentChildrenPage() {
   }, []);
 
 // Функція: onCreateChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: onCreateChild. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   async function onCreateChild() {
     setErr("");
     setMsg("");
@@ -72,6 +86,7 @@ export default function ParentChildrenPage() {
   }
 
 // Функція: onInvite. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: onInvite. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   async function onInvite(childId: number) {
     setErr("");
     setMsg("");
@@ -85,6 +100,7 @@ export default function ParentChildrenPage() {
   }
 
 // Функція: onDeleteChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: onDeleteChild. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   async function onDeleteChild(childId: number, childName: string) {
     const confirmed = window.confirm(`Видалити профіль дитини "${childName}"? Це дію не можна скасувати.`);
     if (!confirmed) return;
@@ -101,12 +117,14 @@ export default function ParentChildrenPage() {
   }
 
 // Функція: onSelectChild. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: onSelectChild. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function onSelectChild(c: Child) {
     setChildSession(c.id, c.ageGroupCode, c.name);
     window.location.href = "/child/subjects";
   }
 
 // Функція: onLogout. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: onLogout. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function onLogout() {
     logout();
     window.location.href = "/login";

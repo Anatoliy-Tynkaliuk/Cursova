@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/child/achievements/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/child/achievements/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -15,6 +24,7 @@ import { getChildSession } from "@/lib/auth";
 import styles from "./ChildAchievementsPage.module.css";
 
 // Функція: getBadgeProgress. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: getBadgeProgress. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function getBadgeProgress(badge: ChildBadgeItem) {
   if (badge.progressPercent != null) return badge.progressPercent;
   if (badge.isEarned) return 100;
@@ -22,6 +32,7 @@ function getBadgeProgress(badge: ChildBadgeItem) {
 }
 
 // Функція: getProgressText. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: getProgressText. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function getProgressText(badge: ChildBadgeItem) {
   if (badge.currentValue != null && badge.targetValue != null) {
     return `${badge.currentValue}/${badge.targetValue}`;
@@ -29,6 +40,7 @@ function getProgressText(badge: ChildBadgeItem) {
   return badge.isEarned ? "Виконано" : "0%";
 }
 
+// Функція: ChildAchievementsPage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function ChildAchievementsPage() {
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
@@ -58,6 +70,7 @@ export default function ChildAchievementsPage() {
     }
 
 // Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: load. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
     async function load() {
       setError(null);
       try {

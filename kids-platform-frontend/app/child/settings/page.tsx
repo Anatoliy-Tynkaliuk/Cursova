@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/child/settings/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/child/settings/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -12,6 +21,7 @@ import { useEffect, useState } from "react";
 import { clearChildSession, getChildSession } from "@/lib/auth";
 import { getChildBadgesPublic } from "@/lib/endpoints";
 
+// Функція: ChildSettingsPage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function ChildSettingsPage() {
   const [childName, setChildName] = useState("Друже");
   const [finishedAttempts, setFinishedAttempts] = useState(0);
@@ -27,6 +37,7 @@ export default function ChildSettingsPage() {
     setChildName(session.childName || "Друже");
 
 // Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: load. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
     async function load() {
       setError(null);
       try {
@@ -42,6 +53,7 @@ export default function ChildSettingsPage() {
   }, []);
 
 // Функція: onExit. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: onExit. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function onExit() {
     clearChildSession();
     window.location.href = "/child/join";

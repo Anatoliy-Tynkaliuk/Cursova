@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/register/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/register/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -23,10 +32,12 @@ type FieldErrors = {
 };
 
 // Функція: isValidEmail. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: isValidEmail. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+// Функція: RegisterPage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -66,12 +77,14 @@ export default function RegisterPage() {
   }, [email, username, password, confirmPassword, loading]);
 
 // Функція: validateAndSetErrors. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: validateAndSetErrors. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function validateAndSetErrors(): boolean {
     setFieldErrs(computed.nextErrors);
     return !computed.hasAnyError;
   }
 
 // Функція: onSubmit. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: onSubmit. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmittedOnce(true);
@@ -99,6 +112,7 @@ export default function RegisterPage() {
   }
 
 // Функція: touchValidate. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: touchValidate. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function touchValidate() {
     if (!submittedOnce) return;
     setFieldErrs(computed.nextErrors);

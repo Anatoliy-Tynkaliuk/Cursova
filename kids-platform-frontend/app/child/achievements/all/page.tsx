@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/child/achievements/all/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/child/achievements/all/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -15,6 +24,7 @@ import { getChildSession } from "@/lib/auth";
 import styles from "./AllAchievementsPage.module.css";
 
 // Функція: parseThreshold. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: parseThreshold. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function parseThreshold(code: string) {
   const match = code.match(/^FINISHED_(\d+)$/i);
   if (!match) return null;
@@ -23,10 +33,12 @@ function parseThreshold(code: string) {
 }
 
 // Функція: clamp. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: clamp. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
 
+// Функція: AllAchievementsPage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function AllAchievementsPage() {
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +52,7 @@ export default function AllAchievementsPage() {
     }
 
 // Функція: load. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: load. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
     async function load() {
       setError(null);
       try {

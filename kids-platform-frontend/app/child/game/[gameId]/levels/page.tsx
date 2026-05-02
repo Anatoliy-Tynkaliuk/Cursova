@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/child/game/[gameId]/levels/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/child/game/[gameId]/levels/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -22,12 +31,14 @@ const difficultyLabels: Record<number, string> = {
 };
 
 // Функція: normalizeDifficulty. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: normalizeDifficulty. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function normalizeDifficulty(value: string | null): number | null {
   if (!value) return null;
   const numeric = Number(value);
   return Number.isInteger(numeric) && numeric > 0 ? numeric : null;
 }
 
+// Функція: GameLevelsPage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function GameLevelsPage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
@@ -64,6 +75,7 @@ export default function GameLevelsPage() {
     let cancelled = false;
 
 // Функція: loadData. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: loadData. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
     async function loadData() {
       setLoading(true);
       setError(null);
@@ -152,6 +164,7 @@ export default function GameLevelsPage() {
                       : `${styles.levelBtn} ${styles.active}`;
 
 // Функція: content. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: content. Локальний обробник подій/даних, який викликається з цього файлу або з JSX.
                   const content = (
                     <span className={styles.levelContent}>
                       <span className={styles.levelBgIcon}>

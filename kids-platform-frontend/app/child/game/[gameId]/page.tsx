@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-frontend/app/child/game/[gameId]/page.tsx`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-frontend/app/child/game/[gameId]/page.tsx`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 "use client";
 
@@ -21,6 +30,7 @@ import { getChildSession } from "@/lib/auth";
 import styles from "./game.module.css";
 
 // Функція: normalizeDifficulty. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: normalizeDifficulty. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function normalizeDifficulty(value: string | null): number | null {
   if (!value) return null;
 
@@ -45,6 +55,7 @@ type TaskState = {
 
 const MAX_STARS = 3;
 // Функція: scoreToStars. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: scoreToStars. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function scoreToStars(score: number, totalCount?: number): number {
   if (!Number.isFinite(score)) return 0;
 
@@ -62,6 +73,7 @@ function scoreToStars(score: number, totalCount?: number): number {
 }
 
 // Функція: StarsRow. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: StarsRow. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function StarsRow({ filled }: { filled: number }) {
   return (
     <div className={styles.starsRow}>
@@ -77,6 +89,7 @@ function StarsRow({ filled }: { filled: number }) {
   );
 }
 
+// Функція: GamePage. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export default function GamePage() {
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
@@ -177,6 +190,7 @@ export default function GamePage() {
   // Start attempt
   useEffect(() => {
 // Функція: boot. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: boot. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
     async function boot() {
       if (!attemptId && childProfileId) {
         setLoading(true);
@@ -229,6 +243,7 @@ export default function GamePage() {
   // Finish by timeout
   useEffect(() => {
 // Функція: completeByTimeout. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: completeByTimeout. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
     async function completeByTimeout() {
       if (!attemptId || summary || timeLeft > 0 || timeoutOpen || awaitExplanation) return;
 
@@ -324,6 +339,7 @@ export default function GamePage() {
 
   // Drag helpers
 // Функція: assignDragItem. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: assignDragItem. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function assignDragItem(target: string, item: string) {
     setDragAssignments((prev) => {
       const next: Record<string, string[]> = {};
@@ -342,6 +358,7 @@ export default function GamePage() {
   }
 
 // Функція: clearDragTarget. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: clearDragTarget. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function clearDragTarget(target: string) {
     setDragAssignments((prev) => {
       if (!prev[target] || prev[target].length === 0) return prev;
@@ -352,6 +369,7 @@ export default function GamePage() {
   }
 
 // Функція: removeItemFromTarget. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: removeItemFromTarget. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function removeItemFromTarget(target: string, item: string) {
     setDragAssignments((prev) => {
       const list = prev[target] ?? [];
@@ -368,6 +386,7 @@ export default function GamePage() {
   }
 
 // Функція: handleItemDragStart. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: handleItemDragStart. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function handleItemDragStart(event: DragEvent<HTMLButtonElement>, item: string) {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", item);
@@ -375,6 +394,7 @@ export default function GamePage() {
   }
 
 // Функція: handleDropOnTarget. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: handleDropOnTarget. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function handleDropOnTarget(event: DragEvent<HTMLButtonElement>, target: string) {
     event.preventDefault();
     const droppedItem = event.dataTransfer.getData("text/plain");
@@ -383,6 +403,7 @@ export default function GamePage() {
   }
 
 // Функція: submitDragAnswer. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: submitDragAnswer. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function submitDragAnswer() {
     if (!isDragTask) return;
 
@@ -395,6 +416,7 @@ export default function GamePage() {
 
   // Sequence helpers
 // Функція: assignSequenceItem. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: assignSequenceItem. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function assignSequenceItem(slotIndex: number, item: string) {
     setSequenceSlots((prev) => {
       if (slotIndex < 0 || slotIndex >= prev.length) return prev;
@@ -407,6 +429,7 @@ export default function GamePage() {
   }
 
 // Функція: clearSequenceSlot. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: clearSequenceSlot. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function clearSequenceSlot(slotIndex: number) {
     setSequenceSlots((prev) => {
       if (slotIndex < 0 || slotIndex >= prev.length) return prev;
@@ -419,6 +442,7 @@ export default function GamePage() {
   }
 
 // Функція: handleSequenceItemDragStart. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: handleSequenceItemDragStart. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function handleSequenceItemDragStart(event: DragEvent<HTMLButtonElement>, item: string) {
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", item);
@@ -426,6 +450,7 @@ export default function GamePage() {
   }
 
 // Функція: handleSequenceDrop. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: handleSequenceDrop. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function handleSequenceDrop(event: DragEvent<HTMLButtonElement>, slotIndex: number) {
     event.preventDefault();
     const droppedItem = event.dataTransfer.getData("text/plain");
@@ -434,6 +459,7 @@ export default function GamePage() {
   }
 
 // Функція: submitSequenceAnswer. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: submitSequenceAnswer. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function submitSequenceAnswer() {
     if (!isSequenceTask || sequenceSlots.length === 0) return;
     if (sequenceSlots.some((item) => item === null)) return;
@@ -441,6 +467,7 @@ export default function GamePage() {
   }
 
 // Функція: handleSequenceAnswerClick. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: handleSequenceAnswerClick. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function handleSequenceAnswerClick(item: string) {
     if (loading || pickedIdx !== null) return;
 
@@ -454,6 +481,7 @@ export default function GamePage() {
   }
 
 // Функція: applyPendingTransition. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: applyPendingTransition. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   function applyPendingTransition() {
     if (!pendingTransition) return;
 
@@ -487,6 +515,7 @@ export default function GamePage() {
   }
 
 // Функція: sendAnswer. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: sendAnswer. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
   async function sendAnswer(userAnswer: any, clickedIndex?: number) {
     if (!attemptId || !current) return;
     if (pickedIdx !== null) return;
@@ -601,6 +630,7 @@ export default function GamePage() {
     .toString()
     .padStart(2, "0");
 // Функція: seconds. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: seconds. Локальний обробник подій/даних, який викликається з цього файлу або з JSX.
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
 
   const starsFilled = summary ? scoreToStars(summary.score, summary.totalCount) : 0;

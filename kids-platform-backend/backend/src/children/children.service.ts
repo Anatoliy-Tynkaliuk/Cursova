@@ -1,9 +1,18 @@
 /**
- * Огляд файлу: `kids-platform-backend/backend/src/children/children.service.ts`.
- * Призначення: містить частину логіки бекенду/фронтенду платформи навчальних ігор.
- * Взаємодія: імпортує типи, сервіси та компоненти з сусідніх модулів і передає дані через DTO/API props.
- * Терміни: API — контракт обміну даними; DTO — тип вхідних/вихідних даних; Service — бізнес-логіка; Controller/Page — точка входу запитів або UI-екран.
+ * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-backend/backend/src/children/children.service.ts`.
+ * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
+ * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
+ * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
+ * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
+ * ГЛОСАРІЙ:
+ * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
+ * - DTO: структура даних, яку дозволено приймати/повертати.
+ * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
+ * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
+ * - Component: перевикористовуваний UI-блок.
+ * - Prisma/ORM: інструмент доступу до бази даних через код.
  */
+
 
 import {
   BadRequestException,
@@ -20,6 +29,7 @@ import {
 import { calculateAchievementMetrics } from './achievement-metrics';
 
 // Функція: randomCode. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: randomCode. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 function randomCode(len = 6) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let out = '';
@@ -77,6 +87,7 @@ type AvatarSettings = {
 };
 
 @Injectable()
+// Клас: ChildrenService. Об'єднує пов'язану логіку та методи в одному модулі для зрозумілого керування поведінкою.
 export class ChildrenService {
   constructor(private prisma: PrismaService) {}
 
@@ -87,6 +98,7 @@ export class ChildrenService {
       activeAvatarId: fallbackId,
     };
 
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
       return defaults;
     }
@@ -96,6 +108,7 @@ export class ChildrenService {
     const purchasedRaw = Array.isArray(input.purchasedAvatarIds)
       ? input.purchasedAvatarIds
       : [];
+  // Метод: for. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     for (const item of purchasedRaw) {
       if (typeof item !== 'string') continue;
       if (AVATAR_CATALOG.some((avatar) => avatar.id === item))
@@ -116,13 +129,16 @@ export class ChildrenService {
     };
   }
 
+  // Метод: userIdFromJwt. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   private userIdFromJwt(user: any) {
     return BigInt(user.sub);
   }
 
+  // Метод: listForUser. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async listForUser(user: any) {
     const userId = this.userIdFromJwt(user);
 
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user.role === 'admin') {
       const all = await this.prisma.childProfile.findMany({
         where: { isActive: true },
@@ -155,6 +171,7 @@ export class ChildrenService {
     }));
   }
 
+  // Метод: createChild. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async createChild(user: any, dto: CreateChildDto) {
     if (user.role !== 'parent' && user.role !== 'admin')
       throw new ForbiddenException('Only parent/admin');
@@ -172,6 +189,7 @@ export class ChildrenService {
     });
 
     // якщо parent — одразу зв’язуємо
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user.role === 'parent') {
       await this.prisma.parentChild.create({
         data: {
@@ -184,6 +202,7 @@ export class ChildrenService {
     return { id: Number(child.id), name: child.name, ageGroupCode: age.code };
   }
 
+  // Метод: createInvite. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async createInvite(user: any, childId: number) {
     if (user.role !== 'parent' && user.role !== 'admin')
       throw new ForbiddenException('Only parent/admin');
@@ -196,6 +215,7 @@ export class ChildrenService {
       throw new NotFoundException('Child not found');
 
     // parent може робити invite тільки для своєї дитини
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
         where: {
@@ -241,6 +261,7 @@ export class ChildrenService {
     };
   }
 
+  // Метод: joinByCode. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async joinByCode(codeRaw: string) {
     const code = codeRaw.trim().toUpperCase();
 
@@ -269,6 +290,7 @@ export class ChildrenService {
     };
   }
 
+  // Метод: getStats. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async getStats(user: any, childId: number) {
     if (user.role !== 'parent' && user.role !== 'admin')
       throw new ForbiddenException('Only parent/admin');
@@ -280,6 +302,7 @@ export class ChildrenService {
     if (!child || !child.isActive)
       throw new NotFoundException('Child not found');
 
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
         where: {
@@ -338,6 +361,7 @@ export class ChildrenService {
       { didPlay: boolean; levelsPassed: number; durationSec: number }
     >();
 
+  // Метод: for. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     for (const attempt of recentAttempts) {
       const dateKey = attempt.createdAt.toISOString().slice(0, 10);
       const prev = activityByDate.get(dateKey) ?? {
@@ -360,6 +384,7 @@ export class ChildrenService {
         attempt.durationSec ?? fallbackDuration,
       );
       prev.durationSec += effectiveDuration;
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
       if (attempt.isFinished && attempt.correctCount > 0) {
         prev.levelsPassed += 1;
       }
@@ -393,7 +418,9 @@ export class ChildrenService {
     const uniqueLevelAttempts = new Set<string>();
     let attemptsWithoutLevelCount = 0;
 
+  // Метод: for. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     for (const attempt of allAttemptsForSummary) {
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
       if (attempt.levelId) {
         const levelKey = attempt.levelId.toString();
         uniqueLevelAttempts.add(levelKey);
@@ -415,6 +442,7 @@ export class ChildrenService {
         }
       } else {
         attemptsWithoutLevelCount += 1;
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
         if (attempt.isFinished) {
           finishedWithoutLevel.push({
             score: attempt.score,
@@ -429,12 +457,14 @@ export class ChildrenService {
     let totalCorrect = 0;
     let totalQuestions = 0;
 
+  // Метод: for. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     for (const best of bestFinishedByLevel.values()) {
       totalScore += best.score;
       totalCorrect += best.correctCount;
       totalQuestions += best.totalCount;
     }
 
+  // Метод: for. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     for (const item of finishedWithoutLevel) {
       totalScore += item.score;
       totalCorrect += item.correctCount;
@@ -486,11 +516,14 @@ export class ChildrenService {
     };
   }
 
+  // Метод: getStatsPublic. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async getStatsPublic(childId: number) {
     return this.getStats({ role: 'admin', sub: '0' }, childId);
   }
 
+  // Метод: getBadges. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async getBadges(user: any, childId: number) {
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user && user.role !== 'parent' && user.role !== 'admin') {
       throw new ForbiddenException('Only parent/admin');
     }
@@ -501,6 +534,7 @@ export class ChildrenService {
     if (!child || !child.isActive)
       throw new NotFoundException('Child not found');
 
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user?.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
         where: {
@@ -559,6 +593,7 @@ export class ChildrenService {
     };
   }
 
+  // Метод: getAvatarShop. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async getAvatarShop(childId: number) {
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
@@ -590,8 +625,10 @@ export class ChildrenService {
     };
   }
 
+  // Метод: buyAvatar. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async buyAvatar(childId: number, avatarIdRaw: string) {
     // Функція: avatarId. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: avatarId. Локальний обробник подій/даних, який викликається з цього файлу або з JSX.
     const avatarId = (avatarIdRaw || '').trim();
     const avatar = AVATAR_CATALOG.find((item) => item.id === avatarId);
     if (!avatar) throw new BadRequestException('Avatar not found');
@@ -603,6 +640,7 @@ export class ChildrenService {
     if (!child) throw new NotFoundException('Child not found');
 
     const settings = this.normalizeAvatarSettings(child.settings);
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (settings.purchasedAvatarIds.includes(avatar.id)) {
       return this.getAvatarShop(childId);
     }
@@ -619,6 +657,7 @@ export class ChildrenService {
     );
     const availableStars = Math.max(0, stats.totalStars - spentStars);
 
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (availableStars < avatar.price) {
       throw new BadRequestException('Not enough stars');
     }
@@ -640,8 +679,10 @@ export class ChildrenService {
     return this.getAvatarShop(childId);
   }
 
+  // Метод: setActiveAvatar. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async setActiveAvatar(childId: number, avatarIdRaw: string) {
     // Функція: avatarId. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
+// Функція: avatarId. Локальний обробник подій/даних, який викликається з цього файлу або з JSX.
     const avatarId = (avatarIdRaw || '').trim();
     const avatar = AVATAR_CATALOG.find((item) => item.id === avatarId);
     if (!avatar) throw new BadRequestException('Avatar not found');
@@ -653,6 +694,7 @@ export class ChildrenService {
     if (!child) throw new NotFoundException('Child not found');
 
     const settings = this.normalizeAvatarSettings(child.settings);
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (!settings.purchasedAvatarIds.includes(avatar.id)) {
       throw new BadRequestException('Avatar is not purchased');
     }
@@ -671,7 +713,9 @@ export class ChildrenService {
     return this.getAvatarShop(childId);
   }
 
+  // Метод: deleteChild. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   async deleteChild(user: any, childId: number) {
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user.role !== 'parent' && user.role !== 'admin') {
       throw new ForbiddenException('Only parent/admin');
     }
@@ -682,6 +726,7 @@ export class ChildrenService {
     if (!child || !child.isActive)
       throw new NotFoundException('Child not found');
 
+  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (user.role === 'parent') {
       const link = await this.prisma.parentChild.findUnique({
         where: {
