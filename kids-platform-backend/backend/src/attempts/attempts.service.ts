@@ -1,16 +1,15 @@
 /**
- * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-backend/backend/src/attempts/attempts.service.ts`.
- * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
- * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
- * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
- * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
- * ГЛОСАРІЙ:
- * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
- * - DTO: структура даних, яку дозволено приймати/повертати.
- * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
- * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
- * - Component: перевикористовуваний UI-блок.
- * - Prisma/ORM: інструмент доступу до бази даних через код.
+ * ФАЙЛ: `src/attempts/attempts.service.ts`.
+ * ЗАГАЛОМ: цей файл є частиною backend-сервера на NestJS і реалізує окремий модуль/шар архітектури.
+ * ВЗАЄМОДІЯ: файл імпортує сутності з інших модулів (DTO, Service, Guard, Prisma), а результати експортує через класи/функції.
+ * ПОТІК ДАНИХ: запит -> Controller -> Service -> Prisma/БД -> відповідь клієнту.
+ * ПОНЯТТЯ:
+ * - NestJS: фреймворк для серверних застосунків на Node.js із модульною архітектурою.
+ * - Controller: приймає HTTP-запити і передає їх у сервіс.
+ * - Service: містить бізнес-логіку, валідацію, обчислення.
+ * - DTO (Data Transfer Object): контракт форми даних для входу/виходу.
+ * - Guard: перевіряє доступ до маршруту (автентифікація/ролі).
+ * - Prisma: ORM для читання/запису даних у БД через типізований API.
  */
 
 
@@ -27,8 +26,7 @@ import {
 } from '../children/achievement-rules';
 import { calculateAchievementMetrics } from '../children/achievement-metrics';
 
-// Функція: deepEqual. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
-// Функція: deepEqual. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
+// Функція `deepEqual(a: any, b: any)`: виконує окремий алгоритм у файлі та повертає підготовлений результат.
 function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
   if (typeof a !== typeof b) return false;
@@ -51,13 +49,10 @@ function deepEqual(a: any, b: any): boolean {
 
 type DragPair = { item: string; target: string };
 
-// Функція: normalizeDragPairsValue. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
-// Функція: normalizeDragPairsValue. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
+// Функція `normalizeDragPairsValue(value: unknown)`: виконує окремий алгоритм у файлі та повертає підготовлений результат.
 function normalizeDragPairsValue(value: unknown): DragPair[] | null {
   if (!value || typeof value !== 'object') return null;
 
-  // Функція: pairs. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
-// Функція: pairs. Локальний обробник подій/даних, який викликається з цього файлу або з JSX.
   const pairs = (value as { pairs?: unknown }).pairs;
   if (!Array.isArray(pairs)) return null;
 
@@ -66,10 +61,7 @@ function normalizeDragPairsValue(value: unknown): DragPair[] | null {
   for (const pair of pairs) {
     if (!pair || typeof pair !== 'object') return null;
 
-    // Функція: item. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
-// Функція: item. Локальний обробник подій/даних, який викликається з цього файлу або з JSX.
     const item = (pair as { item?: unknown }).item;
-// Функція: target. Локальний обробник подій/даних, який викликається з цього файлу або з JSX.
     const target = (pair as { target?: unknown }).target;
 
     if (typeof item !== 'string' || typeof target !== 'string') return null;
@@ -88,8 +80,6 @@ function normalizeDragPairsValue(value: unknown): DragPair[] | null {
   return normalized;
 }
 
-// Функція: answersAreEquivalent. Виконує локальну частину логіки файлу та взаємодіє з залежностями через параметри/імпорти.
-// Функція: answersAreEquivalent. Крок за кроком приймає вхідні дані, перевіряє їх та повертає прогнозований результат.
 export function answersAreEquivalent(
   userAnswer: unknown,
   correctAnswer: unknown,
@@ -105,11 +95,11 @@ export function answersAreEquivalent(
 }
 
 @Injectable()
-// Клас: AttemptsService. Об'єднує пов'язану логіку та методи в одному модулі для зрозумілого керування поведінкою.
+// AttemptsService: клас, що інкапсулює відповідальність цього файлу та координує роботу методів.
 export class AttemptsService {
   constructor(private prisma: PrismaService) {}
 
-  // Метод: awardBadges. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `awardBadges(childProfileId: bigint)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   private async awardBadges(childProfileId: bigint) {
     const [allAttempts, badges] = await Promise.all([
       this.prisma.attempt.findMany({
@@ -145,7 +135,7 @@ export class AttemptsService {
     });
   }
 
-  // Метод: calculateStars. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `calculateStars(correctCount: number, totalTasks: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   private calculateStars(correctCount: number, totalTasks: number) {
     if (correctCount <= 0) return 0;
     if (totalTasks <= 0) return Math.min(3, correctCount);
@@ -168,7 +158,7 @@ export class AttemptsService {
       },
     });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!progress)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!progress) {
       progress = await this.prisma.childLevelProgress.create({
         data: {
@@ -183,7 +173,7 @@ export class AttemptsService {
     return progress;
   }
 
-  // Метод: unlockNextLevelIfNeeded. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `unlockNextLevelIfNeeded(attemptId: bigint)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   private async unlockNextLevelIfNeeded(attemptId: bigint) {
     const attempt = await this.prisma.attempt.findUnique({
       where: { id: attemptId },
@@ -201,7 +191,7 @@ export class AttemptsService {
     if (!attempt || !attempt.level) return;
 
     const isSuccessfulAttempt = attempt.isFinished && attempt.correctCount > 0;
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!isSuccessfulAttempt)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!isSuccessfulAttempt) {
       return;
     }
@@ -214,7 +204,7 @@ export class AttemptsService {
       attempt.level.difficulty,
     );
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(targetUnlockedLevel <= progress.maxUnlockedLevel)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (targetUnlockedLevel <= progress.maxUnlockedLevel) {
       return;
     }
@@ -241,27 +231,24 @@ export class AttemptsService {
     level?: number,
     levelId?: number,
   ) {
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!childProfileId || !gameId)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!childProfileId || !gameId) {
       throw new BadRequestException('childProfileId and gameId are required');
     }
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (!Number.isInteger(difficulty) || difficulty < 1) {
       throw new BadRequestException('difficulty must be a positive integer');
     }
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (level !== undefined && (!Number.isInteger(level) || level < 1)) {
       throw new BadRequestException('level must be a positive integer');
     }
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (levelId !== undefined && (!Number.isInteger(levelId) || levelId < 1)) {
       throw new BadRequestException('levelId must be a positive integer');
     }
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(level !== undefined && levelId !== undefined)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (level !== undefined && levelId !== undefined) {
       throw new BadRequestException('Use either level or levelId, not both');
     }
@@ -273,7 +260,7 @@ export class AttemptsService {
       },
     });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!game || !game.isActive)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!game || !game.isActive) {
       throw new NotFoundException('Game not found or inactive');
     }
@@ -284,7 +271,7 @@ export class AttemptsService {
       title: string;
     };
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(levelId !== undefined)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (levelId !== undefined) {
       selectedLevel = await this.prisma.gameLevel.findFirst({
         where: {
@@ -297,7 +284,7 @@ export class AttemptsService {
         select: { id: true, levelNumber: true, title: true },
       });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!selectedLevel)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
       if (!selectedLevel) {
         throw new NotFoundException(
           'Level not found or inactive for this game/difficulty',
@@ -316,9 +303,9 @@ export class AttemptsService {
         select: { id: true, levelNumber: true, title: true },
       });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!selectedLevel)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
       if (!selectedLevel) {
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(level !== undefined)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
         if (level !== undefined) {
           throw new NotFoundException(
             `Level ${level} is not available for this game and difficulty`,
@@ -335,7 +322,7 @@ export class AttemptsService {
       BigInt(gameId),
       difficulty,
     );
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(selectedLevel.levelNumber > progress.maxUnlockedLevel)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (selectedLevel.levelNumber > progress.maxUnlockedLevel) {
       throw new BadRequestException('Selected level is locked for this child');
     }
@@ -360,7 +347,7 @@ export class AttemptsService {
       orderBy: [{ version: 'desc' }],
     });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!tv)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!tv) {
       tv = await this.prisma.taskVersion.findFirst({
         where: {
@@ -371,7 +358,7 @@ export class AttemptsService {
       });
     }
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!tv)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!tv) {
       throw new NotFoundException(
         `No current task version for difficulty ${difficulty}`,
@@ -425,10 +412,10 @@ export class AttemptsService {
   }
 
   // ---------- ANSWER ----------
-  // Метод: answer. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `answer(attemptId: number, dto: AnswerDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async answer(attemptId: number, dto: AnswerDto) {
     if (!attemptId) throw new BadRequestException('attemptId required');
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!dto?.taskId || !dto?.taskVersionId)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!dto?.taskId || !dto?.taskVersionId) {
       throw new BadRequestException('taskId and taskVersionId required');
     }
@@ -446,7 +433,6 @@ export class AttemptsService {
     });
 
     if (!tv) throw new NotFoundException('Task version not found');
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (Number(tv.taskId) !== dto.taskId) {
       throw new BadRequestException('taskId does not match taskVersionId');
     }
@@ -512,7 +498,7 @@ export class AttemptsService {
       },
     });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!nextTask)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!nextTask) {
       const finished = await this.prisma.attempt.update({
         where: { id: BigInt(attemptId) },
@@ -567,7 +553,7 @@ export class AttemptsService {
   }
 
   // ---------- FINISH ----------
-  // Метод: finish. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `finish(attemptId: number, dto: { durationSec?: number })`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async finish(attemptId: number, dto: { durationSec?: number }) {
     const updatedAttempt = await this.prisma.attempt.update({
       where: { id: BigInt(attemptId) },

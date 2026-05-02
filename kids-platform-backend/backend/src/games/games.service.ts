@@ -1,16 +1,15 @@
 /**
- * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-backend/backend/src/games/games.service.ts`.
- * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
- * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
- * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
- * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
- * ГЛОСАРІЙ:
- * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
- * - DTO: структура даних, яку дозволено приймати/повертати.
- * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
- * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
- * - Component: перевикористовуваний UI-блок.
- * - Prisma/ORM: інструмент доступу до бази даних через код.
+ * ФАЙЛ: `src/games/games.service.ts`.
+ * ЗАГАЛОМ: цей файл є частиною backend-сервера на NestJS і реалізує окремий модуль/шар архітектури.
+ * ВЗАЄМОДІЯ: файл імпортує сутності з інших модулів (DTO, Service, Guard, Prisma), а результати експортує через класи/функції.
+ * ПОТІК ДАНИХ: запит -> Controller -> Service -> Prisma/БД -> відповідь клієнту.
+ * ПОНЯТТЯ:
+ * - NestJS: фреймворк для серверних застосунків на Node.js із модульною архітектурою.
+ * - Controller: приймає HTTP-запити і передає їх у сервіс.
+ * - Service: містить бізнес-логіку, валідацію, обчислення.
+ * - DTO (Data Transfer Object): контракт форми даних для входу/виходу.
+ * - Guard: перевіряє доступ до маршруту (автентифікація/ролі).
+ * - Prisma: ORM для читання/запису даних у БД через типізований API.
  */
 
 
@@ -26,11 +25,11 @@ const DIFFICULTY_LEVELS = [1, 2, 3] as const;
 type LevelState = 'locked' | 'unlocked' | 'completed';
 
 @Injectable()
-// Клас: GamesService. Об'єднує пов'язану логіку та методи в одному модулі для зрозумілого керування поведінкою.
+// GamesService: клас, що інкапсулює відповідальність цього файлу та координує роботу методів.
 export class GamesService {
   constructor(private prisma: PrismaService) {}
 
-  // Метод: list. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `list(ageGroupCode?: string)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async list(ageGroupCode?: string) {
     const age = ageGroupCode
       ? await this.prisma.ageGroup.findUnique({ where: { code: ageGroupCode } })
@@ -82,14 +81,12 @@ export class GamesService {
     });
   }
 
-  // Метод: levels. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `levels(gameId: number, difficulty: number, childProfileId?: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async levels(gameId: number, difficulty: number, childProfileId?: number) {
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (!Number.isInteger(gameId) || gameId < 1) {
       throw new BadRequestException('gameId must be a positive integer');
     }
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (!Number.isInteger(difficulty) || difficulty < 1) {
       throw new BadRequestException('difficulty must be a positive integer');
     }
@@ -108,7 +105,7 @@ export class GamesService {
       include: { module: true },
     });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!game || !game.isActive)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (!game || !game.isActive) {
       throw new NotFoundException('Game not found or inactive');
     }
@@ -123,7 +120,7 @@ export class GamesService {
       orderBy: { levelNumber: 'asc' },
     });
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(levels.length === 0)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (levels.length === 0) {
       return {
         gameId,
@@ -137,7 +134,7 @@ export class GamesService {
     const completedLevelIds = new Set<string>();
     let maxUnlockedLevel = 1;
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(childProfileId !== undefined)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
     if (childProfileId !== undefined) {
       const [completedAttempts, progress] = await Promise.all([
         this.prisma.attempt.findMany({
@@ -166,15 +163,15 @@ export class GamesService {
         }),
       ]);
 
-  // Метод: for. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `for(const attempt of completedAttempts)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
       for (const attempt of completedAttempts) {
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(attempt.levelId)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
         if (attempt.levelId) {
           completedLevelIds.add(attempt.levelId.toString());
         }
       }
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(progress)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
       if (progress) {
         maxUnlockedLevel = progress.maxUnlockedLevel;
       }
@@ -184,7 +181,7 @@ export class GamesService {
       const isCompleted = completedLevelIds.has(level.id.toString());
       let state: LevelState = 'locked';
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(isCompleted)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
       if (isCompleted) {
         state = 'completed';
       } else if (level.levelNumber <= maxUnlockedLevel) {

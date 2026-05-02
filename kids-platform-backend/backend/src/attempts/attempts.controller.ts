@@ -1,16 +1,15 @@
 /**
- * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-backend/backend/src/attempts/attempts.controller.ts`.
- * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
- * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
- * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
- * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
- * ГЛОСАРІЙ:
- * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
- * - DTO: структура даних, яку дозволено приймати/повертати.
- * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
- * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
- * - Component: перевикористовуваний UI-блок.
- * - Prisma/ORM: інструмент доступу до бази даних через код.
+ * ФАЙЛ: `src/attempts/attempts.controller.ts`.
+ * ЗАГАЛОМ: цей файл є частиною backend-сервера на NestJS і реалізує окремий модуль/шар архітектури.
+ * ВЗАЄМОДІЯ: файл імпортує сутності з інших модулів (DTO, Service, Guard, Prisma), а результати експортує через класи/функції.
+ * ПОТІК ДАНИХ: запит -> Controller -> Service -> Prisma/БД -> відповідь клієнту.
+ * ПОНЯТТЯ:
+ * - NestJS: фреймворк для серверних застосунків на Node.js із модульною архітектурою.
+ * - Controller: приймає HTTP-запити і передає їх у сервіс.
+ * - Service: містить бізнес-логіку, валідацію, обчислення.
+ * - DTO (Data Transfer Object): контракт форми даних для входу/виходу.
+ * - Guard: перевіряє доступ до маршруту (автентифікація/ролі).
+ * - Prisma: ORM для читання/запису даних у БД через типізований API.
  */
 
 
@@ -21,12 +20,11 @@ import { AnswerDto } from './dto/answer.dto';
 import { FinishDto } from './dto/finish.dto';
 
 @Controller('attempts')
-// Клас: AttemptsController. Об'єднує пов'язану логіку та методи в одному модулі для зрозумілого керування поведінкою.
+// AttemptsController: клас, що інкапсулює відповідальність цього файлу та координує роботу методів.
 export class AttemptsController {
   constructor(private readonly attemptsService: AttemptsService) {}
 
   @Post('start')
-  // Метод: start. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   start(@Body() dto: StartAttemptDto) {
     return this.attemptsService.start(
       dto.childProfileId,
@@ -38,13 +36,11 @@ export class AttemptsController {
   }
 
   @Post(':attemptId/answer')
-  // Метод: answer. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   answer(@Param('attemptId') attemptId: string, @Body() dto: AnswerDto) {
     return this.attemptsService.answer(Number(attemptId), dto);
   }
 
   @Post(':attemptId/finish')
-  // Метод: finish. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
   finish(@Param('attemptId') attemptId: string, @Body() dto: FinishDto) {
     return this.attemptsService.finish(Number(attemptId), dto);
   }

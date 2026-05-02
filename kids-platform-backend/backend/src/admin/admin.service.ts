@@ -1,16 +1,15 @@
 /**
- * 📘 ОГЛЯД ФАЙЛУ: `kids-platform-backend/backend/src/admin/admin.service.ts`.
- * ЩО ЦЕ: цей файл — частина навчальної платформи для дітей (бекенд API або фронтенд-екран).
- * НАВІЩО: реалізує конкретний шмат логіки (дані, перевірки, маршрути, або відображення інтерфейсу).
- * ЯК ПРАЦЮЄ: імпортує залежності, приймає вхідні дані, обробляє їх, та повертає результат/HTML/API-відповідь.
- * ВЗАЄМОДІЯ З ІНШИМИ ФАЙЛАМИ: через import/export, виклики сервісів, DTO, props, HTTP-запити.
- * ГЛОСАРІЙ:
- * - API: правила обміну даними між клієнтом (фронтенд) і сервером (бекенд).
- * - DTO: структура даних, яку дозволено приймати/повертати.
- * - Service: шар бізнес-логіки (обчислення, перевірки, робота з БД).
- * - Controller/Page: точка входу запиту користувача або сторінка інтерфейсу.
- * - Component: перевикористовуваний UI-блок.
- * - Prisma/ORM: інструмент доступу до бази даних через код.
+ * ФАЙЛ: `src/admin/admin.service.ts`.
+ * ЗАГАЛОМ: цей файл є частиною backend-сервера на NestJS і реалізує окремий модуль/шар архітектури.
+ * ВЗАЄМОДІЯ: файл імпортує сутності з інших модулів (DTO, Service, Guard, Prisma), а результати експортує через класи/функції.
+ * ПОТІК ДАНИХ: запит -> Controller -> Service -> Prisma/БД -> відповідь клієнту.
+ * ПОНЯТТЯ:
+ * - NestJS: фреймворк для серверних застосунків на Node.js із модульною архітектурою.
+ * - Controller: приймає HTTP-запити і передає їх у сервіс.
+ * - Service: містить бізнес-логіку, валідацію, обчислення.
+ * - DTO (Data Transfer Object): контракт форми даних для входу/виходу.
+ * - Guard: перевіряє доступ до маршруту (автентифікація/ролі).
+ * - Prisma: ORM для читання/запису даних у БД через типізований API.
  */
 
 
@@ -36,11 +35,11 @@ import {
 } from './dto';
 
 @Injectable()
-// Клас: AdminService. Об'єднує пов'язану логіку та методи в одному модулі для зрозумілого керування поведінкою.
+// AdminService: клас, що інкапсулює відповідальність цього файлу та координує роботу методів.
 export class AdminService {
   constructor(private prisma: PrismaService) {}
 
-  // Метод: listAgeGroups. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listAgeGroups(без параметрів)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listAgeGroups() {
     const groups = await this.prisma.ageGroup.findMany({
       orderBy: { id: 'asc' },
@@ -56,7 +55,7 @@ export class AdminService {
     }));
   }
 
-  // Метод: createAgeGroup. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createAgeGroup(dto: CreateAgeGroupDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createAgeGroup(dto: CreateAgeGroupDto) {
     const group = await this.prisma.ageGroup.create({
       data: {
@@ -71,7 +70,7 @@ export class AdminService {
     return { id: Number(group.id) };
   }
 
-  // Метод: updateAgeGroup. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateAgeGroup(id: number, dto: UpdateAgeGroupDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateAgeGroup(id: number, dto: UpdateAgeGroupDto) {
     const group = await this.prisma.ageGroup.update({
       where: { id: BigInt(id) },
@@ -87,7 +86,7 @@ export class AdminService {
     return { id: Number(group.id) };
   }
 
-  // Метод: deleteAgeGroup. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteAgeGroup(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteAgeGroup(id: number) {
     await this.prisma.ageGroup.update({
       where: { id: BigInt(id) },
@@ -96,7 +95,7 @@ export class AdminService {
     return { ok: true };
   }
 
-  // Метод: listModules. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listModules(без параметрів)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listModules() {
     const modules = await this.prisma.module.findMany({
       orderBy: { id: 'asc' },
@@ -111,7 +110,7 @@ export class AdminService {
     }));
   }
 
-  // Метод: createModule. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createModule(dto: CreateModuleDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createModule(dto: CreateModuleDto) {
     const module = await this.prisma.module.create({
       data: {
@@ -124,7 +123,7 @@ export class AdminService {
     return { id: Number(module.id) };
   }
 
-  // Метод: updateModule. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateModule(id: number, dto: UpdateModuleDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateModule(id: number, dto: UpdateModuleDto) {
     const module = await this.prisma.module.update({
       where: { id: BigInt(id) },
@@ -138,7 +137,7 @@ export class AdminService {
     return { id: Number(module.id) };
   }
 
-  // Метод: deleteModule. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteModule(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteModule(id: number) {
     await this.prisma.module.update({
       where: { id: BigInt(id) },
@@ -147,7 +146,7 @@ export class AdminService {
     return { ok: true };
   }
 
-  // Метод: listGameTypes. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listGameTypes(без параметрів)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listGameTypes() {
     const types = await this.prisma.gameType.findMany({
       orderBy: { id: 'asc' },
@@ -162,7 +161,7 @@ export class AdminService {
     }));
   }
 
-  // Метод: createGameType. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createGameType(dto: CreateGameTypeDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createGameType(dto: CreateGameTypeDto) {
     const type = await this.prisma.gameType.create({
       data: {
@@ -175,7 +174,7 @@ export class AdminService {
     return { id: Number(type.id) };
   }
 
-  // Метод: updateGameType. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateGameType(id: number, dto: UpdateGameTypeDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateGameType(id: number, dto: UpdateGameTypeDto) {
     const type = await this.prisma.gameType.update({
       where: { id: BigInt(id) },
@@ -189,7 +188,7 @@ export class AdminService {
     return { id: Number(type.id) };
   }
 
-  // Метод: deleteGameType. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteGameType(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteGameType(id: number) {
     await this.prisma.gameType.update({
       where: { id: BigInt(id) },
@@ -198,7 +197,7 @@ export class AdminService {
     return { ok: true };
   }
 
-  // Метод: listGames. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listGames(без параметрів)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listGames() {
     const games = await this.prisma.game.findMany({
       orderBy: { id: 'asc' },
@@ -219,7 +218,7 @@ export class AdminService {
     }));
   }
 
-  // Метод: createGame. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createGame(dto: CreateGameDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createGame(dto: CreateGameDto) {
     const game = await this.prisma.game.create({
       data: {
@@ -235,7 +234,7 @@ export class AdminService {
     return { id: Number(game.id) };
   }
 
-  // Метод: updateGame. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateGame(id: number, dto: UpdateGameDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateGame(id: number, dto: UpdateGameDto) {
     const game = await this.prisma.game.update({
       where: { id: BigInt(id) },
@@ -254,7 +253,7 @@ export class AdminService {
     return { id: Number(game.id) };
   }
 
-  // Метод: deleteGame. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteGame(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteGame(id: number) {
     await this.prisma.game.update({
       where: { id: BigInt(id) },
@@ -263,7 +262,7 @@ export class AdminService {
     return { ok: true };
   }
 
-  // Метод: listGameLevels. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listGameLevels(gameId?: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listGameLevels(gameId?: number) {
     const levels = await this.prisma.gameLevel.findMany({
       where: {
@@ -291,9 +290,8 @@ export class AdminService {
     }));
   }
 
-  // Метод: createGameLevel. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createGameLevel(dto: CreateGameLevelDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createGameLevel(dto: CreateGameLevelDto) {
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
     if (![1, 2, 3].includes(dto.difficulty)) {
       throw new BadRequestException('difficulty must be one of 1, 2, 3');
     }
@@ -301,7 +299,7 @@ export class AdminService {
     const level = await this.prisma.$transaction(async (tx) => {
       let levelNumber = dto.levelNumber;
 
-  // Метод: if. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `if(!levelNumber)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
       if (!levelNumber) {
         const maxLevel = await tx.gameLevel.aggregate({
           where: {
@@ -328,7 +326,7 @@ export class AdminService {
     return { id: Number(level.id) };
   }
 
-  // Метод: updateGameLevel. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateGameLevel(id: number, dto: UpdateGameLevelDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateGameLevel(id: number, dto: UpdateGameLevelDto) {
     const level = await this.prisma.gameLevel.update({
       where: { id: BigInt(id) },
@@ -347,7 +345,7 @@ export class AdminService {
     return { id: Number(level.id) };
   }
 
-  // Метод: deleteGameLevel. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteGameLevel(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteGameLevel(id: number) {
     await this.prisma.gameLevel.update({
       where: { id: BigInt(id) },
@@ -359,7 +357,7 @@ export class AdminService {
     return { ok: true };
   }
 
-  // Метод: listTasks. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listTasks(без параметрів)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listTasks() {
     const tasks = await this.prisma.task.findMany({
       orderBy: { id: 'asc' },
@@ -409,7 +407,7 @@ export class AdminService {
     });
   }
 
-  // Метод: createTask. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createTask(dto: CreateTaskDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createTask(dto: CreateTaskDto) {
     const task = await this.prisma.task.create({
       data: {
@@ -422,7 +420,7 @@ export class AdminService {
     return { id: Number(task.id) };
   }
 
-  // Метод: updateTask. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateTask(id: number, dto: UpdateTaskDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateTask(id: number, dto: UpdateTaskDto) {
     const task = await this.prisma.task.update({
       where: { id: BigInt(id) },
@@ -436,7 +434,7 @@ export class AdminService {
     return { id: Number(task.id) };
   }
 
-  // Метод: deleteTask. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteTask(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteTask(id: number) {
     await this.prisma.task.update({
       where: { id: BigInt(id) },
@@ -445,7 +443,7 @@ export class AdminService {
     return { ok: true };
   }
 
-  // Метод: listTaskVersions. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listTaskVersions(без параметрів)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listTaskVersions() {
     const versions = await this.prisma.taskVersion.findMany({
       orderBy: { id: 'asc' },
@@ -465,7 +463,7 @@ export class AdminService {
     }));
   }
 
-  // Метод: createTaskVersion. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createTaskVersion(dto: CreateTaskVersionDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createTaskVersion(dto: CreateTaskVersionDto) {
     const version = await this.prisma.taskVersion.create({
       data: {
@@ -482,7 +480,7 @@ export class AdminService {
     return { id: Number(version.id) };
   }
 
-  // Метод: updateTaskVersion. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateTaskVersion(id: number, dto: UpdateTaskVersionDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateTaskVersion(id: number, dto: UpdateTaskVersionDto) {
     const version = await this.prisma.taskVersion.update({
       where: { id: BigInt(id) },
@@ -500,7 +498,7 @@ export class AdminService {
     return { id: Number(version.id) };
   }
 
-  // Метод: deleteTaskVersion. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteTaskVersion(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteTaskVersion(id: number) {
     await this.prisma.taskVersion.delete({
       where: { id: BigInt(id) },
@@ -508,7 +506,7 @@ export class AdminService {
     return { ok: true };
   }
 
-  // Метод: listBadges. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `listBadges(без параметрів)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async listBadges() {
     const badges = await this.prisma.badge.findMany({ orderBy: { id: 'asc' } });
     return badges.map((b) => ({
@@ -519,7 +517,7 @@ export class AdminService {
     }));
   }
 
-  // Метод: createBadge. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `createBadge(dto: CreateBadgeDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async createBadge(dto: CreateBadgeDto) {
     const badge = await this.prisma.badge.create({
       data: {
@@ -531,7 +529,7 @@ export class AdminService {
     return { id: Number(badge.id) };
   }
 
-  // Метод: updateBadge. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `updateBadge(id: number, dto: UpdateBadgeDto)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async updateBadge(id: number, dto: UpdateBadgeDto) {
     const badge = await this.prisma.badge.update({
       where: { id: BigInt(id) },
@@ -544,7 +542,7 @@ export class AdminService {
     return { id: Number(badge.id) };
   }
 
-  // Метод: deleteBadge. Частина поведінки класу; використовує поля класу та зовнішні сервіси для виконання задачі.
+  // Метод `deleteBadge(id: number)`: обробляє частину бізнес-логіки; отримує дані, викликає залежності та повертає результат.
   async deleteBadge(id: number) {
     await this.prisma.badge.delete({ where: { id: BigInt(id) } });
     return { ok: true };
