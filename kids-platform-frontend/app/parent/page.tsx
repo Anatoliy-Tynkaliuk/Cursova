@@ -28,6 +28,8 @@ export default function ParentChildrenPage() {
   const [msg, setMsg] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [parentName, setParentName] = useState("");
+  const [deleteCandidate, setDeleteCandidate] = useState<Child | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function load() {
     setErr("");
@@ -72,18 +74,21 @@ export default function ParentChildrenPage() {
     }
   }
 
-  async function onDeleteChild(childId: number, childName: string) {
-    const confirmed = window.confirm(`Видалити профіль дитини "${childName}"? Це дію не можна скасувати.`);
-    if (!confirmed) return;
+  async function onDeleteChild() {
+    if (!deleteCandidate) return;
     setErr("");
     setMsg("");
     setInviteCode("");
     try {
-      await deleteChild(childId);
-      setMsg(`Профіль "${childName}" видалено.`);
+      setIsDeleting(true);
+      await deleteChild(deleteCandidate.id);
+      setMsg(`Профіль "${deleteCandidate.name}" видалено.`);
+      setDeleteCandidate(null);
       await load();
     } catch (e: any) {
       setErr(e.message ?? "Error");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -135,7 +140,7 @@ export default function ParentChildrenPage() {
               <div key={c.id} className={styles.card}>
               <button
                 className={styles.deleteBtn}
-                onClick={() => onDeleteChild(c.id, c.name)}
+                onClick={() => setDeleteCandidate(c)}
                 title="Видалити дитину"
                 aria-label="delete"
               >
@@ -223,6 +228,26 @@ export default function ParentChildrenPage() {
               </button>
             </div>
           </section>
+        )}
+
+
+        {deleteCandidate && (
+          <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="delete-child-title">
+            <div className={styles.modalCard}>
+              <h2 id="delete-child-title" className={styles.modalTitle}>Підтвердження видалення</h2>
+              <p className={styles.modalText}>
+                Ви дійсно хочете видалити профіль дитини <strong>"{deleteCandidate.name}"</strong>?
+                <br />
+                Цю дію не можна скасувати.
+              </p>
+              <div className={styles.modalActions}>
+                <button className={styles.modalCancelBtn} onClick={() => setDeleteCandidate(null)} disabled={isDeleting}>Скасувати</button>
+                <button className={styles.modalDeleteBtn} onClick={onDeleteChild} disabled={isDeleting}>
+                  {isDeleting ? "Видалення..." : "Видалити"}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
