@@ -64,7 +64,6 @@ export default function AdminPage() {
   const [ageGroupIsActive, setAgeGroupIsActive] = useState(true);
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [moduleId, setModuleId] = useState<number | "">("");
   const [gameTypeId, setGameTypeId] = useState<number | "">("");
   const [minAgeGroupId, setMinAgeGroupId] = useState<number | "">("");
@@ -74,7 +73,6 @@ export default function AdminPage() {
   const [levelGameId, setLevelGameId] = useState<number | "">("");
   const [levelDifficulty, setLevelDifficulty] = useState(1);
   const [levelNumberInput, setLevelNumberInput] = useState<string>("");
-  const [levelTitle, setLevelTitle] = useState("");
   const [levelIsActive, setLevelIsActive] = useState(true);
 
   const [taskGameId, setTaskGameId] = useState<number | "">("");
@@ -135,7 +133,7 @@ export default function AdminPage() {
     ];
   }, [gameTypes, sequenceGameType]);
 
-  const levelFormValid = levelGameId !== "" && levelTitle.trim().length > 0 && [1, 2, 3].includes(levelDifficulty);
+  const levelFormValid = levelGameId !== "" && [1, 2, 3].includes(levelDifficulty);
   const levelsByGameDifficulty = useMemo(() => {
     return gameLevels.reduce<Record<string, number>>((acc, level) => {
       const key = `${level.gameId}:${level.difficulty}`;
@@ -366,13 +364,11 @@ export default function AdminPage() {
         gameTypeId: effectiveGameTypeId,
         minAgeGroupId,
         title: title.trim(),
-        description: description.trim() || undefined,
         difficulty,
         isActive,
       });
       setMessage("Гру створено.");
       setTitle("");
-      setDescription("");
       setDifficulty(1);
       setLevelGameId(createdGame.id);
       const gamesData = await getAdminGames();
@@ -435,13 +431,12 @@ export default function AdminPage() {
         gameId: levelGameId,
         difficulty: levelDifficulty,
         levelNumber: parsedLevelNumber,
-        title: levelTitle.trim(),
+        title: `Рівень ${parsedLevelNumber ?? nextLevelNumberForSelection}`,
         isActive: levelIsActive,
       });
 
       setMessage("Рівень створено.");
       setLevelNumberInput("");
-      setLevelTitle("");
       setLevelDifficulty(1);
       setLevelIsActive(true);
 
@@ -818,12 +813,6 @@ export default function AdminPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
-          <textarea
-            placeholder="Опис (необов'язково)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-          />
           <select value={moduleId} onChange={(e) => setModuleId(parseSelectNumber(e.target.value))}>
             <option value="">Модуль</option>
             {modules.map((m) => (
@@ -901,11 +890,6 @@ export default function AdminPage() {
               <option value={3}>3</option>
             </select>
           </label>
-          <input
-            placeholder="Назва рівня"
-            value={levelTitle}
-            onChange={(e) => setLevelTitle(e.target.value)}
-          />
           <label className={styles.inlineLabel}>
             Номер (опц.)
             <input
@@ -932,7 +916,7 @@ export default function AdminPage() {
       </section>
 
       <section className={styles.sectionSpacing}>
-        <details className={styles.collapsible} open>
+        <details className={styles.collapsible}>
           <summary className={styles.collapsibleSummary}>Рівні ігор</summary>
           {gameLevels.length === 0 ? (
           <p>Немає рівнів.</p>
