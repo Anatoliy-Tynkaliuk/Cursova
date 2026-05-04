@@ -1467,7 +1467,7 @@ export default function AdminPage() {
         </details>
       </section>
 
-      <section>
+      <section className={styles.sectionSpacing}>
         <details className={styles.collapsible}>
           <summary className={styles.collapsibleSummary}>Завдання</summary>
           {games.length === 0 ? (
