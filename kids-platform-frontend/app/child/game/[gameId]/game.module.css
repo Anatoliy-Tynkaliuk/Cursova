@@ -392,8 +392,10 @@
 }
 
 .dropTargetValue {
+  width: 100%;
   font-size: 22px;
   font-weight: 900;
+  text-align: center;
 }
 
 .dropTargetValuesWrap {
