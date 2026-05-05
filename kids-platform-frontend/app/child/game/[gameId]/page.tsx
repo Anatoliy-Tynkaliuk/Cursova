@@ -700,7 +700,7 @@ export default function GamePage() {
                                   ))}
                                 </span>
                               ) : (
-                                <span className={styles.dropTargetValue}>Перетягни сюди 1+ карток</span>
+                                <span className={styles.dropTargetValue}>{target}</span>
                               )}
                             </button>
                           );
