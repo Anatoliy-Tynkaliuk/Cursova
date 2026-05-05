@@ -682,8 +682,6 @@ export default function GamePage() {
                                 if (assignedItems.length > 0) clearDragTarget(target);
                               }}
                             >
-                              <span className={styles.dropTargetLabel}>{target}</span>
-
                               {assignedItems.length > 0 ? (
                                 <span className={styles.dropTargetValuesWrap}>
                                   {assignedItems.map((item) => (
