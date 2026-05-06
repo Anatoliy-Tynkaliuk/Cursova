@@ -268,6 +268,48 @@
   color: white;
   outline: none;
 }
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 44px;
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.95) 50%, transparent 50%),
+    linear-gradient(225deg, rgba(255, 255, 255, 0.95) 50%, transparent 50%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  background-position:
+    calc(100% - 19px) 52%,
+    calc(100% - 13px) 52%,
+    100% 0;
+  background-size:
+    6px 6px,
+    6px 6px,
+    38px 100%;
+  background-repeat: no-repeat;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 10px 24px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.select:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.select:focus {
+  border-color: rgba(180, 146, 255, 0.8);
+  box-shadow:
+    0 0 0 3px rgba(171, 123, 255, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 12px 28px rgba(0, 0, 0, 0.3);
+}
+
+.select option {
+  background: #2a1a4f;
+  color: #fff;
+}
 .input::placeholder {
   color: rgba(255, 255, 255, 0.6);
 }
