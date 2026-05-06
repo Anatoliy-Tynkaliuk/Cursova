@@ -291,6 +291,8 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
     0 10px 24px rgba(0, 0, 0, 0.25);
   cursor: pointer;
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 .select:hover {
@@ -309,6 +311,17 @@
 .select option {
   background: #2a1a4f;
   color: #fff;
+  padding: 10px 12px;
+}
+
+.select option:first-child {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.select option:last-child {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 .input::placeholder {
   color: rgba(255, 255, 255, 0.6);
