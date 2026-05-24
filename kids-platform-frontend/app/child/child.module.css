@@ -1,0 +1,13 @@
+.page { padding: 16px; }
+.toolbar { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.section { border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+.summary { font-size: 12px; opacity: 0.8; margin-top: 0; }
+.badgesList { list-style: none; padding: 0; display: grid; gap: 8px; }
+.badgeCard { border: 1px solid #ccc; border-radius: 8px; padding: 10px; }
+.badgeMuted { opacity: 0.5; }
+.badgeTitle { font-weight: 600; }
+.badgeText { font-size: 12px; opacity: 0.85; }
+.badgeStatus { font-size: 12px; margin-top: 4px; }
+.gamesList { display: grid; gap: 10px; list-style: none; padding: 0; }
+.gameCard { border: 1px solid #ddd; padding: 12px; border-radius: 8px; }
+.error { color: red; }

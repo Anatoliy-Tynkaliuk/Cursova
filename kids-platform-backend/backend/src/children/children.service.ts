@@ -3,6 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { CreateChildDto } from "./dto";
 import { buildAchievementRule, type AchievementMetrics } from "./achievement-rules";
 import { calculateAchievementMetrics } from "./achievement-metrics";
+import { RolePolicyService } from "../auth/role-policy.service";
 
 function randomCode(len = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -36,7 +37,7 @@ type AvatarSettings = {
 
 @Injectable()
 export class ChildrenService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private rolePolicy: RolePolicyService) {}
 
   private normalizeAvatarSettings(raw: unknown): AvatarSettings {
     const fallbackId = AVATAR_CATALOG[0].id;
@@ -92,7 +93,7 @@ export class ChildrenService {
       }));
     }
 
-    if (user.role !== "parent") throw new ForbiddenException("Only parent/admin");
+    this.rolePolicy.requireAny(user, ["parent"], "Only parent/admin");
 
     const links = await this.prisma.parentChild.findMany({
       where: {
@@ -112,7 +113,7 @@ export class ChildrenService {
   }
 
   async createChild(user: any, dto: CreateChildDto) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    this.rolePolicy.requireAny(user, ["parent", "admin"], "Only parent/admin");
 
     const age = await this.prisma.ageGroup.findUnique({ where: { code: dto.ageGroupCode } });
     if (!age) throw new BadRequestException("Invalid ageGroupCode");
@@ -125,7 +126,7 @@ export class ChildrenService {
     });
 
     // якщо parent — одразу зв’язуємо
-    if (user.role === "parent") {
+    if (this.rolePolicy.isParent(user)) {
       await this.prisma.parentChild.create({
         data: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id },
       });
@@ -135,7 +136,7 @@ export class ChildrenService {
   }
 
   async createInvite(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    this.rolePolicy.requireAny(user, ["parent", "admin"], "Only parent/admin");
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
@@ -144,11 +145,11 @@ export class ChildrenService {
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
     // parent може робити invite тільки для своєї дитини
-    if (user.role === "parent") {
+    if (this.rolePolicy.isParent(user)) {
       const link = await this.prisma.parentChild.findUnique({
         where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) this.rolePolicy.requireAny(user, ["admin"], "Not your child");
     }
 
     // робимо код на 30 днів
@@ -205,7 +206,7 @@ export class ChildrenService {
   }
 
   async getStats(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    this.rolePolicy.requireAny(user, ["parent", "admin"], "Only parent/admin");
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
@@ -213,11 +214,11 @@ export class ChildrenService {
     });
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
-    if (user.role === "parent") {
+    if (this.rolePolicy.isParent(user)) {
       const link = await this.prisma.parentChild.findUnique({
         where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) this.rolePolicy.requireAny(user, ["admin"], "Not your child");
     }
 
     const attempts = await this.prisma.attempt.findMany({
@@ -389,7 +390,7 @@ export class ChildrenService {
       const link = await this.prisma.parentChild.findUnique({
         where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) this.rolePolicy.requireAny(user, ["admin"], "Not your child");
     }
 
     const [allAttempts, badges, earned] = await Promise.all([
@@ -585,11 +586,11 @@ export class ChildrenService {
     });
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
-    if (user.role === "parent") {
+    if (this.rolePolicy.isParent(user)) {
       const link = await this.prisma.parentChild.findUnique({
         where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
       });
-      if (!link) throw new ForbiddenException("Not your child");
+      if (!link) this.rolePolicy.requireAny(user, ["admin"], "Not your child");
     }
 
     await this.prisma.$transaction([

@@ -1,188 +1,22 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { AnswerDto } from "./dto/answer.dto";
-import { buildAchievementRule, type AchievementMetrics } from "../children/achievement-rules";
-import { calculateAchievementMetrics } from "../children/achievement-metrics";
-
-function deepEqual(a: any, b: any): boolean {
-  if (a === b) return true;
-  if (typeof a !== typeof b) return false;
-  if (a && b && typeof a === "object") {
-    if (Array.isArray(a) !== Array.isArray(b)) return false;
-    if (Array.isArray(a)) {
-      if (a.length !== b.length) return false;
-      for (let i = 0; i < a.length; i++) if (!deepEqual(a[i], b[i])) return false;
-      return true;
-    }
-    const ak = Object.keys(a).sort();
-    const bk = Object.keys(b).sort();
-    if (!deepEqual(ak, bk)) return false;
-    for (const k of ak) if (!deepEqual(a[k], b[k])) return false;
-    return true;
-  }
-  return false;
-}
-
-type DragPair = { item: string; target: string };
-
-function normalizeDragPairsValue(value: unknown): DragPair[] | null {
-  if (!value || typeof value !== "object") return null;
-
-  const pairs = (value as { pairs?: unknown }).pairs;
-  if (!Array.isArray(pairs)) return null;
-
-  const normalized: DragPair[] = [];
-
-  for (const pair of pairs) {
-    if (!pair || typeof pair !== "object") return null;
-
-    const item = (pair as { item?: unknown }).item;
-    const target = (pair as { target?: unknown }).target;
-
-    if (typeof item !== "string" || typeof target !== "string") return null;
-
-    normalized.push({ item: item.trim(), target: target.trim() });
-  }
-
-  normalized.sort((a, b) => {
-    if (a.target === b.target) {
-      return a.item.localeCompare(b.item);
-    }
-
-    return a.target.localeCompare(b.target);
-  });
-
-  return normalized;
-}
+import { AnswerValidationService } from "./services/answer-validation.service";
+import { ProgressionService } from "./services/progression.service";
+import { AchievementAwardService } from "./services/achievement-award.service";
 
 export function answersAreEquivalent(userAnswer: unknown, correctAnswer: unknown): boolean {
-  const normalizedUserPairs = normalizeDragPairsValue(userAnswer);
-  const normalizedCorrectPairs = normalizeDragPairsValue(correctAnswer);
-
-  if (normalizedUserPairs && normalizedCorrectPairs) {
-    return deepEqual(normalizedUserPairs, normalizedCorrectPairs);
-  }
-
-  return deepEqual(userAnswer, correctAnswer);
+  return new AnswerValidationService().answersAreEquivalent(userAnswer, correctAnswer);
 }
 
 @Injectable()
 export class AttemptsService {
-  constructor(private prisma: PrismaService) {}
-
-  private async awardBadges(childProfileId: bigint) {
-    const [allAttempts, badges] = await Promise.all([
-      this.prisma.attempt.findMany({
-        where: { childProfileId },
-        select: {
-          createdAt: true,
-          isFinished: true,
-          correctCount: true,
-          totalCount: true,
-          score: true,
-          levelId: true,
-        },
-      }),
-      this.prisma.badge.findMany(),
-    ]);
-
-    const metrics: AchievementMetrics = calculateAchievementMetrics(allAttempts);
-
-    const eligibleBadges = badges.filter((badge) => {
-      const rule = buildAchievementRule(badge.code, metrics);
-      return rule ? rule.currentValue >= rule.targetValue : false;
-    });
-
-    if (eligibleBadges.length === 0) return;
-
-    await this.prisma.childBadge.createMany({
-      data: eligibleBadges.map((badge) => ({
-        childProfileId,
-        badgeId: badge.id,
-      })),
-      skipDuplicates: true,
-    });
-  }
-
-
-  private calculateStars(correctCount: number, totalTasks: number) {
-    if (correctCount <= 0) return 0;
-    if (totalTasks <= 0) return Math.min(3, correctCount);
-
-    return Math.min(3, Math.max(1, Math.ceil((correctCount / totalTasks) * 3)));
-  }
-
-  private async getOrCreateLevelProgress(childProfileId: bigint, gameId: bigint, difficulty: number) {
-    let progress = await this.prisma.childLevelProgress.findUnique({
-      where: {
-        childProfileId_gameId_difficulty: {
-          childProfileId,
-          gameId,
-          difficulty,
-        },
-      },
-    });
-
-    if (!progress) {
-      progress = await this.prisma.childLevelProgress.create({
-        data: {
-          childProfileId,
-          gameId,
-          difficulty,
-          maxUnlockedLevel: 1,
-        },
-      });
-    }
-
-    return progress;
-  }
-
-  private async unlockNextLevelIfNeeded(attemptId: bigint) {
-    const attempt = await this.prisma.attempt.findUnique({
-      where: { id: attemptId },
-      include: {
-        level: {
-          select: {
-            gameId: true,
-            difficulty: true,
-            levelNumber: true,
-          },
-        },
-      },
-    });
-
-    if (!attempt || !attempt.level) return;
-
-    const isSuccessfulAttempt = attempt.isFinished && attempt.correctCount > 0;
-    if (!isSuccessfulAttempt) {
-      return;
-    }
-
-    const targetUnlockedLevel = attempt.level.levelNumber + 1;
-
-    const progress = await this.getOrCreateLevelProgress(
-      attempt.childProfileId,
-      attempt.level.gameId,
-      attempt.level.difficulty,
-    );
-
-    if (targetUnlockedLevel <= progress.maxUnlockedLevel) {
-      return;
-    }
-
-    await this.prisma.childLevelProgress.update({
-      where: {
-        childProfileId_gameId_difficulty: {
-          childProfileId: attempt.childProfileId,
-          gameId: attempt.level.gameId,
-          difficulty: attempt.level.difficulty,
-        },
-      },
-      data: {
-        maxUnlockedLevel: targetUnlockedLevel,
-      },
-    });
-  }
+  constructor(
+    private prisma: PrismaService,
+    private answerValidationService: AnswerValidationService,
+    private progressionService: ProgressionService,
+    private achievementAwardService: AchievementAwardService,
+  ) {}
 
   // ---------- START ----------
   async start(childProfileId: number, gameId: number, difficulty: number, level?: number, levelId?: number) {
@@ -259,7 +93,7 @@ export class AttemptsService {
       }
     }
 
-    const progress = await this.getOrCreateLevelProgress(BigInt(childProfileId), BigInt(gameId), difficulty);
+    const progress = await this.progressionService.getOrCreateLevelProgress(BigInt(childProfileId), BigInt(gameId), difficulty);
     if (selectedLevel.levelNumber > progress.maxUnlockedLevel) {
       throw new BadRequestException("Selected level is locked for this child");
     }
@@ -434,11 +268,11 @@ export class AttemptsService {
         data: {
           isFinished: true,
           finishedAt: new Date(),
-          score: this.calculateStars(updated.correctCount, totalTasks),
+          score: this.progressionService.calculateStars(updated.correctCount, totalTasks),
         },
       });
-      await this.awardBadges(attempt.childProfileId);
-      await this.unlockNextLevelIfNeeded(BigInt(attemptId));
+      await this.achievementAwardService.awardBadges(attempt.childProfileId);
+      await this.progressionService.unlockNextLevelIfNeeded(BigInt(attemptId));
 
       return {
         attemptId,
@@ -502,12 +336,12 @@ export class AttemptsService {
     const finished = await this.prisma.attempt.update({
       where: { id: BigInt(attemptId) },
       data: {
-        score: this.calculateStars(updatedAttempt.correctCount, totalTasks),
+        score: this.progressionService.calculateStars(updatedAttempt.correctCount, totalTasks),
       },
     });
 
-    await this.awardBadges(finished.childProfileId);
-    await this.unlockNextLevelIfNeeded(BigInt(attemptId));
+    await this.achievementAwardService.awardBadges(finished.childProfileId);
+    await this.progressionService.unlockNextLevelIfNeeded(BigInt(attemptId));
 
     return {
       attemptId,
