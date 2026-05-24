@@ -5,9 +5,6 @@ import { AnswerValidationService } from "./services/answer-validation.service";
 import { ProgressionService } from "./services/progression.service";
 import { AchievementAwardService } from "./services/achievement-award.service";
 
-export function answersAreEquivalent(userAnswer: unknown, correctAnswer: unknown): boolean {
-  return new AnswerValidationService().answersAreEquivalent(userAnswer, correctAnswer);
-}
 
 @Injectable()
 export class AttemptsService {
@@ -201,7 +198,7 @@ export class AttemptsService {
       throw new BadRequestException("taskId does not match taskVersionId");
     }
 
-    const isCorrect = answersAreEquivalent(dto.userAnswer, tv.correctJson);
+    const isCorrect = this.answerValidationService.answersAreEquivalent(dto.userAnswer, tv.correctJson);
 
     await this.prisma.taskAnswer.create({
       data: {
