@@ -5,13 +5,8 @@ import Link from "next/link";
 import styles from "./logic.module.css";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
-import {
-  getChildBadgesPublic,
-  getGameLevels,
-  getGames,
-  type ChildBadgeItem,
-  type GameListItem,
-} from "@/lib/endpoints";
+import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints/children";
+import { getGameLevels, getGames, type GameListItem } from "@/lib/endpoints/games";
 
 type ChildStats = {
   level: number;

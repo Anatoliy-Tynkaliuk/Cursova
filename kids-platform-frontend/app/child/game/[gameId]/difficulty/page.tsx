@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
-import { getGames, type GameListItem } from "@/lib/endpoints";
+import { getGames, type GameListItem } from "@/lib/endpoints/games";
 import styles from "./difficulty.module.css";
 
 const difficultyLabels: Record<number, string> = {

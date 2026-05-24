@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getChildBadgesPublic, getGames, type ChildBadgeItem, type GameListItem } from "@/lib/endpoints";
+import { type ChildBadgeItem, getChildBadgesPublic } from "@/lib/endpoints/children";
+import { getGames, type GameListItem } from "@/lib/endpoints/games";
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildSubjectsPage.module.css";
 

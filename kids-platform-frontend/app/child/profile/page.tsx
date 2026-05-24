@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getChildBadgesPublic, getChildStatsPublic, getGames, type ChildStats, type GameListItem } from "@/lib/endpoints";
+import { getChildBadgesPublic, getChildStatsPublic, type ChildStats } from "@/lib/endpoints/children";
+import { getGames, type GameListItem } from "@/lib/endpoints/games";
 import { getChildSession } from "@/lib/auth";
 
 export default function ChildProfilePage() {

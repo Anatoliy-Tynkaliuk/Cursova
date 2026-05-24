@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getGames, type GameListItem } from "@/lib/endpoints";
+import { getGames, type GameListItem } from "@/lib/endpoints/games";
 
 export function useChildGames(ageGroupCode: string | null) {
   const [games, setGames] = useState<GameListItem[]>([]);

@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./english.module.css";
-import { getChildBadgesPublic, getGameLevels, getGames, type GameListItem } from "@/lib/endpoints";
+import { getChildBadgesPublic } from "@/lib/endpoints/children";
+import { getGameLevels, getGames, type GameListItem } from "@/lib/endpoints/games";
 import { getChildSession } from "@/lib/auth";
 
 const gameTypeImageMap: Record<string, string> = {
