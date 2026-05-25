@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./logic.module.css";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getChildSession } from "@/lib/auth";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import {
   getChildBadgesPublic,
   getGameLevels,
@@ -43,6 +45,8 @@ function getGameCardImage(game: GameListItem, fallbackIndex: number) {
 }
 
 export default function LogicPlanetPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [childName, setChildName] = useState("Друже");
   const [stats, setStats] = useState<ChildStats>({ level: 1, stars: 0, achievements: 0 });
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +57,7 @@ export default function LogicPlanetPage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId || !session.ageGroupCode) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
 

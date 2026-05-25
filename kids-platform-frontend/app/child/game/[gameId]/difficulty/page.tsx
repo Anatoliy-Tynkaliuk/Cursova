@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getGames, type GameListItem } from "@/lib/endpoints";
 import styles from "./difficulty.module.css";
 
@@ -25,6 +26,7 @@ const difficultyMeta: Record<
 export default function GameDifficultyPage() {
   const params = useParams<{ gameId: string }>();
   const router = useRouter();
+  useRequireChildSession();
   const gameId = Number(params.gameId);
 
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export default function GameDifficultyPage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId || !session.ageGroupCode) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
 

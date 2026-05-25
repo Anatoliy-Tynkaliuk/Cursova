@@ -10,6 +10,7 @@ import {
   submitAnswer,
   type StartAttemptResponse,
 } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildSession } from "@/lib/auth";
 import styles from "./game.module.css";
 
@@ -68,6 +69,8 @@ function StarsRow({ filled }: { filled: number }) {
 }
 
 export default function GamePage() {
+  const router = useRouter();
+  useRequireChildSession();
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
 
@@ -142,12 +145,12 @@ export default function GamePage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
 
     if (!attemptIdFromUrl && normalizedDifficulty === null) {
-      window.location.href = `/child/game/${gameId}/difficulty`;
+      router.push(`/child/game/${gameId}/difficulty`);
       return;
     }
 
@@ -157,7 +160,7 @@ export default function GamePage() {
       effectiveLevel === null &&
       effectiveLevelId === null
     ) {
-      window.location.href = `/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`;
+      router.push(`/child/game/${gameId}/levels?difficulty=${normalizedDifficulty}`);
       return;
     }
 
@@ -818,7 +821,7 @@ export default function GamePage() {
                       type="button"
                       className={styles.sequenceBackBtn}
                       disabled={loading}
-                      onClick={() => (window.location.href = levelsHref)}
+                      onClick={() => router.push(levelsHref)}
                     >
                       До списку рівнів
                     </button>

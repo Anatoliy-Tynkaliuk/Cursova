@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "../parent/parent-dashboard.module.css";
 import { getChildren, createChild, createInvite, deleteChild, getMe } from "@/lib/endpoints";
 import { isLoggedIn, logout, setChildSession } from "@/lib/auth";
@@ -20,6 +21,7 @@ function avatarFor(index: number) {
 }
 
 export default function ParentChildrenPage() {
+  const router = useRouter();
   const [children, setChildren] = useState<Child[]>([]);
   const [name, setName] = useState("");
   const [ageGroupCode, setAgeGroupCode] = useState("4_5");
@@ -37,7 +39,7 @@ export default function ParentChildrenPage() {
 
   useEffect(() => {
     if (!isLoggedIn()) {
-      window.location.href = "/login";
+      router.push("/login");
       return;
     }
     Promise.all([load(), getMe().then((me) => setParentName(me.username || me.email))]).catch((e: any) =>
@@ -89,12 +91,12 @@ export default function ParentChildrenPage() {
 
   function onSelectChild(c: Child) {
     setChildSession(c.id, c.ageGroupCode, c.name, c.avatar || undefined);
-    window.location.href = "/child/subjects";
+    router.push("/child/subjects");
   }
 
   function onLogout() {
     logout();
-    window.location.href = "/login";
+    router.push("/login");
   }
 
   const parentDisplayName = useMemo(() => parentName || "Батьки", [parentName]);
@@ -152,7 +154,7 @@ export default function ParentChildrenPage() {
 
               <button
                 className={styles.greenBtn}
-                onClick={() => (window.location.href = `/children/${c.id}/stats`)}
+                onClick={() => router.push(`/children/${c.id}/stats`)}
               >
                 Перегляд досягнень
               </button>

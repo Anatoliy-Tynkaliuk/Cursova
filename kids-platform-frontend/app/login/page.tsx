@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./LoginPage.module.css";
 import { login } from "@/lib/endpoints";
 import { setToken } from "@/lib/auth";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -20,7 +22,7 @@ export default function LoginPage() {
     try {
       const data = await login(email, password);
       setToken(data.accessToken);
-      window.location.href = data.user.role === "admin" ? "/admin" : "/parent";
+      router.push(data.user.role === "admin" ? "/admin" : "/parent");
     } catch (e: any) {
       setErr(e.message ?? "Error");
     } finally {

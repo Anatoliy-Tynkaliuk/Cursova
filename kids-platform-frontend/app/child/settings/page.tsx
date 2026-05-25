@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { clearChildSession, getChildSession } from "@/lib/auth";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildBadgesPublic } from "@/lib/endpoints";
 
 export default function ChildSettingsPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [childName, setChildName] = useState("Друже");
   const [finishedAttempts, setFinishedAttempts] = useState(0);
   const [totalStars, setTotalStars] = useState(0);
@@ -14,7 +18,7 @@ export default function ChildSettingsPage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
     setChildName(session.childName || "Друже");
@@ -35,7 +39,7 @@ export default function ChildSettingsPage() {
 
   function onExit() {
     clearChildSession();
-    window.location.href = "/child/join";
+    router.push("/child/join");
   }
 
   return (
