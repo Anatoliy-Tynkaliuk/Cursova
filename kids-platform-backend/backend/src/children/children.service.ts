@@ -1,8 +1,9 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateChildDto } from "./dto";
 import { buildAchievementRule, type AchievementMetrics } from "./achievement-rules";
 import { calculateAchievementMetrics } from "./achievement-metrics";
+import { ChildrenAccessPolicy } from "./children-access.policy";
 
 function randomCode(len = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -36,7 +37,11 @@ type AvatarSettings = {
 
 @Injectable()
 export class ChildrenService {
-  constructor(private prisma: PrismaService) {}
+  private readonly accessPolicy: ChildrenAccessPolicy;
+
+  constructor(private prisma: PrismaService) {
+    this.accessPolicy = new ChildrenAccessPolicy(prisma);
+  }
 
   private normalizeAvatarSettings(raw: unknown): AvatarSettings {
     const fallbackId = AVATAR_CATALOG[0].id;
@@ -92,7 +97,7 @@ export class ChildrenService {
       }));
     }
 
-    if (user.role !== "parent") throw new ForbiddenException("Only parent/admin");
+    this.accessPolicy.ensureParentOrAdmin(user);
 
     const links = await this.prisma.parentChild.findMany({
       where: {
@@ -112,7 +117,7 @@ export class ChildrenService {
   }
 
   async createChild(user: any, dto: CreateChildDto) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    this.accessPolicy.ensureParentOrAdmin(user);
 
     const age = await this.prisma.ageGroup.findUnique({ where: { code: dto.ageGroupCode } });
     if (!age) throw new BadRequestException("Invalid ageGroupCode");
@@ -135,7 +140,7 @@ export class ChildrenService {
   }
 
   async createInvite(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    this.accessPolicy.ensureParentOrAdmin(user);
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
@@ -143,13 +148,7 @@ export class ChildrenService {
     });
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
-    // parent може робити invite тільки для своєї дитини
-    if (user.role === "parent") {
-      const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
-      });
-      if (!link) throw new ForbiddenException("Not your child");
-    }
+    await this.accessPolicy.ensureParentOwnsChild(user, child.id);
 
     // робимо код на 30 днів
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -205,7 +204,7 @@ export class ChildrenService {
   }
 
   async getStats(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") throw new ForbiddenException("Only parent/admin");
+    this.accessPolicy.ensureParentOrAdmin(user);
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
@@ -213,12 +212,7 @@ export class ChildrenService {
     });
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
-    if (user.role === "parent") {
-      const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
-      });
-      if (!link) throw new ForbiddenException("Not your child");
-    }
+    await this.accessPolicy.ensureParentOwnsChild(user, child.id);
 
     const attempts = await this.prisma.attempt.findMany({
       where: { childProfileId: child.id },
@@ -376,9 +370,7 @@ export class ChildrenService {
   }
 
   async getBadges(user: any, childId: number) {
-    if (user && user.role !== "parent" && user.role !== "admin") {
-      throw new ForbiddenException("Only parent/admin");
-    }
+    this.accessPolicy.ensureOptionalParentOrAdmin(user);
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
@@ -386,10 +378,7 @@ export class ChildrenService {
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
     if (user?.role === "parent") {
-      const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
-      });
-      if (!link) throw new ForbiddenException("Not your child");
+      await this.accessPolicy.ensureParentOwnsChild(user, child.id);
     }
 
     const [allAttempts, badges, earned] = await Promise.all([
@@ -576,21 +565,14 @@ export class ChildrenService {
 
 
   async deleteChild(user: any, childId: number) {
-    if (user.role !== "parent" && user.role !== "admin") {
-      throw new ForbiddenException("Only parent/admin");
-    }
+    this.accessPolicy.ensureParentOrAdmin(user);
 
     const child = await this.prisma.childProfile.findFirst({
       where: { id: BigInt(childId), isActive: true },
     });
     if (!child || !child.isActive) throw new NotFoundException("Child not found");
 
-    if (user.role === "parent") {
-      const link = await this.prisma.parentChild.findUnique({
-        where: { parentUserId_childProfileId: { parentUserId: this.userIdFromJwt(user), childProfileId: child.id } },
-      });
-      if (!link) throw new ForbiddenException("Not your child");
-    }
+    await this.accessPolicy.ensureParentOwnsChild(user, child.id);
 
     await this.prisma.$transaction([
       this.prisma.childProfile.update({
