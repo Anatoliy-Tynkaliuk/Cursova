@@ -3,7 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getChildBadgesPublic, getGames, type ChildBadgeItem, type GameListItem } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildSubjectsPage.module.css";
 
@@ -44,6 +46,8 @@ const subjects: Subject[] = [
 ];
 
 export default function ChildSubjectsPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [games, setGames] = useState<GameListItem[]>([]);
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
@@ -55,7 +59,7 @@ export default function ChildSubjectsPage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId || !session.ageGroupCode) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
     setChildName(session.childName || "Друже");

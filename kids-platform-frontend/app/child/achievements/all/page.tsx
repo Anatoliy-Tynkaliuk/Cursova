@@ -3,7 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildSession } from "@/lib/auth";
 import styles from "./AllAchievementsPage.module.css";
 
@@ -19,6 +21,8 @@ function clamp(n: number, a: number, b: number) {
 }
 
 export default function AllAchievementsPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +30,7 @@ export default function AllAchievementsPage() {
 
   useEffect(() => {
     if (!session?.childProfileId) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
 

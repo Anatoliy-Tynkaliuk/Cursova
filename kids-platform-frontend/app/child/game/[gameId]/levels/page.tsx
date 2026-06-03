@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { getChildSession } from "@/lib/auth";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getGameLevels, type GameLevelsResponse } from "@/lib/endpoints";
 import styles from "./GameLevelsPage.module.css";
 
@@ -21,6 +22,8 @@ function normalizeDifficulty(value: string | null): number | null {
 }
 
 export default function GameLevelsPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const params = useParams<{ gameId: string }>();
   const search = useSearchParams();
 
@@ -33,12 +36,12 @@ export default function GameLevelsPage() {
 
   useEffect(() => {
     if (!Number.isFinite(gameId) || gameId <= 0) {
-      window.location.href = "/child/subjects";
+      router.push("/child/subjects");
       return;
     }
 
     if (!difficulty) {
-      window.location.href = `/child/game/${gameId}/difficulty`;
+      router.push(`/child/game/${gameId}/difficulty`);
       return;
     }
 
@@ -46,7 +49,7 @@ export default function GameLevelsPage() {
     const childProfileId = session.childProfileId;
 
     if (typeof childProfileId !== "number" || !session.ageGroupCode) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
 

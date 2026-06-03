@@ -87,6 +87,7 @@ function normalizeActivityDays(stats: ChildStats): ActivityDay[] {
 }
 
 export default function ChildStatsPage() {
+  const router = useRouter();
   const params = useParams<{ childId: string }>();
   const childId = Number(params.childId);
   const [stats, setStats] = useState<ChildStats | null>(null);
@@ -106,7 +107,7 @@ export default function ChildStatsPage() {
 
   useEffect(() => {
     if (!isLoggedIn()) {
-      window.location.href = "/login";
+      router.push("/login");
       return;
     }
     if (!childId) {

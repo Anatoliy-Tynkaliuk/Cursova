@@ -3,7 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { getChildBadgesPublic, type ChildBadgeItem } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildSession } from "@/lib/auth";
 import styles from "./ChildAchievementsPage.module.css";
 
@@ -21,6 +23,8 @@ function getProgressText(badge: ChildBadgeItem) {
 }
 
 export default function ChildAchievementsPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [badges, setBadges] = useState<ChildBadgeItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
   const [totalStars, setTotalStars] = useState(0);
@@ -44,7 +48,7 @@ export default function ChildAchievementsPage() {
 
   useEffect(() => {
     if (!session?.childProfileId) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
 
