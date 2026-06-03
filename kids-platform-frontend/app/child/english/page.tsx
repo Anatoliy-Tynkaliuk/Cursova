@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./english.module.css";
 import { getChildBadgesPublic, getGameLevels, getGames, type GameListItem } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildSession } from "@/lib/auth";
 
 const gameTypeImageMap: Record<string, string> = {
@@ -37,6 +39,8 @@ type GameProgress = {
 };
 
 export default function EnglishPlanetPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [childName, setChildName] = useState("Друже");
   const [stats, setStats] = useState<ChildStats>({ level: 1, stars: 0, achievements: 0 });
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +51,7 @@ export default function EnglishPlanetPage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId || !session.ageGroupCode) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
     setChildName(session.childName || "Друже");

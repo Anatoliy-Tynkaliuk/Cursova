@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   createAdminGame,
   createAdminGameType,
@@ -42,6 +43,7 @@ import { isLoggedIn } from "@/lib/auth";
 import styles from "./admin.module.css";
 
 export default function AdminPage() {
+  const router = useRouter();
   const parseSelectNumber = (value: string): number | "" => (value === "" ? "" : Number(value));
 
   const [modules, setModules] = useState<AdminModuleItem[]>([]);
@@ -175,7 +177,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isLoggedIn()) {
-      window.location.href = "/login";
+      router.push("/login");
       return;
     }
 

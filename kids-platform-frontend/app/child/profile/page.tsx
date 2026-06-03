@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getChildBadgesPublic, getChildStatsPublic, getGames, type ChildStats, type GameListItem } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildSession } from "@/lib/auth";
 
 export default function ChildProfilePage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [games, setGames] = useState<GameListItem[]>([]);
   const [finishedAttempts, setFinishedAttempts] = useState(0);
   const [totalStars, setTotalStars] = useState(0);
@@ -17,7 +21,7 @@ export default function ChildProfilePage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId || !session.ageGroupCode) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
     setChildName(session.childName || "Друже");

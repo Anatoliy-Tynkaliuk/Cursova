@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -9,6 +10,7 @@ import {
   setActiveAvatar,
   type AvatarShopResponse,
 } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import { getChildSession, setChildAvatar } from "@/lib/auth";
 import styles from "./page.module.css";
 
@@ -26,6 +28,8 @@ function normalizeAvatarSrc(src: string | null | undefined) {
 }
 
 export default function AvatarShopPage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [childId, setChildId] = useState<number | null>(null);
   const [shop, setShop] = useState<AvatarShopResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -34,7 +38,7 @@ export default function AvatarShopPage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
     setChildId(session.childProfileId);

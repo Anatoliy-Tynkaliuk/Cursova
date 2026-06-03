@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getChildBadgesPublic, getGames, type ChildBadgeItem, GameListItem } from "@/lib/endpoints";
+import { useRequireChildSession } from "@/lib/hooks/useRequireChildSession";
 import Link from "next/link";
 import { getChildSession, clearChildSession } from "@/lib/auth";
 
 export default function ChildHomePage() {
+  const router = useRouter();
+  useRequireChildSession();
   const [ageGroupCode, setAgeGroupCode] = useState<string | null>(null);
   const [childProfileId, setChildProfileId] = useState<number | null>(null);
   const [games, setGames] = useState<GameListItem[]>([]);
@@ -25,7 +29,7 @@ export default function ChildHomePage() {
   useEffect(() => {
     const session = getChildSession();
     if (!session.childProfileId || !session.ageGroupCode) {
-      window.location.href = "/child/join";
+      router.push("/child/join");
       return;
     }
     setChildProfileId(session.childProfileId);
@@ -70,12 +74,12 @@ export default function ChildHomePage() {
 
   function onStart(gameId: number) {
     if (!childProfileId) return;
-    window.location.href = `/child/game/${gameId}`;
+    router.push(`/child/game/${gameId}`);
   }
 
   function onExit() {
     clearChildSession();
-    window.location.href = "/child/join";
+    router.push("/child/join");
   }
 
   return (

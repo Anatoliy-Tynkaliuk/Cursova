@@ -3,11 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { joinByCode } from "@/lib/endpoints";
 import { setChildSession } from "@/lib/auth";
 import styles from "./JoinPage.module.css";
 
 export default function JoinPage() {
+  const router = useRouter();
   const [code, setCode] = useState("");
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ export default function JoinPage() {
       const data = await joinByCode(trimmed);
 
       setChildSession(data.childProfileId, data.ageGroupCode, data.childName, data.avatar || undefined);
-      window.location.href = "/child/subjects";
+      router.push("/child/subjects");
     } catch (e: any) {
       setMsg(e?.message ?? "Error");
     } finally {

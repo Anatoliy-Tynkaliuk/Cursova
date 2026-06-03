@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./RegisterPage.module.css";
 import { setToken } from "@/lib/auth";
 import { register } from "@/lib/endpoints";
@@ -20,6 +21,7 @@ function isValidEmail(value: string): boolean {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -80,7 +82,7 @@ export default function RegisterPage() {
     try {
       const data = await register(email.trim(), username.trim(), password);
       setToken(data.accessToken);
-      window.location.href = data.user.role === "admin" ? "/admin" : "/parent";
+      router.push(data.user.role === "admin" ? "/admin" : "/parent");
     } catch (e: any) {
       setServerErr(e?.message ?? "Error");
     } finally {
